@@ -1,0 +1,21 @@
+*.dat
+*.exe
+*.smx
+*.inc
+*.vscode
+*.code-workspace
+*.sql
+*.sp
+[Cc]compiled/
+[Dd]esktop.ini
+[Tt]humbs.db
+
+# Excluded Files:
+
+#Compiled Plugins
+
+#Source Code
+!tf2_pnpc.sp
+
+#Include Files
+!pnpc.inc
