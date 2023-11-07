@@ -29,6 +29,8 @@ public Plugin myinfo =
 #include <dhooks>
 #include <collisionhook>
 
+#include "pnpc/npcs.sp"
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	PNPC_MakeNatives();
