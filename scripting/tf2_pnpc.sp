@@ -28,8 +28,17 @@ public Plugin myinfo =
 #include <tf2utils>
 #include <dhooks>
 #include <collisionhook>
+#include <cbasenpc>
 
 #include "pnpc/npcs.sp"
+
+//PERSONAL NOTES:
+//
+//		- This is going to be a nightmare, but very much worth it in the end.
+//		- Things I must do:
+//				- Implement many, many DHooks and GameData calls.
+//				- Remove all ZR-specific logic (this will likely comprise 90% of npcs.sp)
+//				- Once we have the plugin in a state where it can at least compile, move the ActivePNPC struct to npcs.sp and merge it with CClotBody.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {

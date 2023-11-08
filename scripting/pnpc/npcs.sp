@@ -5,16 +5,9 @@ methodmap CClotBody < CBaseCombatCharacter
 {
 	public CClotBody(float vecPos[3], float vecAng[3],
 						const char[] model,
-						const char[] modelscale = "1.0",
-						const char[] health = "125",
-						bool Ally = false,
-						bool Ally_Invince = false,
-						bool isGiant = false,
-						bool IgnoreBuildings = false,
-						bool IsRaidBoss = false,
-						float CustomThreeDimensions[3] = {0.0,0.0,0.0},
-						bool Ally_Collideeachother = false,
-						bool ForceNpcClipping = false)
+						float modelScale = 1.0,
+						int HP = 100,
+						TFTeam Team)
 	{
 
 		int npc = CreateEntityByName("zr_base_npc");
@@ -24,32 +17,19 @@ methodmap CClotBody < CBaseCombatCharacter
 		DispatchKeyValueVector(npc, "angles",	 vecAng);
 		DispatchKeyValue(npc, "model",	 model);
 		view_as<CBaseCombatCharacter>(npc).SetModel(model);
+		
+		char modelscale[255], health[255];
+		Format(modelscale, sizeof(modelscale), "%f", modelScale);
+		Format(health, sizeof(health), "%i", HP);
 		DispatchKeyValue(npc,	   "modelscale", modelscale);
 		DispatchKeyValue(npc,	   "health",	 health);
 
-		if(Ally)
-		{
-			b_IsAlliedNpc[npc] = true;
-			if(Ally_Invince)
-			{
-				b_ThisEntityIgnored[npc] = true;
-			}
-			SetEntProp(npc, Prop_Send, "m_iTeamNum", TFTeam_Red);
-		}
-		else
-		{
-			SetEntProp(npc, Prop_Send, "m_iTeamNum", TFTeam_Blue);
-		}
-		b_ThisWasAnNpc[npc] = true;
-		b_NpcHasDied[npc] = false;
-		i_FailedTriesUnstuck[npc] = 0;
+		SetEntProp(npc, Prop_Send, "m_iTeamNum", Team);
+
 		DispatchSpawn(npc); //Do this at the end :)
-		Hook_DHook_UpdateTransmitState(npc);
-		Check_For_Team_Npc(npc);
 
 		CClotBody npcstats = view_as<CClotBody>(npc);
 
-	
 		//FIX: This fixes lookup activity not working.
 		npcstats.StartActivity(0);
 		npcstats.SetSequence(0);
@@ -57,11 +37,6 @@ methodmap CClotBody < CBaseCombatCharacter
 		npcstats.SetCycle(0.0);
 		npcstats.ResetSequenceInfo();
 		//FIX: This fixes lookup activity not working.
-
-#if defined RPG
-		SetEntPropFloat(npc, Prop_Send, "m_fadeMinDist", 1600.0);
-		SetEntPropFloat(npc, Prop_Send, "m_fadeMaxDist", 2000.0);
-#endif
 
 		baseNPC.flStepSize = 17.0;
 		baseNPC.flGravity = 800.0; //SEE Npc Base Think Function to change it.
@@ -71,14 +46,6 @@ methodmap CClotBody < CBaseCombatCharacter
 		baseNPC.flFrictionSideways = 5.0;
 		baseNPC.flMaxYawRate = NPC_DEFAULT_YAWRATE;
 		baseNPC.flDeathDropHeight = 999999.0;
-
-#if defined ZR
-		if(!Ally && VIPBuilding_Active())
-		{
-			baseNPC.flAcceleration = 90000.0;
-			baseNPC.flFrictionSideways = 90.0;
-		}
-#endif
 
 		CBaseNPC_Locomotion locomotion = baseNPC.GetLocomotion();
 
@@ -250,7 +217,7 @@ methodmap CClotBody < CBaseCombatCharacter
 		}
 	
 		return view_as<CClotBody>(npc);
-	}
+	}	//THIS IS THE END OF THE NPC_CREATION METHOD
 		property int index 
 	{ 
 		public get() { return view_as<int>(this); } 
@@ -2543,13 +2510,13 @@ public Action NPC_TraceAttack(int victim, int& attacker, int& inflictor, float& 
 	if(inflictor < 1 || inflictor > MaxClients)
 		return Plugin_Continue;
 
-	/*
+	
 	if(GetEntProp(attacker, Prop_Send, "m_iTeamNum") == GetEntProp(victim, Prop_Send, "m_iTeamNum"))
 	{
 		damage = 0.0;
 		return Plugin_Handled;
 	}
-	*/
+	
 	
 	if((damagetype & (DMG_BLAST))) //make sure any hitscan boom type isnt actually boom
 	{
