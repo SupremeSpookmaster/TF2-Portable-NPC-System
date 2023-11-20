@@ -56,6 +56,8 @@ public void OnPluginStart()
 	RegAdminCmd("pnpc_destroy", PNPC_Destroy, ADMFLAG_KICK, "Portable NPC System: Kills the PNPC you are aiming at.");
 	RegAdminCmd("pnpc_destroyall", PNPC_DestroyAll, ADMFLAG_KICK, "Portable NPC System: Kills every currently active PNPC.");
 	
+	NPCs_MakeHooks();
+	
 	PNPC_MakeForwards();
 }
 
