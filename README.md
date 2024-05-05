@@ -4,6 +4,9 @@ TODO: Write this.
 ## *Installation Guide*
 TODO: Write this.
 
+## *Making NPCs*
+TODO: Write a guide in the wiki and link to it here.
+
 ## *Prerequisites*
 - **[SourceMod V1.12+](https://www.sourcemod.net/downloads.php?branch=dev)**
 - **[CBaseNPC](https://github.com/TF2-DMB/CBaseNPC?tab=readme-ov-file)**
