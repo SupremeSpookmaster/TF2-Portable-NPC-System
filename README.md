@@ -18,3 +18,4 @@ TODO: Write a guide in the wiki and link to it here.
 ## *Known Bugs/Limitations*
 - Huntsman arrows are not able to headshot NPCs.
 - Afterburn does not perform identically against NPCs as it does against players. It is very close, but certain small details such as afterburn duration scaling with flamethrower hit time or spelled flamethrowers making the afterburn flames green do not work.
+- TF2 conditions cannot be applied to NPCs. I will not be writing a workaround for this as it would take way too long and ultimately not be very useful, you're better off writing the functionality of the condition you need into your own custom NPC logic.
