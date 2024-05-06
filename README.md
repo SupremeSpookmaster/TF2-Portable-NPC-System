@@ -35,3 +35,6 @@ TODO: Write a guide in the wiki and link to it here.
 - TF2 conditions cannot be applied to NPCs. I will not be writing a workaround for this as it would take way too long and ultimately not be very useful, you're better off writing the functionality of the condition you need into your own custom NPC logic.
 - A lot of very specific/niche weapon attributes do not work against NPCs. As I continue to work on this plugin, I will gradually make more of these non-functioning attributes compatible with NPCs, but this is not a guarantee.
 - NPCs cannot be airblasted. I may or may not add this functionality in the future, no promises.
+- Jars (jarate, mad milk) do not work against NPCs. They just bounce off, and the contents do not splash on them. This is something I intend to fix in the future.
+- Sandman balls harmlessly bounce off of NPCs. This is something I intend to fix in the future.
+- NPCs cannot be damaged by bleed effects (boston basher, wrap assassin, etc). This is something I intend to fix in the future.
