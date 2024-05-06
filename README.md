@@ -5,11 +5,16 @@ TODO: Write this.
 1. Install the **[prerequisites]()**.
 2. Download the **latest release Installation Build. (LINK PENDING)**
 3. Drag-and-drop the contents of the zip file to your server's `tf` folder.
-4. **VERY IMPORTANT NOTE:** one major issue with NPCs in TF2 is that melee weapons treat them the same as walls. As a result, while melee weapons *can* damage NPCs, the impact sound is *always* the sound of a melee weapon hitting a metal wall. The Portable NPC System fixes this by implementing its own custom melee hitreg. This hitreg functions identically to TF2's actual melee hitreg, but **forcibly sets every melee weapon's bounds and range (attributes 263 and 264) to 0.0.** The plugin instead simulates these on its own. If you wish to change a melee weapon's range or bounding box, you will need to use the `"custom hitreg melee range"` and `"custom hitreg melee bounds"` custom attributes, which are included with the Portable NPC System and function identically to attributes 264 and 263 respectively. If custom attributes are not an option for whatever reason, you may also use attribute 2000 for melee range and attribute 2001 for melee bounds, though it is preferable to use the custom attributes instead. If you wish to skip this entirely and use TF2's vanilla hitreg, you may disable the custom hitreg in `data/pnpc/settings.cfg`, though I advise against this.
+4. The Portable NPC System is now active on your server!
 
 ## *Update Guide*
 1. Download the **latest release Update Build. (LINK PENDING)**
 2. Drag-and-drop the contents of the zip file to your server's `tf` folder.
+3. The Portable NPC System is now updated on your server!
+
+## *IMPORTANT DISCLAIMERS*
+1. One major issue with NPCs in TF2 is that melee weapons treat them the same as walls. As a result, while melee weapons *can* damage NPCs, the impact sound is *always* the sound of a melee weapon hitting a metal wall. The Portable NPC System fixes this by implementing its own custom melee hitreg. This hitreg functions identically to TF2's actual melee hitreg, but **forcibly sets every melee weapon's bounds and range (attributes 263 and 264) to 0.0.** The plugin instead simulates these on its own. If you wish to change a melee weapon's range or bounding box, you will need to use the `"custom hitreg melee range"` and `"custom hitreg melee bounds"` custom attributes, which are included with the Portable NPC System and function identically to attributes 264 and 263 respectively. If custom attributes are not an option for whatever reason, you may also use attribute 2000 for melee range and attribute 2001 for melee bounds, though it is preferable to use the custom attributes instead. If you wish to skip this entirely and use TF2's vanilla hitreg, you may disable the custom hitreg in `data/pnpc/settings.cfg`, though I advise against this.
+2. Another major issue with NPCs in TF2 is that they block explosions. For example: if you fire a rocket at an NPC, that NPC will take damage, but anything behind it will not, even if they are within the blast radius. The Portable NPC System gets around this by simulating all of TF2's explosions manually. These explosions function identically to TF2's explosions, but if, for whatever reason, you want to turn off the simulation in favor of using TF2's vanilla explosions, you may do so in `data/pnpc/settings.cfg`. Again, I advise against this.
 
 ## *Making NPCs*
 TODO: Write a guide in the wiki and link to it here.
