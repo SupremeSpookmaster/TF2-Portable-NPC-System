@@ -16,6 +16,7 @@ TODO: Write a guide in the wiki and link to it here.
 - **[Kenzzer](https://github.com/Kenzzer)**, the creator of **[CBaseNPC](https://github.com/TF2-DMB/CBaseNPC?tab=readme-ov-file)**, without which none of this would even have been possible.
 
 ## *Known Bugs/Limitations*
-- Huntsman arrows are not able to headshot NPCs.
-- Afterburn does not perform identically against NPCs as it does against players. It is very close, but certain small details such as afterburn duration scaling with flamethrower hit time or spelled flamethrowers making the afterburn flames green do not work.
+- Huntsman arrows are not able to headshot NPCs. I have absolutely no idea how to fix this, if anybody might know how I would happily accept a pull request.
 - TF2 conditions cannot be applied to NPCs. I will not be writing a workaround for this as it would take way too long and ultimately not be very useful, you're better off writing the functionality of the condition you need into your own custom NPC logic.
+- A lot of very specific/niche weapon attributes do not work against NPCs. As I continue to work on this plugin, I will gradually make more of these non-functioning attributes compatible with NPCs, but this is not a guarantee.
+- NPCs cannot be airblasted. I may or may not add this functionality in the future, no promises.
