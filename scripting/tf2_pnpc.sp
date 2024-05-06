@@ -34,7 +34,8 @@ public Plugin myinfo =
 
 //PERSONAL NOTES:
 //
-//		- This is going to be a nightmare, but very much worth it in the end.
+//		- Rewrite some of this to use methodmaps instead of enum structs.
+//		- Port Chaos Fortress CFNPCs to this, then remove them from Chaos Fortress.
 //		- Things I must do:
 //				- Implement many, many DHooks and GameData calls.
 //				- Remove all ZR-specific logic (this will likely comprise 90% of npcs.sp)
