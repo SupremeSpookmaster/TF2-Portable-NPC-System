@@ -31,6 +31,7 @@ TODO: Write a guide in the wiki and link to it here.
 - **[Kenzzer](https://github.com/Kenzzer)**, the creator of **[CBaseNPC](https://github.com/TF2-DMB/CBaseNPC?tab=readme-ov-file)**, without which none of this would even have been possible.
 
 ## *Known Bugs/Limitations*
+- Some custom damage sources (example: a custom laser beam that damages enemies) will not work against NPCs, as their developers coded them in such a way where they can only hit clients, *not* entities. This is the fault of poorly-written plugins, not the Portable NPC System, and I cannot fix it. Instead, if your server has such damage sources, either edit their code to be compatible with entities, or contact the developers of those damage sources and ask them to fix it.
 - Huntsman arrows are not able to headshot NPCs. I have absolutely no idea how to fix this, if anybody might know how I would happily accept a pull request.
 - TF2 conditions cannot be applied to NPCs. I will not be writing a workaround for this as it would take way too long and ultimately not be very useful, you're better off writing the functionality of the condition you need into your own custom NPC logic.
 - A lot of very specific/niche weapon attributes do not work against NPCs. As I continue to work on this plugin, I will gradually make more of these non-functioning attributes compatible with NPCs, but this is not a guarantee.
