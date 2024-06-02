@@ -32,8 +32,8 @@ TODO: Write a guide in the wiki and link to it here.
 - **[Kenzzer](https://github.com/Kenzzer)**, the creator of **[CBaseNPC](https://github.com/TF2-DMB/CBaseNPC?tab=readme-ov-file)**, without which none of this would even have been possible.
 
 ## *Known Bugs/Limitations*
-- Huntsman arrows are not able to headshot NPCs. I have absolutely no idea why, if anybody might know how I would happily accept a pull request.
+- Huntsman arrows are not able to headshot NPCs. I have absolutely no idea why, I would happily accept a pull request if anybody might know how to fix this.
 - TF2 conditions cannot be applied to NPCs. I will not be writing a workaround for this as it would take way too long and ultimately not be very useful, you're better off writing the functionality of the condition you need into your own custom NPC logic.
 - A lot of very specific/niche weapon attributes do not work against NPCs. I may eventually make certain attributes compatible if I end up needing them for my own personal projects, but this is not a guarantee that every attribute will eventually be fixed.
 - NPCs cannot be airblasted (their projectiles CAN be, however). I do not plan to fix this.
-- Sandman balls, flying guillotines, and all jars (jarate, milk, gas) have a rare chance to sometimes bounce off of NPCs harmlessly.
+- Sandman balls, flying guillotines, and all jars (jarate, milk, gas) have a rare chance to sometimes bounce off of NPCs harmlessly. Again, I would happily accept a pull request from anyone who knows how to fix this.
