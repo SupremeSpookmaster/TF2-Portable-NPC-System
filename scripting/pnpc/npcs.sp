@@ -109,6 +109,7 @@ ArrayList g_AttachedWeaponModels[2049];
 DynamicHook g_DHookGrenadeExplode;
 DynamicHook g_DHookStickyExplode;
 DynamicHook g_DHookFireballExplode;
+DynamicHook g_DHookRocketExplode;
 
 Handle g_DHookPillCollide;
 //DynamicHook g_DHookFlareExplode;
@@ -243,6 +244,7 @@ void PNPC_MakeForwards()
 	g_DHookGrenadeExplode = DHook_CreateVirtual(gd, "CBaseGrenade::Explode");
 	g_DHookStickyExplode = DHook_CreateVirtual(gd, "CBaseGrenade::Detonate");
 	g_DHookFireballExplode = DHook_CreateVirtual(gd, "CTFProjectile_SpellFireball::Explode");
+	g_DHookRocketExplode = DHook_CreateVirtual(gd, "CTFBaseRocket::Explode");
 
 	DHook_CreateDetour(gd, "JarExplode()", PNPC_OnJarExplodePre);
 	DHook_CreateDetour(gd, "CTFProjectile_Flare::Explode_Air()", PNPC_OnFlareExplodePre);

@@ -794,7 +794,7 @@ forward Action PNPC_OnPNPCHeal(int target, int &amount, float &maxHeal, int &hea
  *
  * @return True if the NPC's character has the specified aspect, false if not.
  */
-native bool PNPC_HasAspect(int NPC, char pluginName[255], char aspectName[255]);
+//native bool PNPC_HasAspect(int NPC, char pluginName[255], char aspectName[255]);
 
 /**
  * Gets an int value from a specified aspect's arg.
@@ -806,7 +806,7 @@ native bool PNPC_HasAspect(int NPC, char pluginName[255], char aspectName[255]);
  *
  * @return An int equal to the value obtained from the given aspect's specified arg, -1 if no such value was present.
  */
-native int PNPC_GetArgI(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
+//native int PNPC_GetArgI(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
 
 /**
  * Gets a float value from a specified aspect's arg.
@@ -818,7 +818,7 @@ native int PNPC_GetArgI(int NPC, char pluginName[255], char aspectName[255], cha
  *
  * @return A float equal to the value obtained from the given aspect's specified arg, -1.0 if no such value was present.
  */
-native float PNPC_GetArgF(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
+//native float PNPC_GetArgF(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
 
 /**
  * Gets a string value from a specified aspect's arg.
@@ -832,7 +832,7 @@ native float PNPC_GetArgF(int NPC, char pluginName[255], char aspectName[255], c
  *
  * @return The string obtained from the given aspect's specified arg (empty if the arg was not found), stored in the output buffer.
  */
-native PNPC_GetArgS(int NPC, char pluginName[255], char aspectName[255], char argName[255], char output[255], int size);
+//native PNPC_GetArgS(int NPC, char pluginName[255], char aspectName[255], char argName[255], char output[255], int size);
 
 /**
  * Retrieves the coordinates of the center of the given entity based on its collision hull, stored in the output buffer.

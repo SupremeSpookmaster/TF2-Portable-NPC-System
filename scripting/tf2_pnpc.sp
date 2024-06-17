@@ -46,8 +46,6 @@ public void OnPluginStart()
 	RegAdminCmd("pnpc_destroy", PNPC_Destroy, ADMFLAG_KICK, "Portable NPC System: Kills the PNPC you are aiming at.");
 	RegAdminCmd("pnpc_destroyall", PNPC_DestroyAll, ADMFLAG_KICK, "Portable NPC System: Kills every currently active PNPC.");
 	
-	NPCs_MakeHooks();
-	
 	PNPC_MakeForwards();
 }
 
@@ -96,7 +94,6 @@ public void OnMapEnd()
 }
 
 PNPC PNPCs[MAXIMUM_PNPCS];
-ActivePNPC ActivePNPCs[2049];
 
 int i_NumTemplates = 0;
 
@@ -104,8 +101,6 @@ bool b_IsPNPC[2049] = { false, ... };
 
 public void PNPC_LoadNPCs()
 {
-	PNPC_UnloadNPCs();
-	
 	ConfigMap ListOfNPCs = new ConfigMap("data/pnpc/npcs.cfg");
 	if (ListOfNPCs == null)
 	{
@@ -140,16 +135,7 @@ public void PNPC_LoadNPCs()
 		ListOfNPCs.Get(CurrentSlot, CurrentCFG, 255);
 	}
 	
-	
 	DeleteCfg(ListOfNPCs);
-}
-
-public void PNPC_UnloadNPCs()
-{
-	for (int i = 0; i < MAXIMUM_PNPCS; i++)
-	{
-		PNPCs[i].Delete();
-	}
 }
 
 public void PNPC_LoadNPCData(ConfigMap NPCMap, char CFGName[255])
@@ -161,8 +147,8 @@ public void PNPC_LoadNPCData(ConfigMap NPCMap, char CFGName[255])
 			
 	int MaxHP = GetIntFromConfigMap(NPCMap, "npc.health", 0);
 	float Speed = GetFloatFromConfigMap(NPCMap, "npc.speed", 0.0);
-			
-	PNPCs[i_NumTemplates].Create(Name, Model, AI, CFGName, MaxHP, Speed);
+
+	//TODO: Create an NPC Template from the data read from the config.
 }
 
 public void PNPC_ManageNPCFiles(ConfigMap NPCMap)
@@ -358,9 +344,9 @@ public int PNPC_KillAll()
 	
 	for (int i = 0; i < 2049; i++)
 	{
-		if (IsValidEntity(ActivePNPCs[i].EntityIndex))
+		if (PNPC_IsNPC(i))
 		{
-			ActivePNPCs[i].Kill();
+			//TODO: Kill NPC
 			NumKilled++;
 		}
 	}
@@ -375,9 +361,9 @@ public int PNPC_SpawnNPC(char name[255])
 	
 	for (int i = 0; i < MAXIMUM_PNPCS && !Found; i++)
 	{
-		if (PNPCs[i].Exists && StrEqual(name, PNPCs[i].ConfigName) || StrContains(PNPCs[i].Name, name) != -1)
+		if (PNPCs[i].b_Exists && (StrEqual(name, PNPCs[i].ConfigName) || StrContains(PNPCs[i].Name, name) != -1))
 		{
-			ReturnValue = PNPCs[i].Spawn();
+			//TODO: Spawn NPC
 			Found = true;
 		}
 	}
@@ -449,12 +435,12 @@ public Action PNPC_Destroy(int client, int args)
 		
 		delete trace;
 		
-		if (IsValidEntity(DestroyedPNPC))
+		if (PNPC_IsNPC(DestroyedPNPC))
 		{
 			CPrintToChat(client, "{orange}[Portable NPC System] {default}Destroyed {olive}%s{default}.", "TODO: Put the spawned NPC's name here.");
 			EmitSoundToClient(client, SND_ADMINCOMMAND);
 			
-			ActivePNPCs[DestroyedPNPC].Kill();
+			//TODO: Kill
 		}
 		else
 		{
@@ -496,7 +482,7 @@ public void OnEntityDestroyed(int entity)
 {
 	if (entity >= 0 && entity < 2049)
 	{
-		PNPC_OnENtityDestroyed(entity);
+		PNPC_OnEntityDestroyed(entity);
 	}
 }
 
@@ -510,254 +496,5 @@ public bool Trace_OnlyHitPNPCs(entity, contentsMask)
 	if (entity < 0 || entity > 2048)
 		return false;
 	
-	return b_IsPNPC[entity];
-}
-
-public Native_PNPC_IsPNPC(Handle plugin, int numParams)
-{
-	int entity = GetNativeCell(1);
-	
-	if (IsValidEntity(entity))
-	{
-		return ActivePNPCs[entity].EntityIndex == entity;
-	}
-	
-	return false;
-}
-
-public Native_PNPC_GetPNPCTeam(Handle plugin, int numParams)
-{
-	int entity = GetNativeCell(1);
-	
-	if (PNPC_IsPNPC(entity))
-	{
-		int team = GetEntProp(entity, Prop_Send, "m_iTeamNum");
-		
-		switch(team)
-		{
-			case 2:
-				return TFTeam_Red;
-			case 3:
-				return TFTeam_Blue;
-		}
-	}
-	
-	return TFTeam_Unassigned;
-}
-
-public Native_PNPC_HasAspect(Handle plugin, int numParams)
-{
-	int entity = GetNativeCell(1);
-	
-	if (!PNPC_IsPNPC(entity))
-		return false;
-		
-	char conf[255], targetPlugin[255], targetAspect[255], pluginName[255], abName[255];
-	conf = ActivePNPCs[entity].Config;
-	
-	ConfigMap map = new ConfigMap(conf);
-	if (map == null)
-		return false;
-		
-	GetNativeString(2, targetPlugin, sizeof(targetPlugin));
-	GetNativeString(3, targetAspect, sizeof(targetAspect));
-		
-	ConfigMap aspects = map.GetSection("npc.aspects");
-	if (aspects == null)
-	{
-		DeleteCfg(map);
-		return false;
-	}
-		
-	bool ReturnValue = false;
-		
-	int i = 1;
-	char secName[255];
-	Format(secName, sizeof(secName), "aspect_%i", i);
-		
-	ConfigMap subsection = aspects.GetSection(secName);
-	while (subsection != null)
-	{
-		subsection.Get("aspect_name", abName, sizeof(abName));
-		subsection.Get("plugin_name", pluginName, sizeof(pluginName));
-		
-		if (StrEqual(targetPlugin, pluginName) && StrEqual(targetAspect, abName))
-		{
-			ReturnValue = true;
-			break;
-		}
-		
-		i++;
-		Format(secName, sizeof(secName), "aspect_%i", i);
-		subsection = aspects.GetSection(secName);
-	}
-	
-	DeleteCfg(map);
-	
-	return ReturnValue;
-}
-
-public Native_PNPC_GetArgI(Handle plugin, int numParams)
-{
-	int entity = GetNativeCell(1);
-	
-	if (!PNPC_IsPNPC(entity))
-		return -1;
-		
-	char conf[255], targetPlugin[255], targetAspect[255], argName[255], pluginName[255], abName[255];
-	conf = ActivePNPCs[entity].Config;
-	
-	ConfigMap map = new ConfigMap(conf);
-	if (map == null)
-		return -1;
-		
-	GetNativeString(2, targetPlugin, sizeof(targetPlugin));
-	GetNativeString(3, targetAspect, sizeof(targetAspect));
-	GetNativeString(4, argName, sizeof(argName));
-		
-	ConfigMap abilities = map.GetSection("npc.aspects");
-	if (abilities == null)
-	{
-		DeleteCfg(map);
-		return -1;
-	}
-		
-	int ReturnValue = -1;
-		
-	int i = 1;
-	char secName[255];
-	Format(secName, sizeof(secName), "aspect_%i", i);
-		
-	ConfigMap subsection = abilities.GetSection(secName);
-	while (subsection != null)
-	{
-		subsection.Get("aspect_name", abName, sizeof(abName));
-		subsection.Get("plugin_name", pluginName, sizeof(pluginName));
-		
-		if (StrEqual(targetPlugin, pluginName) && StrEqual(targetAspect, abName))
-		{
-			ReturnValue = GetIntFromConfigMap(subsection, argName, -1);
-			break;
-		}
-		
-		i++;
-		Format(secName, sizeof(secName), "aspect_%i", i);
-		subsection = abilities.GetSection(secName);
-	}
-	
-	DeleteCfg(map);
-	
-	return ReturnValue;
-}
-
-public any Native_PNPC_GetArgF(Handle plugin, int numParams)
-{
-	int entity = GetNativeCell(1);
-	
-	if (!PNPC_IsPNPC(entity))
-		return -1.0;
-		
-	char conf[255], targetPlugin[255], targetAspect[255], argName[255], pluginName[255], abName[255];
-	conf = ActivePNPCs[entity].Config;
-	
-	ConfigMap map = new ConfigMap(conf);
-	if (map == null)
-		return -1.0;
-		
-	GetNativeString(2, targetPlugin, sizeof(targetPlugin));
-	GetNativeString(3, targetAspect, sizeof(targetAspect));
-	GetNativeString(4, argName, sizeof(argName));
-		
-	ConfigMap abilities = map.GetSection("npc.aspects");
-	if (abilities == null)
-	{
-		DeleteCfg(map);
-		return -1.0;
-	}
-		
-	float ReturnValue = -1.0;
-		
-	int i = 1;
-	char secName[255];
-	Format(secName, sizeof(secName), "aspect_%i", i);
-		
-	ConfigMap subsection = abilities.GetSection(secName);
-	while (subsection != null)
-	{
-		subsection.Get("aspect_name", abName, sizeof(abName));
-		subsection.Get("plugin_name", pluginName, sizeof(pluginName));
-		
-		if (StrEqual(targetPlugin, pluginName) && StrEqual(targetAspect, abName))
-		{
-			ReturnValue = GetFloatFromConfigMap(subsection, argName, -1.0);
-			break;
-		}
-		
-		i++;
-		Format(secName, sizeof(secName), "aspect_%i", i);
-		subsection = abilities.GetSection(secName);
-	}
-	
-	DeleteCfg(map);
-	
-	return ReturnValue;
-}
-
-public Native_PNPC_GetArgS(Handle plugin, int numParams)
-{
-	int entity = GetNativeCell(1);
-	int size = GetNativeCell(6);
-	
-	if (!PNPC_IsPNPC(entity))
-	{
-		SetNativeString(5, "", size, false);
-		return;
-	}
-		
-	char conf[255], targetPlugin[255], targetAspect[255], argName[255], pluginName[255], abName[255];
-	conf = ActivePNPCs[entity].Config;
-	
-	ConfigMap map = new ConfigMap(conf);
-	if (map == null)
-	{
-		SetNativeString(5, "", size, false);
-		return;
-	}
-		
-	GetNativeString(2, targetPlugin, sizeof(targetPlugin));
-	GetNativeString(3, targetAspect, sizeof(targetAspect));
-	GetNativeString(4, argName, sizeof(argName));
-		
-	ConfigMap abilities = map.GetSection("character.aspects");
-	if (abilities == null)
-	{
-		DeleteCfg(map);
-		SetNativeString(5, "", size, false);
-		return;
-	}
-		
-	int i = 1;
-	char secName[255];
-	Format(secName, sizeof(secName), "aspect_%i", i);
-		
-	ConfigMap subsection = abilities.GetSection(secName);
-	while (subsection != null)
-	{
-		subsection.Get("aspect_name", abName, sizeof(abName));
-		subsection.Get("plugin_name", pluginName, sizeof(pluginName));
-		
-		if (StrEqual(targetPlugin, pluginName) && StrEqual(targetAspect, abName))
-		{
-			char arg[255]; 
-			subsection.Get(argName, arg, sizeof(arg));
-			SetNativeString(5, arg, size, false);
-			break;
-		}
-		
-		i++;
-		Format(secName, sizeof(secName), "aspect_%i", i);
-		subsection = abilities.GetSection(secName);
-	}
-	
-	DeleteCfg(map);
+	return PNPC_IsNPC(entity);
 }
