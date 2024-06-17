@@ -65,7 +65,7 @@ public void OnPluginStart()
 /**
  * Creates all of the PNPCS natives.
  */
-public void PNPC_MakeNatives()
+/*public void PNPC_MakeNatives()
 {
 	RegPluginLibrary("tf2_pnpc");
 	
@@ -75,15 +75,7 @@ public void PNPC_MakeNatives()
 	CreateNative("PNPC_GetArgI", Native_PNPC_GetArgI);
 	CreateNative("PNPC_GetArgF", Native_PNPC_GetArgF);
 	CreateNative("PNPC_GetArgS", Native_PNPC_GetArgS);
-}
-
-/**
- * Creates all of the PNPCS forwards.
- */
-public void PNPC_MakeForwards()
-{
-	
-}
+}*/
 
 #define SND_ADMINCOMMAND			"ui/cyoa_ping_in_progress.wav"
 #define SND_ADMINCOMMAND_ERROR		"ui/cyoa_ping_in_progress.wav"
