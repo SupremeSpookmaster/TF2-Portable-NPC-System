@@ -23,13 +23,11 @@ public Plugin myinfo =
 #include "pnpc/templates.sp"
 
 //PERSONAL NOTES:
-//
 //		- Port all of the "GetClosestTarget/Ally/Whatever" natives from CF.
 //		- Make custom melee hitreg so it doesn't sound like you're hitting a wall every time you hit an NPC with melee.
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Add an option to make NPCs automatically enter their air/swim animations if airborne or in the water.
 //		- Add customizable sounds for any number of custom triggers.
 //			- Should include: sound_damaged, sound_impact, sound_kill, and sound_killed as officially supported sound cues, then have "CFNPC.PlaySound" as a native to play custom cues.
 //		- NPC CFGs should function like FF2 boss CFGs, with sections for equipped models, name, etc. One of these sections should be called "functionality", where devs can add and tweak AI modifiers to control how the NPC behaves.
@@ -54,6 +52,7 @@ public Plugin myinfo =
 //			- Make flare explosion detection actually work.
 //		- Add an option to make NPCs use the body_pitch and body_yaw pose parameters to automatically look towards their target destination.
 //		- Add natives for basic attacks (should have generic melee, generic projectile, and generic bullets).
+//		- Add an option to make NPCs automatically enter their air/swim animations if airborne or in the water.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
