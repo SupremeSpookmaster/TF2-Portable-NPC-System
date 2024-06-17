@@ -20,6 +20,7 @@ public Plugin myinfo =
 #include <pnpc>
 
 #include "pnpc/npcs.sp"
+#include "pnpc/templates.sp"
 
 //PERSONAL NOTES:
 //
@@ -38,8 +39,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	HookEvent("teamplay_round_win", RoundEnd);
-	HookEvent("teamplay_round_stalemate", RoundEnd);
+	//HookEvent("teamplay_round_win", RoundEnd);
+	//HookEvent("teamplay_round_stalemate", RoundEnd);
 	
 	RegAdminCmd("pnpc_reload", PNPC_ReloadNPCs, ADMFLAG_KICK, "Portable NPC System: Reloads the list of enabled PNPCs.");
 	RegAdminCmd("pnpc_spawn", PNPC_Spawn, ADMFLAG_KICK, "Portable NPC System: Spawns the specified PNPC at your crosshair.");
@@ -69,19 +70,9 @@ public void OnPluginStart()
 
 #define MAXIMUM_PNPCS				255
 
-public const char s_ModelFileExtensions[][] =
-{
-	".dx80.vtx",
-	".dx90.vtx",
-	".mdl",
-	".phy",
-	".sw.vtx",
-	".vvd"
-};
-
 public OnMapStart()
 {
-	PNPC_LoadNPCs();
+	Templates_MapStart();
 	PNPC_MapStart();
 	
 	PrecacheSound(SND_ADMINCOMMAND);
@@ -91,252 +82,10 @@ public OnMapStart()
 public void OnMapEnd()
 {
 	PNPC_MapEnd();
+	Templates_MapEnd();
 }
 
-PNPC PNPCs[MAXIMUM_PNPCS];
-
-int i_NumTemplates = 0;
-
-bool b_IsPNPC[2049] = { false, ... };
-
-public void PNPC_LoadNPCs()
-{
-	ConfigMap ListOfNPCs = new ConfigMap("data/pnpc/npcs.cfg");
-	if (ListOfNPCs == null)
-	{
-		LogError("data/pnpc/npcs.cfg does not exist!");
-		return;
-	}
-	
-	int i = 1;
-	char CurrentCFG[255];
-	ListOfNPCs.Get("npcs.1", CurrentCFG, 255);
-	while (!StrEqual(CurrentCFG, ""))
-	{
-		char CFGPath[255];
-		Format(CFGPath, sizeof(CFGPath), "configs/pnpcs/%s.cfg", CurrentCFG);
-		ConfigMap NPCMap = new ConfigMap(CFGPath);
-		
-		if (NPCMap != null)
-		{
-			PNPC_LoadNPCData(NPCMap, CurrentCFG);
-			PNPC_ManageNPCFiles(NPCMap);
-			
-			DeleteCfg(NPCMap);
-		}
-		else
-		{
-			LogError("data/pnpc/npcs.cfg specifies a PNPC with the config path ''%s'', but no such config exists.", CFGPath);
-		}
-		
-		i++;
-		char CurrentSlot[16];
-		Format(CurrentSlot, sizeof(CurrentSlot), "npcs.%i", i);
-		ListOfNPCs.Get(CurrentSlot, CurrentCFG, 255);
-	}
-	
-	DeleteCfg(ListOfNPCs);
-}
-
-public void PNPC_LoadNPCData(ConfigMap NPCMap, char CFGName[255])
-{
-	char Name[255], Model[255], AI[255];
-	NPCMap.Get("npc.name", Name, sizeof(Name));
-	NPCMap.Get("npc.model", Model, sizeof(Model));
-	NPCMap.Get("npc.ai", AI, sizeof(AI));
-			
-	int MaxHP = GetIntFromConfigMap(NPCMap, "npc.health", 0);
-	float Speed = GetFloatFromConfigMap(NPCMap, "npc.speed", 0.0);
-
-	//TODO: Create an NPC Template from the data read from the config.
-}
-
-public void PNPC_ManageNPCFiles(ConfigMap NPCMap)
-{
-	ConfigMap section = NPCMap.GetSection("character.model_download");
- 	if (section != null)
- 	{
- 		PNPC_DownloadNPCModels(section);
- 	}
- 	
- 	section = NPCMap.GetSection("npc.downloads");
- 	if (section != null)
- 	{
- 		PNPC_DownloadFiles(section);
- 	}
- 	
- 	section = NPCMap.GetSection("npc.precache");
- 	if (section != null)
- 	{
- 		PNPC_PrecacheFiles(section);
- 	}
-}
-
-public void PNPC_DownloadNPCModels(ConfigMap subsection)
-{
-	char value[255];
- 	
- 	for (int i = 1; i <= subsection.Size; i++)
- 	{
- 		subsection.GetIntKey(i, value, sizeof(value));
- 			
- 		char fileCheck[255], actualFile[255];
-				
-		for (int j = 0; j < sizeof(s_ModelFileExtensions); j++)
-		{
-			Format(fileCheck, sizeof(fileCheck), "models/%s%s", value, s_ModelFileExtensions[j]);
-			Format(actualFile, sizeof(actualFile), "%s%s", value, s_ModelFileExtensions[j]);
-			if (CheckFile(fileCheck))
-			{
-				if (StrEqual(s_ModelFileExtensions[j], ".mdl"))
-				{
-					#if defined DEBUG_NPC_CREATION
-					int check = PrecacheModel(fileCheck);
-					
-					if (check != 0)
-					{
-						PrintToServer("Successfully precached file ''%s''.", fileCheck);
-					}
-					else
-					{
-						PrintToServer("Failed to precache file ''%s''.", fileCheck);
-					}
-					#else
-					PrecacheModel(fileCheck);
-					#endif
-				}
-
-				AddFileToDownloadsTable(fileCheck);
-						
-				#if defined DEBUG_NPC_CREATION
-				PrintToServer("Successfully added model file ''%s'' to the downloads table.", fileCheck);
-				#endif
-			}
-			else
-			{
-				#if defined DEBUG_NPC_CREATION
-				PrintToServer("ERROR: Failed to find model file ''%s''.", fileCheck);
-				#endif
-			}
-		}
-	}
-}
-
- public void PNPC_DownloadFiles(ConfigMap subsection)
- {
- 	char value[255];
- 	
- 	for (int i = 1; i <= subsection.Size; i++)
- 	{
- 		subsection.GetIntKey(i, value, sizeof(value));
- 			
- 		char actualFile[255];
- 		
- 		if (CheckFile(value))
-		{
-			AddFileToDownloadsTable(value);
-			
-			if (StrContains(value, "sound") == 0)
-			{
-				for (int j = 6; j < sizeof(value); j++)	//Write the path to the sound without the "sound/" to a new string so we can precache it.
-				{
-					actualFile[j - 6] = value[j];
-				}
-
-				#if defined DEBUG_NPC_CREATION
-				bool succeeded = PrecacheSound(actualFile);
-				
-				if (succeeded)
-				{
-					PrintToServer("Successfully precached file ''%s''.", actualFile);
-				}
-				else
-				{
-					PrintToServer("Failed to precache file ''%s''.", actualFile);
-				}
-				#else
-				PrecacheSound(actualFile);
-				#endif
-			}
-			
-			#if defined DEBUG_NPC_CREATION
-			PrintToServer("Successfully added file ''%s'' to the downloads table.", value);
-			#endif
-		}
-		else
-		{
-			#if defined DEBUG_NPC_CREATION
-			PrintToServer("ERROR: Failed to find file ''%s''.", value);
-			#endif
-		}
-	}
- }
-
- public void PNPC_PrecacheFiles(ConfigMap subsection)
- {
- 	char value[255];
- 	
- 	for (int i = 1; i <= subsection.Size; i++)
- 	{
- 		subsection.GetIntKey(i, value, sizeof(value));
- 		
- 		char file[255];
-				
-		bool exists = false;
-				
-		Format(file, sizeof(file), "models/%s", value);
-				
-				
-		if (CheckFile(file))
-		{
-			exists = true;
-					
-			#if defined DEBUG_NPC_CREATION
-			int check = PrecacheModel(file);
-			if (check != 0)
-			{
-				PrintToServer("Successfully precached file ''%s''.", file);
-			}
-			else
-			{
-				PrintToServer("Failed to precache file ''%s''.", file);
-			}
-			#else
-			PrecacheModel(file);
-			#endif
-		}
-		else
-		{
-			Format(file, sizeof(file), "sound/%s", value);
-					
-			if (CheckFile(file))
-			{
-				exists = true;
-					
-				#if defined DEBUG_NPC_CREATION
-				bool check = PrecacheSound(value);
-				if (check)
-				{
-					PrintToServer("Successfully precached file ''%s''.", file);
-				}
-				else
-				{
-					PrintToServer("Failed to precache file ''%s''.", file);
-				}
-				#else
-				PrecacheSound(value);
-				#endif
-			}
-		}
-				
-		if (!exists)
-		{
-			#if defined DEBUG_NPC_CREATION
-			PrintToServer("Failed to find file ''%s''.", file);
-			#endif
-		}
-	}
-}
+PNPC_Template Templates[MAXIMUM_PNPCS];
 
 public int PNPC_KillAll()
 {
@@ -346,7 +95,7 @@ public int PNPC_KillAll()
 	{
 		if (PNPC_IsNPC(i))
 		{
-			//TODO: Kill NPC
+			view_as<PNPC>(i).Gib();
 			NumKilled++;
 		}
 	}
@@ -354,6 +103,7 @@ public int PNPC_KillAll()
 	return NumKilled;
 }
 
+//TODO: Expand parameters to allow specifying a position, angles, owner, and team. Possibly more as well.
 public int PNPC_SpawnNPC(char name[255])
 {
 	int ReturnValue = -1;
@@ -361,9 +111,16 @@ public int PNPC_SpawnNPC(char name[255])
 	
 	for (int i = 0; i < MAXIMUM_PNPCS && !Found; i++)
 	{
-		if (PNPCs[i].b_Exists && (StrEqual(name, PNPCs[i].ConfigName) || StrContains(PNPCs[i].Name, name) != -1))
+		if (!Templates[i].b_Exists)
+			continue;
+		
+		char confName[255], realName[255];
+		Templates[i].GetConfigName(confName);
+		Templates[i].GetName(realName);
+
+		if (StrEqual(name, confName) || StrContains(realName, name) != -1)
 		{
-			//TODO: Spawn NPC
+			Templates[i].Spawn(NULL_VECTOR, NULL_VECTOR);
 			Found = true;
 		}
 	}
@@ -371,10 +128,10 @@ public int PNPC_SpawnNPC(char name[255])
 	return ReturnValue;
 }
 
-public void RoundEnd(Event hEvent, const char[] sEvName, bool bDontBroadcast)
+/*public void RoundEnd(Event hEvent, const char[] sEvName, bool bDontBroadcast)
 {
 	PNPC_KillAll();
-}
+}*/
 
 public Action PNPC_ReloadNPCs(int client, int args)
 {	
@@ -382,7 +139,7 @@ public Action PNPC_ReloadNPCs(int client, int args)
 	{
 		CPrintToChat(client, "{orange}[Portable NPC System] {default}Reloaded data/pnpc/npcs.cfg.");
 		EmitSoundToClient(client, SND_ADMINCOMMAND);
-		PNPC_LoadNPCs();
+		Templates_LoadNPCs();
 	}	
 	
 	return Plugin_Continue;
@@ -401,7 +158,7 @@ public Action PNPC_Spawn(int client, int args)
 		char target[255];
 		GetCmdArg(1, target, sizeof(target));
 		
-		int SpawnedPNPC = PNPC_SpawnNPC(target);
+		int SpawnedPNPC = PNPC_SpawnNPC(target);	//TODO: Expand on this command so the user can specify a team and owner, maybe other things too.
 		
 		if (IsValidEntity(SpawnedPNPC))
 		{
@@ -440,7 +197,7 @@ public Action PNPC_Destroy(int client, int args)
 			CPrintToChat(client, "{orange}[Portable NPC System] {default}Destroyed {olive}%s{default}.", "TODO: Put the spawned NPC's name here.");
 			EmitSoundToClient(client, SND_ADMINCOMMAND);
 			
-			//TODO: Kill
+			view_as<PNPC>(DestroyedPNPC).Gib();
 		}
 		else
 		{

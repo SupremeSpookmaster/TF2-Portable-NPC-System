@@ -3,6 +3,62 @@
 #endif
 #define _pnpc_included_
 
+methodmap PNPC_Template
+{
+	/**
+	 * Generates a PNPC template from a given config file.
+	 * 
+	 * @param file			The file to generate from, relative to sourcemod/configs/npcs.
+	 */
+	public native PNPC_Template(char[] file);
+
+	/**
+	 * Spawns a PNPC using this template.
+	 * 
+	 * @param pos			The position to spawn the PNPC at.
+	 * @param ang			The angles to spawn the PNPC with.
+	 * @param owner			The entity this PNPC belongs to. Does not need to be valid.
+	 * @param team			The team this PNPC belongs to.
+	 * 
+	 * @return	The entity index of the spawned PNPC if successful, -1 otherwise.
+	 */
+	public native int Spawn(float pos[3], float ang[3], int owner = -1, TFTeam team = TFTeam_Unassigned);
+
+	/**
+	 * Retrieves the config file used for this PNPC template, relative to sourcemod/configs/npcs.
+	 * 
+	 * @param output		Output buffer.
+	 */
+	public native void GetConfigName(char output[255]);
+
+	/**
+	 * Sets the config file used for this PNPC template, relative to sourcemod/configs/npcs.
+	 * 
+	 * @param file			New file to use.
+	 */
+	public native void SetConfigName(char file[255]);
+
+	/**
+	 * Retrieves the in-game name used for PNPCs spawned using this template. IE: "John".
+	 * 
+	 * @param output		Output buffer.
+	 */
+	public native void GetName(char output[255]);
+
+	/**
+	 * Sets the in-game name used for PNPCs spawned using this template. IE: "John".
+	 * 
+	 * @param name		New name to use.
+	 */
+	public native void SetName(char name[255]);
+
+	property bool b_Exists
+	{
+		public native get();
+		public native set(bool value);
+	}
+}
+
 methodmap PNPC < CBaseCombatCharacter
 {
 	/**
