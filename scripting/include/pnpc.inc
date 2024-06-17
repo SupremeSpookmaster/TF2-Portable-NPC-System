@@ -842,6 +842,20 @@ forward bool PNPC_OnPNPCProjectileExplode(int rocket, int owner, int launcher);
 forward Action PNPC_OnPNPCHeal(int target, int &amount, float &maxHeal, int &healer);
 
 /**
+ * Called when a PNPC is created.
+ * 
+ * @param entity	The PNPC.
+ */
+forward void PNPC_OnPNPCCreated(int entity);
+
+/**
+ * Called when a PNPC is destroyed.
+ * 
+ * @param entity	The PNPC.
+ */
+forward void PNPC_OnPNPCDestroyed(int entity);
+
+/**
  * Checks if a given PNPC has a specified aspect.
  *
  * @param NPC			The PNPC whose aspects to check.

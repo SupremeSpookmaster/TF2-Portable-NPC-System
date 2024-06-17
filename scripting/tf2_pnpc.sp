@@ -34,6 +34,7 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	PNPC_MakeNatives();
+	Templates_MakeNatives();
 	return APLRes_Success;
 }
 

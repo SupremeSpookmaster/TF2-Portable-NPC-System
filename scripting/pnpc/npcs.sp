@@ -112,6 +112,7 @@ DynamicHook g_DHookFireballExplode;
 DynamicHook g_DHookRocketExplode;
 
 Handle g_DHookPillCollide;
+Handle g_hSDKWorldSpaceCenter;
 //DynamicHook g_DHookFlareExplode;
 
 enum //hitgroup_t
@@ -251,6 +252,12 @@ void PNPC_MakeForwards()
 	DHook_CreateDetour(gd, "NextBotGroundLocomotion::UpdateGroundConstraint", PNPC_UpdateGroundConstraint_Pre, PNPC_UpdateGroundConstraint_Post);
 
 	g_DHookPillCollide = CheckedDHookCreateFromConf(gd, "CTFGrenadePipebombProjectile::PipebombTouch");
+
+	//WorldSpaceCenter:
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gd, SDKConf_Virtual, "CBaseEntity::WorldSpaceCenter");
+	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_ByRef);
+	if ((g_hSDKWorldSpaceCenter = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CBaseEntity::WorldSpaceCenter offset!");
 
 	delete gd;
 }
@@ -444,6 +451,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_Explosion", Native_PNPCExplosion);
 	CreateNative("PNPC_IsNPC", Native_PNPCIsThisAnNPC);
 	CreateNative("PNPC_HealEntity", Native_PNPCHealEntity);
+	CreateNative("PNPC_IsValidTarget", Native_PNPC_IsValidTarget);
+	CreateNative("PNPC_WorldSpaceCenter", Native_PNPC_WorldSpaceCenter);
 }
 
 public void PNPC_OnEntityCreated(int entity, const char[] classname)
@@ -3393,4 +3402,65 @@ public Action PNPC_PassFilter(int ent1, int ent2, bool &result)
 	}
 
 	return Plugin_Continue;
+}
+
+public Native_PNPC_IsValidTarget(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	TFTeam team = GetNativeCell(2);
+	char pluginName[255];
+	GetNativeString(3, pluginName, sizeof(pluginName));
+	Function filter = GetNativeFunction(4);
+	
+	if (!IsValidEntity(entity))
+		return false;
+		
+	if (team != TFTeam_Unassigned)
+	{
+		if (!HasEntProp(entity, Prop_Send, "m_iTeamNum"))
+			return false;
+			
+		TFTeam entTeam = view_as<TFTeam>(GetEntProp(entity, Prop_Send, "m_iTeamNum"));
+		if (team != entTeam)
+			return false;
+	}
+	
+	if (!StrEqual(pluginName, "") && filter != INVALID_FUNCTION)
+	{
+		Handle FunctionPlugin = GetPluginHandle(pluginName);
+	
+		bool result;
+			
+		if (FunctionPlugin == INVALID_HANDLE)
+		{
+			result = true;
+		}
+		else
+		{
+			Call_StartFunction(FunctionPlugin, filter);
+				
+			Call_PushCell(entity);
+				
+			Call_Finish(result);
+		}
+		
+		delete FunctionPlugin;
+		
+		return result;
+	}
+	
+	return true;
+}
+
+public Native_PNPC_WorldSpaceCenter(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	float output[3];
+	GetNativeArray(2, output, sizeof(output));
+	
+	if (!IsValidEntity(entity))
+		return;
+		
+	SDKCall(g_hSDKWorldSpaceCenter, entity, output);
+	SetNativeArray(2, output, sizeof(output));
 }
