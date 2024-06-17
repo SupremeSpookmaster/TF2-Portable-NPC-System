@@ -16,19 +16,8 @@ public Plugin myinfo =
 	url = PLUGIN_URL
 };
 
+#include <pnpc_stocks>
 #include <pnpc>
-#include <sourcemod>
-#include <sdktools>
-#include <sdkhooks>
-#include <entity>
-#include <morecolors>
-#include <tf2_stocks>
-#include <cfgmap>
-#include <tf_econ_data>
-#include <tf2utils>
-#include <dhooks>
-#include <collisionhook>
-#include <cbasenpc>
 
 #include "pnpc/npcs.sp"
 
@@ -106,87 +95,6 @@ ActivePNPC ActivePNPCs[2049];
 int i_NumTemplates = 0;
 
 bool b_IsPNPC[2049] = { false, ... };
-
-enum struct PNPC
-{
-	char Name[255];
-	char Model[255];
-	char AI[255];
-	char Config[255];
-	char ConfigName[255];
-	int MaxHP;
-	float Speed;
-	bool Exists;
-	
-	void Create(char newName[255], char newModel[255], char newAI[255], char newConfig[255], int newMaxHP, float newSpeed)
-	{
-		strcopy(this.Name, 255, newName);
-		strcopy(this.Model, 255, newModel);
-		strcopy(this.AI, 255, newAI);
-		strcopy(this.ConfigName, 255, newConfig);
-		Format(this.Config, 255, "configs/pnpcs/%s.cfg", newConfig);
-		this.MaxHP = newMaxHP;
-		this.Speed = newSpeed;
-		
-		this.Exists = true;
-		i_NumTemplates++;
-	}
-	
-	int Spawn()
-	{
-		int ReturnValue = -1; //Something something, CreateEntityByName("base_boss");
-		
-		//TODO: Spawn a new NPC using this template's information, then return its entity index if successful, or -1 if it fails.
-		
-		if (IsValidEntity(ReturnValue))
-		{
-			ActivePNPCs[ReturnValue].Create(ReturnValue, this.Name, this.Model, this.AI, this.Config, this.MaxHP, this.Speed);
-		}
-		
-		return ReturnValue;
-	}
-	
-	void Delete()
-	{
-		this.Exists = false;
-		i_NumTemplates--;
-	}
-}
-
-enum struct ActivePNPC
-{
-	int EntityIndex;
-	
-	char Name[255];
-	char Model[255];
-	char AI[255];
-	char Config[255];
-	
-	int MaxHP;
-	
-	float Speed;
-	
-	void Create(int newIndex, char newName[255], char newModel[255], char newAI[255], char newConfig[255], int newMaxHP, float newSpeed)
-	{
-		strcopy(this.Name, 255, newName);
-		strcopy(this.Model, 255, newModel);
-		strcopy(this.AI, 255, newAI);
-		strcopy(this.Config, 255, newConfig);
-		this.MaxHP = newMaxHP;
-		this.Speed = newSpeed;
-		this.EntityIndex = newIndex;
-	}
-	
-	void Kill()
-	{
-		this.Delete();
-	}
-	
-	void Delete()
-	{
-		this.EntityIndex = -1;
-	}
-}
 
 public void PNPC_LoadNPCs()
 {
@@ -582,120 +490,12 @@ public void OnEntityDestroyed(int entity)
 	}
 }
 
-//Stocks and such, move these to a file like pnpc_stocks or something before publishing:
-
-/**
- * Checks if a client is valid.
- *
- * @param client			The client to check.
- *
- * @return					True if the client is valid, false otherwise.
- */
-stock bool IsValidClient(int client)
-{
-	if(client <= 0 || client > MaxClients)
-	{
-		return false;
-	}
-	
-	if(!IsClientInGame(client))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-stock Handle getAimTrace(int client, TraceEntityFilter filter)
-{
-	float eyePos[3];
-	float eyeAng[3];
-	GetClientEyePosition(client, eyePos);
-	GetClientEyeAngles(client, eyeAng);
-	
-	Handle trace;
-	
-	trace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_SHOT, RayType_Infinite, filter);
-	
-	return trace;
-}
-
-public bool Trace_OnlyHitWorld(entity, contentsMask)
-{
-	return entity == 0;
-}
-
 public bool Trace_OnlyHitPNPCs(entity, contentsMask)
 {
 	if (entity < 0 || entity > 2048)
 		return false;
 	
 	return b_IsPNPC[entity];
-}
-
-stock int GetIntFromConfigMap(ConfigMap map, char[] path, int defaultValue)
-{
-	char value[255];
-	map.Get(path, value, sizeof(value));
-	
-	if (StrEqual(value, ""))
-	{
-		return defaultValue;
-	}
-	
-	return StringToInt(value);
-}
-
-stock float GetFloatFromConfigMap(ConfigMap map, char[] path, float defaultValue)
-{
-	char value[255];
-	map.Get(path, value, sizeof(value));
-	
-	if (StrEqual(value, ""))
-	{
-		return defaultValue;
-	}
-	
-	return StringToFloat(value);
-}
-
-stock bool GetBoolFromConfigMap(ConfigMap map, char[] path, bool defaultValue)
-{
-	char value[255];
-	map.Get(path, value, sizeof(value));
-	
-	if (StrEqual(value, ""))
-	{
-		return defaultValue;
-	}
-	
-	return (StringToInt(value) != 0);
-}
-
-/**
- * Checks if a file exists.
- *
- * @param path			The file to check.
- *
- * @return					True if it exists, false otherwise.
- */
-stock bool CheckFile(char path[255])
-{
-	bool exists = false;
-	
-	if (FileExists(path))
-	{
-		exists = true;
-	}
-	else
-	{
-		if (FileExists(path, true))
-		{
-			exists = true;
-		}
-	}
-	
-	return exists;
 }
 
 public Native_PNPC_IsPNPC(Handle plugin, int numParams)

@@ -1,4 +1,4 @@
-#define NPC_NAME	"cf_base_npc"
+#define NPC_NAME	"pnpc_base_npc"
 
 #define VFX_AFTERBURN_RED		"burningplayer_red"
 #define VFX_AFTERBURN_BLUE		"burningplayer_blue"
@@ -196,23 +196,23 @@ public float PNPC_PathCost(INextBot bot, CNavArea area, CNavArea from_area, CNav
 
 void PNPC_MakeForwards()
 {
-	g_OnPNPCCreated = new GlobalForward("CF_OnPNPCCreated", ET_Ignore, Param_Cell);
-	g_OnPNPCDestroyed = new GlobalForward("CF_OnPNPCDestroyed", ET_Ignore, Param_Cell);
-	g_OnPNPCHeadshot = new GlobalForward("CF_OnPNPCHeadshot", ET_Event, Param_Any, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef);
-	g_OnPNPCDamaged = new GlobalForward("CF_OnPNPCTakeDamage", ET_Event, Param_Any, Param_FloatByRef, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef);
-	g_OnPNPCKilled = new GlobalForward("CF_OnPNPCKilled", ET_Event, Param_Any, Param_Float, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
-	g_OnPNPCExtinguished = new GlobalForward("CF_OnPNPCExtinguished", ET_Single, Param_Any);
-	g_OnPNPCIgnited = new GlobalForward("CF_OnPNPCIgnited", ET_Event, Param_Any, Param_FloatByRef, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_FloatByRef);
-	g_OnPNPCBleed = new GlobalForward("CF_OnPNPCBleed", ET_Event, Param_Any, Param_FloatByRef, Param_FloatByRef, Param_CellByRef);
-	g_OnPNPCMilkRemoved = new GlobalForward("CF_OnPNPCMilkRemoved", ET_Single, Param_Cell, Param_Cell);
-	g_OnPNPCJarateRemoved = new GlobalForward("CF_OnPNPCJarateRemoved", ET_Single, Param_Cell, Param_Cell);
-	g_OnPNPCGasRemoved = new GlobalForward("CF_OnPNPCGasRemoved", ET_Single, Param_Cell, Param_Cell);
-	g_OnPNPCMilked = new GlobalForward("CF_OnPNPCMilked", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
-	g_OnPNPCJarated = new GlobalForward("CF_OnPNPCJarated", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
-	g_OnPNPCGassed = new GlobalForward("CF_OnPNPCGassed", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
-	g_OnJarCollide = new GlobalForward("CF_OnPNPCJarCollide", ET_Single, Param_Cell, Param_Cell, Param_Cell);
-	g_OnProjectileExplode = new GlobalForward("CF_OnPNPCProjectileExplode", ET_Single, Param_Cell, Param_Cell, Param_Cell);
-	g_OnHeal = new GlobalForward("CF_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
+	g_OnPNPCCreated = new GlobalForward("PNPC_OnPNPCCreated", ET_Ignore, Param_Cell);
+	g_OnPNPCDestroyed = new GlobalForward("PNPC_OnPNPCDestroyed", ET_Ignore, Param_Cell);
+	g_OnPNPCHeadshot = new GlobalForward("PNPC_OnPNPCHeadshot", ET_Event, Param_Any, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef);
+	g_OnPNPCDamaged = new GlobalForward("PNPC_OnPNPCTakeDamage", ET_Event, Param_Any, Param_FloatByRef, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef);
+	g_OnPNPCKilled = new GlobalForward("PNPC_OnPNPCKilled", ET_Event, Param_Any, Param_Float, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
+	g_OnPNPCExtinguished = new GlobalForward("PNPC_OnPNPCExtinguished", ET_Single, Param_Any);
+	g_OnPNPCIgnited = new GlobalForward("PNPC_OnPNPCIgnited", ET_Event, Param_Any, Param_FloatByRef, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_FloatByRef);
+	g_OnPNPCBleed = new GlobalForward("PNPC_OnPNPCBleed", ET_Event, Param_Any, Param_FloatByRef, Param_FloatByRef, Param_CellByRef);
+	g_OnPNPCMilkRemoved = new GlobalForward("PNPC_OnPNPCMilkRemoved", ET_Single, Param_Cell, Param_Cell);
+	g_OnPNPCJarateRemoved = new GlobalForward("PNPC_OnPNPCJarateRemoved", ET_Single, Param_Cell, Param_Cell);
+	g_OnPNPCGasRemoved = new GlobalForward("PNPC_OnPNPCGasRemoved", ET_Single, Param_Cell, Param_Cell);
+	g_OnPNPCMilked = new GlobalForward("PNPC_OnPNPCMilked", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
+	g_OnPNPCJarated = new GlobalForward("PNPC_OnPNPCJarated", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
+	g_OnPNPCGassed = new GlobalForward("PNPC_OnPNPCGassed", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
+	g_OnJarCollide = new GlobalForward("PNPC_OnPNPCJarCollide", ET_Single, Param_Cell, Param_Cell, Param_Cell);
+	g_OnProjectileExplode = new GlobalForward("PNPC_OnPNPCProjectileExplode", ET_Single, Param_Cell, Param_Cell, Param_Cell);
+	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");
 	AcFac.SetEventCallback(EventResponderType_OnActorEmoted, PluginBot_OnActorEmoted);*/
@@ -220,7 +220,7 @@ void PNPC_MakeForwards()
 	CEntityFactory PNPC_Factory = new CEntityFactory(NPC_NAME, PNPC_OnCreate, PNPC_OnDestroy);
 	PNPC_Factory.DeriveFromNPC();
 	//PNPC_Factory.SetInitialActionFactory(AcFac);
-	PNPC_Factory.BeginDataMapDesc().DefineIntField("cf_pPath").EndDataMapDesc();
+	PNPC_Factory.BeginDataMapDesc().DefineIntField("pnpc_pPath").EndDataMapDesc();
 	PNPC_Factory.Install();
 
 	GameData gd = LoadGameConfigFile("portable_npc_system");
@@ -500,7 +500,7 @@ static MRESReturn PNPC_GrenadeCollide(int self, Handle params)
 	else
 		team = TFTeam_Red;
 
-	if (CF_IsValidTarget(other, team) && !b_PillAlreadyBounced[self])
+	if (PNPC_IsValidTarget(other, team) && !b_PillAlreadyBounced[self])
 		i_PillCollideTarget[self] = EntIndexToEntRef(other);
 
 	b_PillAlreadyBounced[self] = true;
@@ -655,7 +655,7 @@ void PNPC_OnCreate(int npc)
 		int entity = EntRefToEntIndex(i_TotalNPCs[i]);
 		if (!IsValidEntity(entity))
 		{
-			alive.SetProp(Prop_Data, "cf_pPath", view_as<int>(g_PathFollowers[i]));
+			alive.SetProp(Prop_Data, "pnpc_pPath", view_as<int>(g_PathFollowers[i]));
 			i_TotalNPCs[i] = EntIndexToEntRef(alive.Index);
 			break;
 		}
@@ -687,7 +687,7 @@ void PNPC_OnDestroy(int npc)
 	{
 		dead.GetPathFollower().Invalidate(); //Remove its current path
 	}
-	dead.SetProp(Prop_Data, "cf_pPath", -1);
+	dead.SetProp(Prop_Data, "pnpc_pPath", -1);
 
 	PNPC_RemoveFromPaths(dead);
 
@@ -708,7 +708,7 @@ void PNPC_RemoveFromPaths(PNPC npc)
 		int entity = EntRefToEntIndex(i_TotalNPCs[i]);
 		if (entity == npc.Index)
 		{
-			npc.SetProp(Prop_Data, "cf_pPath", 0);
+			npc.SetProp(Prop_Data, "pnpc_pPath", 0);
 			i_TotalNPCs[i] = -1;
 			break;
 		}
@@ -1097,7 +1097,7 @@ public void PNPC_ExtinguishViaJar(int victim)
 	{
 		EmitSoundToAll(SND_EXTINGUISH, victim);
 		float pos[3];
-		CF_WorldSpaceCenter(victim, pos);
+		PNPC_WorldSpaceCenter(victim, pos);
 		SpawnParticle(pos, PARTICLE_EXTINGUISH, 2.0);
 	}
 }
@@ -2153,7 +2153,7 @@ public int Native_PNPCRemoveGesture(Handle plugin, int numParams)
 
 public any Native_PNPCGetPathFollower(Handle plugin, int numParams)
 {
-	return view_as<PathFollower>(view_as<PNPC>(GetNativeCell(1)).GetProp(Prop_Data, "cf_pPath"));
+	return view_as<PathFollower>(view_as<PNPC>(GetNativeCell(1)).GetProp(Prop_Data, "pnpc_pPath"));
 }
 
 public int Native_PNPCStartPathing(Handle plugin, int numParams)
@@ -2306,7 +2306,7 @@ public int Native_PNPCGib(Handle plugin, int numParams)
 			}
 			else
 			{
-				CF_WorldSpaceCenter(ent, pos);
+				PNPC_WorldSpaceCenter(ent, pos);
 				GetEntPropVector(ent, Prop_Data, "m_angRotation", ang);
 			}
 
@@ -2899,7 +2899,7 @@ public int Native_PNPCExplosion(Handle plugin, int numParams)
 				continue;
 			
 			float vicLoc[3];
-			CF_WorldSpaceCenter(victim, vicLoc);
+			PNPC_WorldSpaceCenter(victim, vicLoc);
 			
 			bool passed = true;
 
