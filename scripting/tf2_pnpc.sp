@@ -84,9 +84,15 @@ public const char s_ModelFileExtensions[][] =
 public OnMapStart()
 {
 	PNPC_LoadNPCs();
+	PNPC_MapStart();
 	
 	PrecacheSound(SND_ADMINCOMMAND);
 	PrecacheSound(SND_ADMINCOMMAND_ERROR);
+}
+
+public void OnMapEnd()
+{
+	PNPC_MapEnd();
 }
 
 PNPC PNPCs[MAXIMUM_PNPCS];
@@ -481,13 +487,22 @@ public Action PNPC_DestroyAll(int client, int args)
 	return Plugin_Continue;
 }
 
+public void OnEntityCreated(int entity, const char[] classname)
+{
+	PNPC_OnEntityCreated(entity, classname);
+}
+
 public void OnEntityDestroyed(int entity)
 {
 	if (entity >= 0 && entity < 2049)
 	{
-		ActivePNPCs[entity].Delete();
-		b_IsPNPC[entity] = false;
+		PNPC_OnENtityDestroyed(entity);
 	}
+}
+
+public Action CH_PassFilter(int ent1, int ent2, bool &result)
+{
+	return PNPC_PassFilter(ent1, ent2, result);
 }
 
 public bool Trace_OnlyHitPNPCs(entity, contentsMask)
