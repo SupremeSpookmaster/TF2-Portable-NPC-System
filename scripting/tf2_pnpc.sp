@@ -27,9 +27,9 @@ public Plugin myinfo =
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Add customizable sounds for any number of custom triggers.
-//			- Should include: sound_damaged, sound_impact, sound_kill, and sound_killed as officially supported sound cues, then have "CFNPC.PlaySound" as a native to play custom cues.
-//		- PNPC_Template.Spawn still needs to actually SPAWN the NPC.
+//		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
+//		- Finish NPC_Template.Spawn by adding models, gibs, and particles.
+//		- Fix the SpawnNPC method freaking out if when it fails to find the specified template.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
@@ -56,7 +56,8 @@ public Plugin myinfo =
 //		- Add natives for basic attacks:
 //				- Generic hitscan: uses a hull trace with customizable width, length, and filter.
 //				- Generic projectile: fires a single projectile with customizable model, scale, velocity, homing, and on-collide function.
-//				- Both: Have parameters for both an on-hit function and a filter function to determine what can/cannot be hit.
+//				- Generic melee: should just be an extension of generic hitscan that adds a delay before the damage event occurs.
+//				- All: Have parameters for both an on-hit function and a filter function to determine what can/cannot be hit, as well as animation and sound parameters.
 //		- Add an option to make NPCs automatically enter their air/swim animations if airborne or in the water.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -168,8 +169,11 @@ public Action PNPC_Spawn(int client, int args)
 			delete trace;
 			
 			TeleportEntity(SpawnedPNPC, pos);
+
+			char name[255];
+			view_as<PNPC>(SpawnedPNPC).GetName(name, sizeof(name));
 			
-			CPrintToChat(client, "{orange}[Portable NPC System] {default}Spawned {olive}%s{default}.", "TODO: Put the spawned NPC's name here.");
+			CPrintToChat(client, "{orange}[Portable NPC System] {default}Spawned {olive}%s{default}.", name);
 			EmitSoundToClient(client, SND_ADMINCOMMAND);
 		}
 		else
@@ -194,10 +198,13 @@ public Action PNPC_Destroy(int client, int args)
 		
 		if (PNPC_IsNPC(DestroyedPNPC))
 		{
-			CPrintToChat(client, "{orange}[Portable NPC System] {default}Destroyed {olive}%s{default}.", "TODO: Put the spawned NPC's name here.");
+			PNPC npc = view_as<PNPC>(DestroyedPNPC);
+			char name[255];
+			npc.GetName(name, sizeof(name));
+			CPrintToChat(client, "{orange}[Portable NPC System] {default}Destroyed {olive}%s{default}.", name);
 			EmitSoundToClient(client, SND_ADMINCOMMAND);
 			
-			view_as<PNPC>(DestroyedPNPC).Gib();
+			npc.Gib();
 		}
 		else
 		{

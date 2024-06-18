@@ -458,6 +458,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.SetConfigName", Native_PNPC_SetConfigName);
 
 	//Name:
+	CreateNative("PNPC.GetName", Native_PNPC_GetName);
+	CreateNative("PNPC.SetName", Native_PNPC_SetName);
 
 	//Global (not specific to the PNPC methodmap) Natives:
 	CreateNative("PNPC_Explosion", Native_PNPCExplosion);
