@@ -447,12 +447,16 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.Bleed", Native_PNPCBleed);
 	CreateNative("PNPC.b_Bleeding.get", Native_PNPCGetBleeding);
 
+	//Sound:
+	CreateNative("PNPC.PlayRandomSound", Native_PNPC_PlayRandomSound);
+
 	//Global (not specific to the PNPC methodmap) Natives:
 	CreateNative("PNPC_Explosion", Native_PNPCExplosion);
 	CreateNative("PNPC_IsNPC", Native_PNPCIsThisAnNPC);
 	CreateNative("PNPC_HealEntity", Native_PNPCHealEntity);
 	CreateNative("PNPC_IsValidTarget", Native_PNPC_IsValidTarget);
 	CreateNative("PNPC_WorldSpaceCenter", Native_PNPC_WorldSpaceCenter);
+	CreateNative("PNPC_GetClosestTarget", Native_PNPC_GetClosestTarget);
 }
 
 public void PNPC_OnEntityCreated(int entity, const char[] classname)
@@ -3463,4 +3467,52 @@ public Native_PNPC_WorldSpaceCenter(Handle plugin, int numParams)
 		
 	SDKCall(g_hSDKWorldSpaceCenter, entity, output);
 	SetNativeArray(2, output, sizeof(output));
+}
+
+public Native_PNPC_GetClosestTarget(Handle plugin, int numParams)
+{
+	float pos[3];
+	GetNativeArray(1, pos, sizeof(pos));
+	
+	bool IncludeEntities = GetNativeCell(2);
+	
+	float closestDist = GetNativeCellRef(3);
+	float maxDist = GetNativeCell(4);
+	TFTeam team = GetNativeCell(5);
+	char pluginName[255];
+	GetNativeString(6, pluginName, sizeof(pluginName));
+	Function filter = GetNativeFunction(7);
+	
+	int closestEnt = -1;
+	
+	for (int i = 1; i <= (IncludeEntities ? 2048 : MaxClients); i++)
+	{
+		if (!PNPC_IsValidTarget(i, team, pluginName, filter))
+			continue;
+		
+		float otherPos[3];
+		PNPC_WorldSpaceCenter(i, otherPos);
+		
+		float dist = GetVectorDistance(pos, otherPos);
+		
+		if (maxDist > 0.0 && dist > maxDist)
+			continue;
+			
+		if (dist < closestDist || closestEnt == -1)
+		{
+			closestDist = dist;
+			closestEnt = i;
+		}
+	}
+	
+	return closestEnt;
+}
+
+public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	char cue[255];
+	GetNativeString(2, cue, sizeof(cue));
+
+	
 }

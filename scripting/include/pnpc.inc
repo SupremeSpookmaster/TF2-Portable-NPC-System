@@ -32,6 +32,13 @@ methodmap PNPC_Template __nullable__
 	public native int Spawn(float pos[3], float ang[3], int owner = -1, TFTeam team = TFTeam_Unassigned);
 
 	/**
+	 * Triggers a sound cue based on the cues in this PNPC's config.
+	 * 
+	 * @param cue			The sound cue to trigger.
+	 */
+	public native bool PlayRandomSound(char cue[255]);
+
+	/**
 	 * Retrieves the config file used for this PNPC template, relative to sourcemod/configs/npcs.
 	 * 
 	 * @param output		Output buffer.

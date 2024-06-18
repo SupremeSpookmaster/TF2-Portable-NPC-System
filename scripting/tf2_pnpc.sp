@@ -23,7 +23,6 @@ public Plugin myinfo =
 #include "pnpc/templates.sp"
 
 //PERSONAL NOTES:
-//		- Port all of the "GetClosestTarget/Ally/Whatever" natives from CF.
 //		- Make custom melee hitreg so it doesn't sound like you're hitting a wall every time you hit an NPC with melee.
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
