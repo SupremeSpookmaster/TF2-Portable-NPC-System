@@ -92,8 +92,6 @@ public void OnPluginStart()
 #define SND_ADMINCOMMAND			"ui/cyoa_ping_in_progress.wav"
 #define SND_ADMINCOMMAND_ERROR		"ui/cyoa_ping_in_progress.wav"
 
-#define MAXIMUM_PNPCS				255
-
 public OnMapStart()
 {
 	Templates_MapStart();
@@ -109,8 +107,6 @@ public void OnMapEnd()
 	Templates_MapEnd();
 }
 
-PNPC_Template Templates[MAXIMUM_PNPCS];
-
 public int PNPC_KillAll()
 {
 	int NumKilled = 0;
@@ -125,31 +121,6 @@ public int PNPC_KillAll()
 	}
 	
 	return NumKilled;
-}
-
-//TODO: Expand parameters to allow specifying a position, angles, owner, and team. Possibly more as well.
-public int PNPC_SpawnNPC(char name[255])
-{
-	int ReturnValue = -1;
-	bool Found = false;
-	
-	for (int i = 0; i < MAXIMUM_PNPCS && !Found; i++)
-	{
-		if (!Templates[i].b_Exists)
-			continue;
-		
-		char confName[255], realName[255];
-		Templates[i].GetConfigName(confName);
-		Templates[i].GetName(realName);
-
-		if (StrEqual(name, confName) || StrContains(realName, name) != -1)
-		{
-			Templates[i].Spawn(NULL_VECTOR, NULL_VECTOR);
-			Found = true;
-		}
-	}
-	
-	return ReturnValue;
 }
 
 /*public void RoundEnd(Event hEvent, const char[] sEvName, bool bDontBroadcast)

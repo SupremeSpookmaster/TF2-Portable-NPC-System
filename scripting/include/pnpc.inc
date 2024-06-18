@@ -3,7 +3,7 @@
 #endif
 #define _pnpc_included_
 
-methodmap PNPC_Template
+methodmap PNPC_Template __nullable__
 {
 	/**
 	 * Generates a PNPC template from a given config file.
@@ -11,6 +11,13 @@ methodmap PNPC_Template
 	 * @param file			The file to generate from, relative to sourcemod/configs/npcs.
 	 */
 	public native PNPC_Template(char[] file);
+
+	/**
+	 * Removes this template from the list of templates and deletes its ConfigMap. 
+	 * Don't call this unless you know exactly what you're doing, the Portable NPC System calls this automatically in all of the main situations where it would be needed.
+	 * The only time you should need this would be in weird edge cases where you're already doing fairly advanced things with the templates.
+	 */
+	public native void Destroy();
 
 	/**
 	 * Spawns a PNPC using this template.
@@ -52,10 +59,21 @@ methodmap PNPC_Template
 	 */
 	public native void SetName(char name[255]);
 
+	property int Index
+	{
+		public native get();
+	}
+
 	property bool b_Exists
 	{
 		public native get();
 		public native set(bool value);
+	}
+
+	property ConfigMap g_ConfigMap
+	{
+		public native get();
+		public native set(ConfigMap value);
 	}
 }
 
