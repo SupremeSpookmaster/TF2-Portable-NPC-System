@@ -30,7 +30,6 @@ public Plugin myinfo =
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Add customizable sounds for any number of custom triggers.
 //			- Should include: sound_damaged, sound_impact, sound_kill, and sound_killed as officially supported sound cues, then have "CFNPC.PlaySound" as a native to play custom cues.
-//		- NPC CFGs should function like FF2 boss CFGs, with sections for equipped models, name, etc. One of these sections should be called "functionality", where devs can add and tweak AI modifiers to control how the NPC behaves.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
@@ -46,12 +45,18 @@ public Plugin myinfo =
 //			- Movement and combat will typically only be used by extremely basic NPCs, whereas aspects and abilities are used to create more complex NPCs.
 //		- Allow server owners to configure several settings:
 //			- Max NPCs, max gibs, max model attachments per NPC, whether or not NPCs should have visible health bars, whether or not the NPC's remaining HP should be displayed on the user's HUD when the NPC is damaged.
-//		- Some day down the road (not immediately), add the Fake Player Model system. Should actually be fairly easy to implement given all of the control we have over animations; we just copy the user's current sequence, pose parameters, and gestures to the NPC every frame, then when we animate the NPC we stop copying until the animation is done.
+//		- Some day down the road (not immediately), add the Fake Player Model system. The basic functionality should actually be fairly easy to implement given all of the control we have over animations.
+//			- Copy the user's current sequence, pose parameters, and gestures to the NPC every frame, then when we animate the NPC we stop copying until the animation is done.
+//			- The actual player should be teleported off of the map, and SetClientViewEntity should be used to make them view everything from the NPC's perspective.
+//			- The hard part will be making all of the TFConds and other related things (setting client's move type, GetClientAbsOrigin, etc) work properly. A lot of this can be done with function rerouting, but it will be impossible to make it perfect.
 //		- Do the following to finish the explosion rewrites:
 //			- Make the Loose Cannon work as intended against NPCs, maybe?
 //			- Make flare explosion detection actually work.
 //		- Add an option to make NPCs use the body_pitch and body_yaw pose parameters to automatically look towards their target destination.
-//		- Add natives for basic attacks (should have generic melee, generic projectile, and generic bullets).
+//		- Add natives for basic attacks:
+//				- Generic hitscan: uses a hull trace with customizable width, length, and filter.
+//				- Generic projectile: fires a single projectile with customizable model, scale, velocity, homing, and on-collide function.
+//				- Both: Have parameters for both an on-hit function and a filter function to determine what can/cannot be hit.
 //		- Add an option to make NPCs automatically enter their air/swim animations if airborne or in the water.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
