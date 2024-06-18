@@ -78,6 +78,9 @@ char PNPC_Model[2049][255];
 char PNPC_BleedParticle[2049][255];
 char PNPC_FlinchSequence[2049][255];
 
+char PNPC_ConfigName[2049][255];
+char PNPC_Name[2049][255];
+
 GlobalForward g_OnPNPCCreated;
 GlobalForward g_OnPNPCDestroyed;
 GlobalForward g_OnPNPCHeadshot;
@@ -450,6 +453,12 @@ void PNPC_MakeNatives()
 	//Sound:
 	CreateNative("PNPC.PlayRandomSound", Native_PNPC_PlayRandomSound);
 
+	//Config:
+	CreateNative("PNPC.GetConfigName", Native_PNPC_GetConfigName);
+	CreateNative("PNPC.SetConfigName", Native_PNPC_SetConfigName);
+
+	//Name:
+
 	//Global (not specific to the PNPC methodmap) Natives:
 	CreateNative("PNPC_Explosion", Native_PNPCExplosion);
 	CreateNative("PNPC_IsNPC", Native_PNPCIsThisAnNPC);
@@ -457,6 +466,26 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_IsValidTarget", Native_PNPC_IsValidTarget);
 	CreateNative("PNPC_WorldSpaceCenter", Native_PNPC_WorldSpaceCenter);
 	CreateNative("PNPC_GetClosestTarget", Native_PNPC_GetClosestTarget);
+}
+
+public int Native_PNPC_GetConfigName(Handle plugin, int numParams) { SetNativeString(2, PNPC_ConfigName[GetNativeCell(1)], GetNativeCell(3)); return 0; }
+
+public int Native_PNPC_SetConfigName(Handle plugin, int numParams)
+{
+	char conf[255];
+	GetNativeString(2, conf, sizeof(conf));
+	strcopy(PNPC_ConfigName[GetNativeCell(1)], 255, conf);
+	return 0;
+}
+
+public int Native_PNPC_GetName(Handle plugin, int numParams) { SetNativeString(2, PNPC_Name[GetNativeCell(1)], GetNativeCell(3)); return 0; }
+
+public int Native_PNPC_SetName(Handle plugin, int numParams)
+{
+	char conf[255];
+	GetNativeString(2, conf, sizeof(conf));
+	strcopy(PNPC_Name[GetNativeCell(1)], 255, conf);
+	return 0;
 }
 
 public void PNPC_OnEntityCreated(int entity, const char[] classname)
@@ -712,6 +741,9 @@ void PNPC_OnDestroy(int npc)
 	delete g_AttachedWeaponModels[npc];
 	i_BleedStacks[npc] = 0;
 
+	strcopy(PNPC_ConfigName[npc], 255, "");
+	strcopy(PNPC_Name[npc], 255, "");
+
 	dead.b_Exists = false;
 	I_AM_DEAD[npc] = true;
 }
@@ -732,7 +764,7 @@ void PNPC_RemoveFromPaths(PNPC npc)
 
 public int Native_PNPCConstructor(Handle plugin, int numParams)
 {
-	char model[255], logicPlugin[255];
+	char model[255], logicPlugin[255], configName[255], name[255];
 	float pos[3], ang[3];
 
 	GetNativeString(1, model, sizeof(model));
@@ -748,6 +780,8 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 	GetNativeArray(11, pos, sizeof(pos));
 	GetNativeArray(12, ang, sizeof(ang));
 	float lifespan = GetNativeCell(13);
+	GetNativeString(14, configName, sizeof(configName));
+	GetNativeString(15, name, sizeof(name));
 
 	int ent = CreateEntityByName(NPC_NAME);
 	if (IsValidEntity(ent))
@@ -768,6 +802,8 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		npc.f_ThinkRate = thinkRate;
 		npc.SetBleedParticle(VFX_DEFAULT_BLEED);
 		npc.SetBoundingBox(DEFAULT_MINS, DEFAULT_MAXS);
+		npc.SetConfigName(configName);
+		npc.SetName(name);
 
 		if (lifespan > 0.0)
 			npc.f_EndTime = GetGameTime() + lifespan;
@@ -3511,8 +3547,112 @@ public Native_PNPC_GetClosestTarget(Handle plugin, int numParams)
 public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
-	char cue[255];
+	char cue[255], config[255];
 	GetNativeString(2, cue, sizeof(cue));
+	Format(cue, sizeof(cue), "npc.sounds.%s", cue);
+	npc.GetConfigName(config, sizeof(config));
 
-	
+	Format(config, sizeof(config), "configs/npcs/%s.cfg", config);
+
+	//Check 1: Does our NPC even have a ConfigMap?
+	ConfigMap conf = new ConfigMap(config);
+	if (conf == null)
+		return false;
+
+	//Check 2: Our NPC has a ConfigMap, but does their sounds section actually have an entry for our cue?
+	ConfigMap cueSection = conf.GetSection(cue);
+	if (cueSection == null)
+	{
+		DeleteCfg(conf);
+		return false;
+	}
+
+	StringMapSnapshot snap = cueSection.Snapshot();
+	int chosen = GetRandomInt(0, snap.Length - 1);
+
+	char key[255], realKey[255];
+	snap.GetKey(chosen, key, sizeof(key));
+	delete snap;
+
+	strcopy(realKey, sizeof(realKey), key);
+
+	if (StrContains(key, ".") != -1)
+	{
+		ReplaceString(key, sizeof(key), ".", "\\.");
+	}
+
+	char soundToPlay[255];
+
+	KeyValType KVT = cueSection.GetKeyValType(key);
+	//Check 3: We do indeed have an entry for our cue, use it to get the sound we are attempting to play.
+	switch(cueSection.GetKeyValType(key))
+	{
+		case KeyValType_Value:
+		{
+			cueSection.Get(key, soundToPlay, sizeof(soundToPlay));
+		}
+		case KeyValType_Section:
+		{
+			strcopy(soundToPlay, sizeof(soundToPlay), realKey);
+		}
+		default:	//This should literally never be possible, but we can never be too safe...
+		{
+			DeleteCfg(conf);
+			return false;
+		}
+	}
+
+	//Check 4: Make sure our sound actually exists before we attempt to play it.
+	if (!CheckFile(soundToPlay))
+	{
+		DeleteCfg(conf);
+		return false;
+	}
+
+	PrecacheSound(soundToPlay);
+
+	int level = 100;
+	float volume = 1.0;
+	int channel = SNDCHAN_VOICE;
+	bool global = false;
+	int maxPitch = 100;
+	int minPitch = 100;
+	bool success = true;
+
+	if (KVT == KeyValType_Section)
+	{
+		Format(cue, sizeof(cue), "%s.%s", cue, key);
+		ConfigMap soundSection = conf.GetSection(cue);
+
+		if (soundSection != null)
+		{
+			success = GetRandomFloat(0.0, 1.0) <= GetFloatFromConfigMap(soundSection, "chance", 1.0);
+			if (success)
+			{
+				level = GetIntFromConfigMap(soundSection, "level", 100);
+				volume = GetFloatFromConfigMap(soundSection, "volume", 1.0);
+				channel = GetIntFromConfigMap(soundSection, "channel", 7);
+				global = GetBoolFromConfigMap(soundSection, "global", false);
+				minPitch = GetIntFromConfigMap(soundSection, "pitch_min", 100);
+				maxPitch = GetIntFromConfigMap(soundSection, "pitch_max", 100);
+			}
+		}
+		else
+		{
+			DeleteCfg(conf);
+			return false;
+		}
+	}
+
+	if (success)
+	{
+		if (global)
+			EmitSoundToAll(soundToPlay, _, channel, level, _, volume, GetRandomInt(minPitch, maxPitch));
+		else
+			EmitSoundToAll(soundToPlay, npc.Index, channel, level, _, volume, GetRandomInt(minPitch, maxPitch));
+	}
+
+	DeleteCfg(conf);
+
+	return success;
 }

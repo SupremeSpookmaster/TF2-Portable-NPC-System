@@ -29,6 +29,7 @@ public Plugin myinfo =
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Add customizable sounds for any number of custom triggers.
 //			- Should include: sound_damaged, sound_impact, sound_kill, and sound_killed as officially supported sound cues, then have "CFNPC.PlaySound" as a native to play custom cues.
+//		- PNPC_Template.Spawn still needs to actually SPAWN the NPC.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
