@@ -215,6 +215,11 @@ methodmap PNPC < CBaseCombatCharacter
 	public native void SetGibsFromConfig();
 
 	/**
+	 * Clears all models and attachments from this PNPC's list of gibs to use when it is gibbed.
+	 */
+	public native void ClearGibs();
+
+	/**
 	 * Automatically sets this PNPC's particle effects, using its config.
 	 */
 	public native void SetParticlesFromConfig();

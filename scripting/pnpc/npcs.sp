@@ -37,6 +37,159 @@ static char SFX_GenericExplosion[][] = {
 	SND_EXPLOSION_GENERIC_3
 };
 
+static char Gibs_Scout_Models[][] = {
+	"models/player/gibs/scoutgib001.mdl",
+	"models/player/gibs/scoutgib002.mdl",
+	"models/player/gibs/scoutgib003.mdl",
+	"models/player/gibs/scoutgib004.mdl",
+	"models/player/gibs/scoutgib005.mdl",
+	"models/player/gibs/scoutgib006.mdl",
+	"models/player/gibs/scoutgib007.mdl",
+	"models/player/gibs/scoutgib008.mdl",
+	"models/player/gibs/scoutgib009.mdl",
+};
+
+static char Gibs_Scout_Attachments[][] = {
+	""
+};
+
+static char Gibs_Soldier_Models[][] = {
+	"models/player/gibs/soldiergib001.mdl",
+	"models/player/gibs/soldiergib002.mdl",
+	"models/player/gibs/soldiergib003.mdl",
+	"models/player/gibs/soldiergib004.mdl",
+	"models/player/gibs/soldiergib005.mdl",
+	"models/player/gibs/soldiergib006.mdl",
+	"models/player/gibs/soldiergib007.mdl",
+	"models/player/gibs/soldiergib008.mdl"
+};
+
+static char Gibs_Soldier_Attachments[][] = {
+	""
+};
+
+static char Gibs_Pyro_Models[][] = {
+	"models/player/gibs/pyrogib001.mdl",
+	"models/player/gibs/pyrogib002.mdl",
+	"models/player/gibs/pyrogib003.mdl",
+	"models/player/gibs/pyrogib004.mdl",
+	"models/player/gibs/pyrogib007.mdl",
+	"models/player/gibs/pyrogib008.mdl"
+};
+
+static char Gibs_Pyro_Attachments[][] = {
+	"foot_L",
+	"foot_R",
+	"effect_hand_L",
+	"effect_hand_R",
+	"flag",
+	"head"
+};
+
+static char Gibs_Demo_Models[][] = {
+	"models/player/gibs/demogib001.mdl",
+	"models/player/gibs/demogib002.mdl",
+	"models/player/gibs/demogib003.mdl",
+	"models/player/gibs/demogib004.mdl",
+	"models/player/gibs/demogib005.mdl",
+	"models/player/gibs/demogib006.mdl"
+};
+
+static char Gibs_Demo_Attachments[][] = {
+	"foot_L",
+	"foot_R",
+	"effect_hand_L",
+	"effect_hand_R",
+	"flag",
+	"head"
+};
+
+static char Gibs_Heavy_Models[][] = {
+	"models/player/gibs/heavygib001.mdl",
+	"models/player/gibs/heavygib002.mdl",
+	"models/player/gibs/heavygib004.mdl",
+	"models/player/gibs/heavygib005.mdl",
+	"models/player/gibs/heavygib006.mdl",
+	"models/player/gibs/heavygib007.mdl"
+};
+
+static char Gibs_Heavy_Attachments[][] = {
+	"foot_R",
+	"foot_L",
+	"back_lower",
+	"effect_hand_R",
+	"flag",
+	"head"
+};
+
+static char Gibs_Engineer_Models[][] = {
+	"models/player/gibs/engineergib001.mdl",
+	"models/player/gibs/engineergib002.mdl",
+	"models/player/gibs/engineergib003.mdl",
+	"models/player/gibs/engineergib005.mdl",
+	"models/player/gibs/engineergib006.mdl",
+	"models/player/gibs/engineergib007.mdl"
+};
+
+static char Gibs_Engineer_Attachments[][] = {
+	"foot_L",
+	"back_lower",
+	"effect_hand_R",
+	"flag",
+	"head",
+	"partyhat"
+};
+
+static char Gibs_Medic_Models[][] = {
+	"models/player/gibs/medicgib001.mdl",
+	"models/player/gibs/medicgib002.mdl",
+	"models/player/gibs/medicgib003.mdl",
+	"models/player/gibs/medicgib004.mdl",
+	"models/player/gibs/medicgib005.mdl",
+	"models/player/gibs/medicgib006.mdl",
+	"models/player/gibs/medicgib007.mdl",
+	"models/player/gibs/medicgib008.mdl"
+};
+
+static char Gibs_Medic_Attachments[][] = {
+	"foot_R",
+	"foot_L",
+	"back_lower",
+	"effect_hand_L",
+	"effect_hand_R",
+	"flag",
+	"head",
+	"eyes"
+};
+
+static char Gibs_Sniper_Models[][] = {
+	"models/player/gibs/snipergib001.mdl",
+	"models/player/gibs/snipergib002.mdl",
+	"models/player/gibs/snipergib003.mdl",
+	"models/player/gibs/snipergib004.mdl",
+	"models/player/gibs/snipergib005.mdl",
+	"models/player/gibs/snipergib006.mdl",
+	"models/player/gibs/snipergib007.mdl"
+};
+
+static char Gibs_Sniper_Attachments[][] = {
+	""
+};
+
+static char Gibs_Spy_Models[][] = {
+	"models/player/gibs/spygib001.mdl",
+	"models/player/gibs/spygib002.mdl",
+	"models/player/gibs/spygib003.mdl",
+	"models/player/gibs/spygib004.mdl",
+	"models/player/gibs/spygib005.mdl",
+	"models/player/gibs/spygib006.mdl",
+	"models/player/gibs/spygib007.mdl"
+};
+
+static char Gibs_Spy_Attachments[][] = {
+	""
+};
+
 static float DEFAULT_MINS[3] = { -24.0, -24.0, 0.0 };
 static float DEFAULT_MAXS[3] = { 24.0, 24.0, 82.0 };
 
@@ -159,6 +312,33 @@ void PNPC_MapStart()
 	PrecacheSound(SND_EXPLOSION_GENERIC_2);
 	PrecacheSound(SND_EXPLOSION_GENERIC_3);
 	PrecacheSound(SND_EXPLOSION_FIREBALL);
+
+	for (int i = 0; i < sizeof(Gibs_Scout_Models); i++)
+		PrecacheModel(Gibs_Scout_Models[i]);
+
+	for (int i = 0; i < sizeof(Gibs_Soldier_Models); i++)
+		PrecacheModel(Gibs_Soldier_Models[i]);
+
+	for (int i = 0; i < sizeof(Gibs_Pyro_Models); i++)
+		PrecacheModel(Gibs_Pyro_Models[i]);
+
+	for (int i = 0; i < sizeof(Gibs_Demo_Models); i++)
+		PrecacheModel(Gibs_Demo_Models[i]);
+	
+	for (int i = 0; i < sizeof(Gibs_Heavy_Models); i++)
+		PrecacheModel(Gibs_Heavy_Models[i]);
+
+	for (int i = 0; i < sizeof(Gibs_Engineer_Models); i++)
+		PrecacheModel(Gibs_Engineer_Models[i]);
+
+	for (int i = 0; i < sizeof(Gibs_Medic_Models); i++)
+		PrecacheModel(Gibs_Medic_Models[i]);
+
+	for (int i = 0; i < sizeof(Gibs_Sniper_Models); i++)
+		PrecacheModel(Gibs_Sniper_Models[i]);
+	
+	for (int i = 0; i < sizeof(Gibs_Spy_Models); i++)
+		PrecacheModel(Gibs_Spy_Models[i]);
 }
 
 void PNPC_MapEnd()
@@ -391,6 +571,7 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.b_GibsForced.get", Native_PNPCGetForcedGib);
 	CreateNative("PNPC.b_GibsForced.set", Native_PNPCSetForcedGib);
 	CreateNative("PNPC.SetGibsFromConfig", Native_PNPCSetGibsFromConfig);
+	CreateNative("PNPC.ClearGibs", Native_PNPCClearGibs);
 
 	//Damage VFX:
 	CreateNative("PNPC.SetBleedParticle", Native_PNPCSetBleedEffect);
@@ -3823,29 +4004,96 @@ public int Native_PNPCSetGibsFromConfig(Handle plugin, int numParams)
 	if (conf == null)
 		return 0;
 
-	ConfigMap gibs = conf.GetSection("npc.visuals.gibs");
-	if (gibs != null)
+	int autofill = GetIntFromConfigMap(conf, "npc.visuals.autofill_gibs", 0);
+	if (autofill > 0 && autofill < 10)
 	{
-		int slot = 1;
-		char slotChar[16];
-		ConfigMap instance = gibs.GetSection("1");
+		npc.ClearGibs();
 
-		while (instance != null)
+		switch(autofill)
 		{
-			char model[255], attachment[255];
-			instance.Get("model", model, sizeof(model));
-			instance.Get("attachment", attachment, sizeof(attachment));
+			case 1:
+			{
+				for (int i = 0; i < sizeof(Gibs_Scout_Models); i++)
+					npc.AddGib(Gibs_Scout_Models[i], Gibs_Scout_Attachments[i]);
+			}
+			case 2:
+			{
+				for (int i = 0; i < sizeof(Gibs_Soldier_Models); i++)
+					npc.AddGib(Gibs_Soldier_Models[i], Gibs_Soldier_Attachments[i]);
+			}
+			case 3:
+			{
+				for (int i = 0; i < sizeof(Gibs_Pyro_Models); i++)
+					npc.AddGib(Gibs_Pyro_Models[i], Gibs_Pyro_Attachments[i]);
+			}
+			case 4:
+			{
+				for (int i = 0; i < sizeof(Gibs_Demo_Models); i++)
+					npc.AddGib(Gibs_Demo_Models[i], Gibs_Demo_Attachments[i]);
+			}
+			case 5:
+			{
+				for (int i = 0; i < sizeof(Gibs_Heavy_Models); i++)
+					npc.AddGib(Gibs_Heavy_Models[i], Gibs_Heavy_Attachments[i]);
+			}
+			case 6:
+			{
+				for (int i = 0; i < sizeof(Gibs_Engineer_Models); i++)
+					npc.AddGib(Gibs_Engineer_Models[i], Gibs_Engineer_Attachments[i]);
+			}
+			case 7:
+			{
+				for (int i = 0; i < sizeof(Gibs_Medic_Models); i++)
+					npc.AddGib(Gibs_Medic_Models[i], Gibs_Medic_Attachments[i]);
+			}
+			case 8:
+			{
+				for (int i = 0; i < sizeof(Gibs_Scout_Models); i++)
+					npc.AddGib(Gibs_Sniper_Models[i], Gibs_Sniper_Attachments[i]);
+			}
+			case 9:
+			{
+				for (int i = 0; i < sizeof(Gibs_Scout_Models); i++)
+					npc.AddGib(Gibs_Spy_Models[i], Gibs_Spy_Attachments[i]);
+			}
+		}
+	}
+	else
+	{
+		ConfigMap gibs = conf.GetSection("npc.visuals.gibs");
+		if (gibs != null)
+		{
+			npc.ClearGibs();
 
-			npc.AddGib(model, attachment);
+			int slot = 1;
+			char slotChar[16];
+			ConfigMap instance = gibs.GetSection("1");
 
-			slot++;
-			IntToString(slot, slotChar, sizeof(slotChar));
-			instance = gibs.GetSection(slotChar);
+			while (instance != null)
+			{
+				char model[255], attachment[255];
+				instance.Get("model", model, sizeof(model));
+				instance.Get("attachment", attachment, sizeof(attachment));
+
+				npc.AddGib(model, attachment);
+
+				slot++;
+				IntToString(slot, slotChar, sizeof(slotChar));
+				instance = gibs.GetSection(slotChar);
+			}
 		}
 	}
 
 	DeleteCfg(conf);
 
+	return 0;
+}
+
+public int Native_PNPCClearGibs(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	delete g_Gibs[npc.Index];
+	delete g_GibAttachments[npc.Index];
 	return 0;
 }
 
@@ -3914,6 +4162,7 @@ public int Native_PNPCSetAttachmentsFromConfig(Handle plugin, int numParams)
 	ConfigMap attachments = conf.GetSection("npc.visuals.models");
 	if (attachments != null)
 	{
+		npc.RemoveAttachments();
 		int slot = 1;
 		char slotChar[16];
 		ConfigMap instance = attachments.GetSection("1");
