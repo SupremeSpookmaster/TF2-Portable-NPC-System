@@ -28,8 +28,6 @@ public Plugin myinfo =
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
-//		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
-//		- Projectiles phase through NPCs that have no team affiliation. PassFilter does not fix this. Find an alternative solution.
 //		- Implement the following:
 //			- PNPC_HasAspect
 //			- PNPC_GetArgInt
@@ -65,6 +63,8 @@ public Plugin myinfo =
 //				- Generic melee: should just be an extension of generic hitscan that adds a delay before the damage event occurs.
 //				- All: Have parameters for both an on-hit function and a filter function to determine what can/cannot be hit, as well as animation and sound parameters.
 //		- Add an option to make NPCs automatically enter their air/swim animations if airborne or in the water.
+//		- Projectiles phase through NPCs that have no team affiliation. PassFilter does not fix this. Find an alternative solution.
+//		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
