@@ -500,7 +500,8 @@ public any Native_PNPC_HasAspect(Handle plugin, int numParams)
 	char name[255];
 	int slot = 1;
 	Format(name, sizeof(name), "aspect_%i", slot);
-	while ((ConfigMap specificAspect = aspects.GetSection(name)) != null && !success)
+	ConfigMap specificAspect = aspects.GetSection(name);
+	while (specificAspect != null && !success)
 	{
 		char thisAspect[255], thisPlugin[255];
 		specificAspect.Get("aspect_name", thisAspect, sizeof(thisAspect));
@@ -515,10 +516,94 @@ public any Native_PNPC_HasAspect(Handle plugin, int numParams)
 
 		slot++;
 		Format(name, sizeof(name), "aspect_%i", slot);
+		specificAspect = aspects.GetSection(name)
 	}
 
 	DeleteCfg(conf);
 	return success;
+}
+
+public int Native_PNPC_GetArgI(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	ConfigMap conf = npc.GetConfigMap();
+	if (conf == null)
+		return false;
+
+	char aspect[255], pluginName[255], key[255], path[255];
+	GetNativeString(2, aspect, sizeof(aspect));
+	GetNativeString(3, pluginName, sizeof(pluginName));
+	GetNativeString(4, key, sizeof(key));
+	int defaultVal = GetNativeCell(5);
+
+	if (!npc.HasAspect(aspect, pluginName, path, sizeof(path)))
+	{
+		DeleteCfg(conf);
+		return defaultVal;
+	}
+
+	Format(path, sizeof(path), "%s.%s", path, key);
+	int returnVal = GetIntFromConfigMap(conf, path, defaultVal);
+
+	DeleteCfg(conf);
+
+	return returnVal;
+}
+
+public any Native_PNPC_GetArgF(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	ConfigMap conf = npc.GetConfigMap();
+	if (conf == null)
+		return false;
+
+	char aspect[255], pluginName[255], key[255], path[255];
+	GetNativeString(2, aspect, sizeof(aspect));
+	GetNativeString(3, pluginName, sizeof(pluginName));
+	GetNativeString(4, key, sizeof(key));
+	float defaultVal = GetNativeCell(5);
+
+	if (!npc.HasAspect(aspect, pluginName, path, sizeof(path)))
+	{
+		DeleteCfg(conf);
+		return defaultVal;
+	}
+
+	Format(path, sizeof(path), "%s.%s", path, key);
+	int returnVal = GetFloatFromConfigMap(conf, path, defaultVal);
+	
+	DeleteCfg(conf);
+
+	return returnVal;
+}
+
+public int Native_PNPC_GetArgS(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	ConfigMap conf = npc.GetConfigMap();
+	if (conf == null)
+		return false;
+
+	char aspect[255], pluginName[255], key[255], path[255], defaultVal[255], returnVal[255];
+	GetNativeString(2, aspect, sizeof(aspect));
+	GetNativeString(3, pluginName, sizeof(pluginName));
+	GetNativeString(4, key, sizeof(key));
+	GetNativeString(7, defaultVal, sizeof(defaultVal));
+
+	if (!npc.HasAspect(aspect, pluginName, path, sizeof(path)))
+	{
+		DeleteCfg(conf);
+		SetNativeString(5, defaultVal, GetNativeCell(6));
+		return 0;
+	}
+
+	Format(path, sizeof(path), "%s.%s", path, key);
+	conf.Get(path, returnVal, sizeof(returnVal));
+	SetNativeString(5, returnVal, GetNativeCell(6));
+	
+	DeleteCfg(conf);
+
+	return 0;
 }
 
 public int Native_PNPC_GetConfigName(Handle plugin, int numParams) { SetNativeString(2, PNPC_ConfigName[GetNativeCell(1)], GetNativeCell(3)); return 0; }
