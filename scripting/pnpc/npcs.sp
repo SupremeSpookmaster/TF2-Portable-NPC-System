@@ -390,6 +390,7 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.AddGib", Native_PNPCAddGib);
 	CreateNative("PNPC.b_GibsForced.get", Native_PNPCGetForcedGib);
 	CreateNative("PNPC.b_GibsForced.set", Native_PNPCSetForcedGib);
+	CreateNative("PNPC.SetGibsFromConfig", Native_PNPCSetGibsFromConfig);
 
 	//Damage VFX:
 	CreateNative("PNPC.SetBleedParticle", Native_PNPCSetBleedEffect);
@@ -405,6 +406,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.g_AttachedWeapons.get", Native_PNPCGetAttachedWeapons);
 	CreateNative("PNPC.g_AttachedWeapons.set", Native_PNPCSetAttachedWeapons);
 	CreateNative("PNPC.RemoveAttachments", Native_PNPCRemoveAttachments);
+	CreateNative("PNPC.SetParticlesFromConfig", Native_PNPCSetParticlesFromConfig);
+	CreateNative("PNPC.SetAttachmentsFromConfig", Native_PNPCSetAttachmentsFromConfig);
 
 	//Afterburn:
 	CreateNative("PNPC.b_Burning.get", Native_PNPCGetBurning);
@@ -456,6 +459,7 @@ void PNPC_MakeNatives()
 	//Config:
 	CreateNative("PNPC.GetConfigName", Native_PNPC_GetConfigName);
 	CreateNative("PNPC.SetConfigName", Native_PNPC_SetConfigName);
+	CreateNative("PNPC.GetConfigMap", Native_PNPC_GetConfigMap);
 
 	//Name:
 	CreateNative("PNPC.GetName", Native_PNPC_GetName);
@@ -2382,7 +2386,6 @@ public int Native_PNPCAttachModel(Handle plugin, int numParams)
 	GetNativeString(2, model, sizeof(model));
 	if (!CheckFile(model))
 		return -1;
-	PrecacheModel(model);
 
 	GetNativeString(3, attachment, sizeof(attachment));
 	GetNativeString(4, sequence, sizeof(sequence));
@@ -3657,4 +3660,138 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 	DeleteCfg(conf);
 
 	return success;
+}
+
+public any Native_PNPC_GetConfigMap(Handle plugin, int numParams)
+{
+	char filePath[255];
+	Format(filePath, sizeof(filePath), "configs/npcs/%s.cfg", PNPC_ConfigName[GetNativeCell(1)]);
+	return new ConfigMap(filePath);
+}
+
+public int Native_PNPCSetGibsFromConfig(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+
+	ConfigMap conf = npc.GetConfigMap();
+	if (conf == null)
+		return 0;
+
+	ConfigMap gibs = conf.GetSection("npc.visuals.gibs");
+	if (gibs != null)
+	{
+		int slot = 1;
+		char slotChar[16];
+		ConfigMap instance = gibs.GetSection("1");
+
+		while (instance != null)
+		{
+			char model[255], attachment[255];
+			instance.Get("model", model, sizeof(model));
+			instance.Get("attachment", attachment, sizeof(attachment));
+
+			npc.AddGib(model, attachment);
+
+			slot++;
+			IntToString(slot, slotChar, sizeof(slotChar));
+			instance = gibs.GetSection(slotChar);
+		}
+	}
+
+	DeleteCfg(conf);
+
+	return 0;
+}
+
+public int Native_PNPCSetParticlesFromConfig(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+
+	ConfigMap conf = npc.GetConfigMap();
+	if (conf == null)
+		return 0;
+
+	ConfigMap particles = conf.GetSection("npc.visuals.particles");
+	if (particles != null)
+	{
+		int slot = 1;
+		char slotChar[16];
+		ConfigMap instance = particles.GetSection("1");
+
+		while (instance != null)
+		{
+			//TODO: Expand on this to allow "aura" effects, like what unusual taunts use.
+			//These also need to be hidden via SetTransmit while the PNPC is invisible.
+
+			char particle[255], attachment[255], placeholder[255];
+			instance.Get("name_red", particle, sizeof(particle));
+			instance.Get("attachment", attachment, sizeof(attachment));
+
+			if (npc.i_Team == TFTeam_Blue)
+			{
+				instance.Get("name_blue", placeholder, sizeof(placeholder));
+				if (!StrEqual(placeholder, ""))
+					strcopy(particle, sizeof(particle), placeholder);
+			}
+			else if (npc.i_Team != TFTeam_Red)
+			{
+				instance.Get("name_unassigned", placeholder, sizeof(placeholder));
+				if (!StrEqual(placeholder, ""))
+					strcopy(particle, sizeof(particle), placeholder);
+			}
+
+			float xOff = GetFloatFromConfigMap(instance, "x_offset", 0.0);
+			float yOff = GetFloatFromConfigMap(instance, "y_offset", 0.0);
+			float zOff = GetFloatFromConfigMap(instance, "z_offset", 0.0);
+
+			AttachParticleToEntity(npc.Index, particle, attachment, _, xOff, yOff, zOff);
+
+			slot++;
+			IntToString(slot, slotChar, sizeof(slotChar));
+			instance = particles.GetSection(slotChar);
+		}
+	}
+
+	DeleteCfg(conf);
+
+	return 0;
+}
+
+public int Native_PNPCSetAttachmentsFromConfig(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+
+	ConfigMap conf = npc.GetConfigMap();
+	if (conf == null)
+		return 0;
+
+	ConfigMap attachments = conf.GetSection("npc.visuals.models");
+	if (attachments != null)
+	{
+		int slot = 1;
+		char slotChar[16];
+		ConfigMap instance = attachments.GetSection("1");
+
+		while (instance != null)
+		{
+			char model[255], attachment[255], sequence[255];
+			instance.Get("model", model, sizeof(model));
+			instance.Get("attachment", attachment, sizeof(attachment));
+			instance.Get("sequence", sequence, sizeof(sequence));
+			int skin = GetIntFromConfigMap(instance, "skin", -1);
+			float scale = GetFloatFromConfigMap(instance, "scale", 1.0);
+			bool bonemerge = GetBoolFromConfigMap(instance, "bonemerge", true);
+			bool weapon = GetBoolFromConfigMap(instance, "weapon", false);
+
+			npc.AttachModel(model, attachment, sequence, skin, scale, bonemerge, weapon);
+
+			slot++;
+			IntToString(slot, slotChar, sizeof(slotChar));
+			instance = attachments.GetSection(slotChar);
+		}
+	}
+
+	DeleteCfg(conf);
+
+	return 0;
 }

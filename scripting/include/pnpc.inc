@@ -68,6 +68,13 @@ methodmap PNPC_Template __nullable__
 	 */
 	public native void SetName(char name[255]);
 
+	/**
+	 * Retrieves a copy of this template's ConfigMap. You must call DeleteCfg when you are done with it, or else you run the risk of causing a memory leak.
+	 * 
+	 * @return		A copy of this template's ConfigMap.
+	 */
+	public native ConfigMap GetConfigMap();
+
 	property int Index
 	{
 		public native get();
@@ -81,6 +88,9 @@ methodmap PNPC_Template __nullable__
 
 	property ConfigMap g_ConfigMap
 	{
+		/**
+		 * NOTE: This getter is for internal use only! If you need to mess with a PNPC's ConfigMap, use PNPC.GetConfigMapAtPosition instead!
+		 */
 		public native get();
 		public native set(ConfigMap value);
 	}
@@ -108,6 +118,13 @@ methodmap PNPC < CBaseCombatCharacter
 	 * @param name			The name of this PNPC, as displayed in-game.
 	 */
 	public native PNPC(char[] model, TFTeam team, int health = 200, int maxHealth = 200, int skin = -1, float scale = 1.0, float speed = 300.0, Function logic = INVALID_FUNCTION, char plugin[255] = "", float thinkRate = 0.0, float pos[3] = NULL_VECTOR, float ang[3] = NULL_VECTOR, float lifespan = 0.0, char config[255] = "", char name[255] = "");
+
+	/**
+	 * Retrieves a ConfigMap of this PNPC's config. You must call DeleteCfg when you're done with it, or else you will cause a memory leak.
+	 * 
+	 * @return A ConfigMap using this PNPC's config.
+	 */
+	public native ConfigMap GetConfigMap();
 
 	/**
 	 * Retrieves the PNPC's model, stored in the output buffer.
@@ -191,6 +208,21 @@ methodmap PNPC < CBaseCombatCharacter
 	 * @param name		New name.
 	 */
 	public native void SetName(char[] name);
+
+	/**
+	 * Automatically sets this PNPC's gibs, using its config.
+	 */
+	public native void SetGibsFromConfig();
+
+	/**
+	 * Automatically sets this PNPC's particle effects, using its config.
+	 */
+	public native void SetParticlesFromConfig();
+
+	/**
+	 * Automatically sets this PNPC's model attachments, using its config.
+	 */
+	public native void SetAttachmentsFromConfig();
 
 	/**
 	 * Retrieves the PNPC's locomotion interface.
@@ -341,7 +373,7 @@ methodmap PNPC < CBaseCombatCharacter
 	public native void PunchForce(const float vel[3], bool override);
 
 	/**
-	 * Attaches a model to the PNPC. These are precached automatically.
+	 * Attaches a model to the PNPC. You must precache these manually.
 	 * 
 	 * @param model			The model to attach.
 	 * @param attachment	The bone to attach to.

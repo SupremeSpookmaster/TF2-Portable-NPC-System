@@ -28,8 +28,14 @@ public Plugin myinfo =
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
-//		- Finish NPC_Template.Spawn by adding models, gibs, and particles.
-//		- Fix the SpawnNPC method freaking out if when it fails to find the specified template.
+//		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
+//		- The "NPCs being sent directly to NPC hell by attempting to stand on projectiles" fix made it so all projectiles just go right through NPCs now. Fix this.
+//		- Implement the following:
+//			- PNPC_HasAspect
+//			- PNPC_GetArgInt
+//			- PNPC_GetArgFloat
+//			- PNPC_GetArgBool
+//			- PNPC_GetArgString
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
