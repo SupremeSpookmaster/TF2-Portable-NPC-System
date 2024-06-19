@@ -34,8 +34,8 @@ TODO: Write a guide in the wiki and link to it here.
 ## *Known Bugs/Limitations*
 Ranked in order of most to least impactful:
 - Huntsman arrows are not able to headshot NPCs. I have absolutely no idea why, I would happily accept a pull request if anybody might know how to fix this.
-- Some projectiles phase through NPCs assigned to TFTeam_Spectator, and all projectiles phase through NPCs assigned to TFTeam_Unassigned.
+- Some projectiles phase through NPCs assigned to TFTeam_Spectator, and all projectiles phase through NPCs assigned to TFTeam_Unassigned. I tried fixing this via CollisionHook, but that did not work.
 - Sandman balls, flying guillotines, and all jars (jarate, milk, gas) have a rare chance to sometimes bounce off of NPCs harmlessly. Again, I would happily accept a pull request from anyone who knows how to fix this.
-- NPCs cannot be airblasted (their projectiles CAN be, however). I do not plan to fix this.
-- A lot of very specific/niche weapon attributes do not work against NPCs. I may eventually make certain attributes compatible if I end up needing them for my own personal projects, but this is not a guarantee that every attribute will eventually be fixed.
+- NPCs cannot be airblasted (their projectiles CAN be, however). I might fix this some day if one of my personal projects makes it necessary for airblast to work against NPCs, but for the time being, I will not be changing this.
+- A lot of very specific/niche weapon attributes do not work against NPCs. Inevitably, I will end up making certain attributes compatible for my own personal projects, but this is by no means a guarantee that every attribute will eventually be fixed.
 - TF2 conditions cannot be applied to NPCs. I will not be writing a workaround for this as it would take way too long and ultimately not be very useful, you're better off writing the functionality of the condition you need into your own custom NPC logic.
