@@ -28,6 +28,7 @@ public Plugin myinfo =
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
+//		- Add support for the "autofill_gibs" feature.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
