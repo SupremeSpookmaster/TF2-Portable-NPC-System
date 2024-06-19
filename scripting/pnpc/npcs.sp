@@ -50,7 +50,15 @@ static char Gibs_Scout_Models[][] = {
 };
 
 static char Gibs_Scout_Attachments[][] = {
-	""
+	"foot_R",
+	"foot_L",
+	"back_lower",
+	"effect_hand_L",
+	"effect_hand_R",
+	"back_upper",
+	"head",
+	"partyhat",
+	"partyhat"
 };
 
 static char Gibs_Soldier_Models[][] = {
@@ -58,14 +66,19 @@ static char Gibs_Soldier_Models[][] = {
 	"models/player/gibs/soldiergib002.mdl",
 	"models/player/gibs/soldiergib003.mdl",
 	"models/player/gibs/soldiergib004.mdl",
-	"models/player/gibs/soldiergib005.mdl",
 	"models/player/gibs/soldiergib006.mdl",
 	"models/player/gibs/soldiergib007.mdl",
 	"models/player/gibs/soldiergib008.mdl"
 };
 
 static char Gibs_Soldier_Attachments[][] = {
-	""
+	"foot_R",
+	"foot_L",
+	"effect_hand_R",
+	"prop_bone",
+	"flag",
+	"head",
+	"partyhat"
 };
 
 static char Gibs_Pyro_Models[][] = {
@@ -173,7 +186,13 @@ static char Gibs_Sniper_Models[][] = {
 };
 
 static char Gibs_Sniper_Attachments[][] = {
-	""
+	"foot_L",
+	"foot_R",
+	"effect_hand_L",
+	"flag",
+	"head",
+	"eyes",
+	"partyhat"
 };
 
 static char Gibs_Spy_Models[][] = {
@@ -181,13 +200,17 @@ static char Gibs_Spy_Models[][] = {
 	"models/player/gibs/spygib002.mdl",
 	"models/player/gibs/spygib003.mdl",
 	"models/player/gibs/spygib004.mdl",
-	"models/player/gibs/spygib005.mdl",
 	"models/player/gibs/spygib006.mdl",
 	"models/player/gibs/spygib007.mdl"
 };
 
 static char Gibs_Spy_Attachments[][] = {
-	""
+	"foot_R",
+	"foot_L",
+	"effect_hand_R",
+	"effect_hand_L",
+	"flag",
+	"head"
 };
 
 static float DEFAULT_MINS[3] = { -24.0, -24.0, 0.0 };
