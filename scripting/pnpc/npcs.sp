@@ -1286,6 +1286,9 @@ public bool PNPC_IsTraversable(CBaseNPC_Locomotion loco, int other, TraverseWhen
 	if (other < 1)
 		return false;
 
+	//if (b_IsInUpdateGroundConstraint && b_IsProjectile[other])
+	//	return false;
+
 	//int bot = loco.GetBot().GetNextBotCombatCharacter();
 
 	if (Brush_Is_Solid(other))
@@ -3440,10 +3443,21 @@ public any Native_PNPCRemoveGas(Handle plugin, int numParams)
 
 public Action PNPC_PassFilter(int ent1, int ent2, bool &result)
 {
-	if (b_IsInUpdateGroundConstraint && (b_IsProjectile[ent1] || b_IsProjectile[ent2]))
+	if (!PNPC_IsNPC(ent1) && !PNPC_IsNPC(ent2))
+		return Plugin_Continue;
+
+	if (b_IsProjectile[ent1] || b_IsProjectile[ent2])
 	{
-		result = false;
-		return Plugin_Changed;
+		if (b_IsInUpdateGroundConstraint)
+		{
+			result = false;
+			return Plugin_Changed;
+		}
+		else
+		{
+			result = GetEntProp(ent1, Prop_Send, "m_iTeamNum") != GetEntProp(ent2, Prop_Send, "m_iTeamNum");
+			return Plugin_Changed;
+		}
 	}
 
 	return Plugin_Continue;

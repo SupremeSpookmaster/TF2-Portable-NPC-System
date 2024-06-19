@@ -29,7 +29,7 @@ methodmap PNPC_Template __nullable__
 	 * 
 	 * @return	The entity index of the spawned PNPC if successful, -1 otherwise.
 	 */
-	public native int Spawn(float pos[3], float ang[3], int owner = -1, TFTeam team = TFTeam_Unassigned);
+	public native int Spawn(float pos[3], float ang[3], int owner = -1, TFTeam team = TFTeam_Spectator);
 
 	/**
 	 * Triggers a sound cue based on the cues in this PNPC's config.

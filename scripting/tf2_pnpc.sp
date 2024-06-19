@@ -29,7 +29,7 @@ public Plugin myinfo =
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
 //		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
-//		- The "NPCs being sent directly to NPC hell by attempting to stand on projectiles" fix made it so all projectiles just go right through NPCs now. Fix this.
+//		- Projectiles phase through NPCs that have no team affiliation. PassFilter does not fix this. Find an alternative solution.
 //		- Implement the following:
 //			- PNPC_HasAspect
 //			- PNPC_GetArgInt
