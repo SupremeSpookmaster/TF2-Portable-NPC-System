@@ -89,7 +89,7 @@ methodmap PNPC_Template __nullable__
 	property ConfigMap g_ConfigMap
 	{
 		/**
-		 * NOTE: This getter is for internal use only! If you need to mess with a PNPC's ConfigMap, use PNPC.GetConfigMapAtPosition instead!
+		 * NOTE: This getter is for internal use only! If you need to mess with a PNPC's ConfigMap, use PNPC.GetConfigMap instead!
 		 */
 		public native get();
 		public native set(ConfigMap value);
@@ -509,6 +509,56 @@ methodmap PNPC < CBaseCombatCharacter
 	 * @param autoscale	If true, the mins and maxs are automatically scaled based on the PNPC's model scale.
 	 */
 	public native void SetBoundingBox(float mins[3], float maxs[3], bool autoscale = true);
+
+	/**
+	 * Checks to see if this PNPC has a given aspect.
+	 * 
+	 * @param aspect		Aspect name, IE "my_aspect".
+	 * @param plugin		Plugin name, IE "my_plugin".
+	 * @param output		Optional output buffer to store the ConfigMap path to the aspect if it is found, IE "npc.aspects.aspect_1".
+	 * @param size			Output buffer length.
+	 * 
+	 * @return		True if the aspect is found, false otherwise.
+	 */
+	public native bool HasAspect(char[] aspect, char[] plugin, char[] output = "", int size = 0);
+
+	/**
+	 * Retrieves an integer associated with a given aspect of this PNPC.
+	 * 
+	 * @param aspect		Aspect name, IE "my_aspect".
+	 * @param plugin		Plugin name, IE "my_plugin".
+	 * @param key			Key to retrieve the integer from, IE "my_key".
+	 * @param defaultVal	Default value to return if the aspect or key does not exist on this PNPC.
+	 * 
+	 * @return		The integer value associated with the given aspect's specified key.
+	 */
+	public native int GetArgI(char[] aspect, char[] plugin, char[] key, int defaultVal = 0);
+
+	/**
+	 * Retrieves a float associated with a given aspect of this PNPC.
+	 * 
+	 * @param aspect		Aspect name, IE "my_aspect".
+	 * @param plugin		Plugin name, IE "my_plugin".
+	 * @param key			Key to retrieve the integer from, IE "my_key".
+	 * @param defaultVal	Default value to return if the aspect or key does not exist on this PNPC.
+	 * 
+	 * @return		The float value associated with the given aspect's specified key.
+	 */
+	public native float GetArgF(char[] aspect, char[] plugin, char[] key, float defaultVal = 0);
+
+	/**
+	 * Retrieves a string associated with a given aspect of this PNPC, stored in the output buffer.
+	 * 
+	 * @param aspect		Aspect name, IE "my_aspect".
+	 * @param plugin		Plugin name, IE "my_plugin".
+	 * @param key			Key to retrieve the string from, IE "my_key".
+	 * @param output		Output buffer to store the result in.
+	 * @param size			Output buffer length.
+	 * @param defaultVal	Default value to return if the aspect or key does not exist on this PNPC.
+	 * 
+	 * @return		The string value associated with the given aspect's specified key, stored in the output buffer.
+	 */
+	public native void GetArgS(char[] aspect, char[] plugin, char[] key, char[] output, int size, char[] defaultVal = "");
 
 	property int Index
 	{

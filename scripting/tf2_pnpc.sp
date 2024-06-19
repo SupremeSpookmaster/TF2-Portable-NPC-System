@@ -29,7 +29,6 @@ public Plugin myinfo =
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
 //		- Implement the following:
-//			- PNPC_HasAspect
 //			- PNPC_GetArgInt
 //			- PNPC_GetArgFloat
 //			- PNPC_GetArgBool

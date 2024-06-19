@@ -460,6 +460,10 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.GetConfigName", Native_PNPC_GetConfigName);
 	CreateNative("PNPC.SetConfigName", Native_PNPC_SetConfigName);
 	CreateNative("PNPC.GetConfigMap", Native_PNPC_GetConfigMap);
+	CreateNative("PNPC.HasAspect", Native_PNPC_HasAspect);
+	CreateNative("PNPC.GetArgI", Native_PNPC_GetArgI);
+	CreateNative("PNPC.GetArgF", Native_PNPC_GetArgF);
+	CreateNative("PNPC.GetArgS", Native_PNPC_GetArgS);
 
 	//Name:
 	CreateNative("PNPC.GetName", Native_PNPC_GetName);
@@ -472,6 +476,49 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_IsValidTarget", Native_PNPC_IsValidTarget);
 	CreateNative("PNPC_WorldSpaceCenter", Native_PNPC_WorldSpaceCenter);
 	CreateNative("PNPC_GetClosestTarget", Native_PNPC_GetClosestTarget);
+}
+
+public any Native_PNPC_HasAspect(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	ConfigMap conf = npc.GetConfigMap();
+	if (conf == null)
+		return false;
+
+	char aspect[255], pluginName[255];
+	GetNativeString(2, aspect, sizeof(aspect));
+	GetNativeString(3, pluginName, sizeof(pluginName));
+
+	ConfigMap aspects = conf.GetSection("npc.aspects");
+	if (aspects == null)
+	{
+		DeleteCfg(conf);
+		return false;
+	}
+
+	bool success = false;
+	char name[255];
+	int slot = 1;
+	Format(name, sizeof(name), "aspect_%i", slot);
+	while ((ConfigMap specificAspect = aspects.GetSection(name)) != null && !success)
+	{
+		char thisAspect[255], thisPlugin[255];
+		specificAspect.Get("aspect_name", thisAspect, sizeof(thisAspect));
+		specificAspect.Get("plugin_name", thisPlugin, sizeof(thisPlugin));
+		if (StrEqual(thisAspect, aspect) && StrEqual(thisPlugin, pluginName))
+		{
+			char fullPath[255];
+			Format(fullPath, sizeof(fullPath), "npc.aspects.%s", name);
+			SetNativeString(4, fullPath, GetNativeCell(5));
+			success = true;
+		}
+
+		slot++;
+		Format(name, sizeof(name), "aspect_%i", slot);
+	}
+
+	DeleteCfg(conf);
+	return success;
 }
 
 public int Native_PNPC_GetConfigName(Handle plugin, int numParams) { SetNativeString(2, PNPC_ConfigName[GetNativeCell(1)], GetNativeCell(3)); return 0; }
