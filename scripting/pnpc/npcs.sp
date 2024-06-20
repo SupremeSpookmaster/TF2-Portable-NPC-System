@@ -249,6 +249,7 @@ bool b_MiniCrit[2049] = { false, ... };
 bool I_AM_DEAD[2049] = { false, ... };
 bool b_PillAlreadyBounced[2049] = { false, ... };
 bool b_IsProjectile[2049] = { false, ... };
+bool b_IsGib[2049] = { false, ... };
 
 char PNPC_Model[2049][255];
 char PNPC_BleedParticle[2049][255];
@@ -294,6 +295,9 @@ DynamicHook g_DHookRocketExplode;
 Handle g_DHookPillCollide;
 Handle g_hSDKWorldSpaceCenter;
 //DynamicHook g_DHookFlareExplode;
+
+Queue g_NPCsList;
+Queue g_GibsList;
 
 enum //hitgroup_t
 {
@@ -363,6 +367,8 @@ void PNPC_MapStart()
 	
 	for (int i = 0; i < sizeof(Gibs_Spy_Models); i++)
 		PrecacheModel(Gibs_Spy_Models[i]);
+
+	g_NPCsList = new Queue();
 }
 
 void PNPC_MapEnd()
@@ -378,6 +384,8 @@ void PNPC_MapEnd()
 		delete g_AttachedWeaponModels[i];
 		delete g_AttachedParticles[i];
 	}
+
+	delete g_NPCsList;
 }
 
 public float PNPC_PathCost(INextBot bot, CNavArea area, CNavArea from_area, CNavLadder ladder, int iElevator, float length)
@@ -868,6 +876,11 @@ public void PNPC_OnEntityDestroyed(int entity)
 	i_PillCollideTarget[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
+	if (b_IsGib[entity])
+	{
+		PNPC_RemoveFromList(entity, true);
+		b_IsGib[entity] = false;
+	}
 }
 
 MRESReturn PNPC_OnFlareExplodePre(int entity, Handle hParams) 
@@ -1025,6 +1038,9 @@ bool PNPC_CheckAllowCustomExplosionLogic(int entity, int &owner = -1, int &launc
 
 	Call_Finish(success);
 
+	if (!Settings_AllowExplosions())
+		success = false;
+
 	return success;
 }
 
@@ -1039,6 +1055,21 @@ void PNPC_CalculateExplosionBaseStats(int launcher, float &damage, float &radius
 
 void PNPC_OnCreate(int npc)
 {
+	if (Settings_WillExceedNPCLimit(g_NPCsList))
+	{
+		if (Settings_GetMaxNPCsMethod() <= 0)
+		{
+			RemoveEntity(npc);
+			return;
+		}
+		else
+		{
+			int oldest = EntRefToEntIndex(g_NPCsList.Pop());
+			if (IsValidEntity(oldest))
+				view_as<PNPC>(oldest).Gib();
+		}
+	}
+
 	PNPC alive = view_as<PNPC>(npc);
 
 	for (int i = MaxClients + 1; i < 2049; i++)
@@ -1060,6 +1091,39 @@ void PNPC_OnCreate(int npc)
 	I_AM_DEAD[npc] = false;
 
 	alive.PlayRandomSound("sound_spawn");
+	g_NPCsList.Push(EntIndexToEntRef(npc));
+}
+
+void PNPC_RemoveFromList(int entity, bool isAGib = false)
+{
+	Queue replacement = new Queue();
+
+	if (!isAGib)
+	{
+		while (!g_NPCsList.Empty)
+		{
+			int ent = EntRefToEntIndex(g_NPCsList.Pop());
+			if (ent != entity && IsValidEntity(ent))
+				replacement.Push(EntIndexToEntRef(ent));
+		}
+
+		delete g_NPCsList;
+		g_NPCsList = replacement.Clone();
+		delete replacement;
+	}
+	else
+	{
+		while (!g_GibsList.Empty)
+		{
+			int ent = EntRefToEntIndex(g_GibsList.Pop());
+			if (ent != entity && IsValidEntity(ent))
+				replacement.Push(EntIndexToEntRef(ent));
+		}
+
+		delete g_GibsList;
+		g_GibsList = replacement.Clone();
+		delete replacement;
+	}
 }
 
 void PNPC_OnDestroy(int npc)
@@ -1097,6 +1161,8 @@ void PNPC_OnDestroy(int npc)
 
 	dead.b_Exists = false;
 	I_AM_DEAD[npc] = true;
+
+	PNPC_RemoveFromList(npc);
 }
 
 void PNPC_RemoveFromPaths(PNPC npc)
@@ -2751,6 +2817,9 @@ public int Native_PNPCAttachParticle(Handle plugin, int numParams)
 	int ent = GetNativeCell(1);
 	PNPC npc = view_as<PNPC>(ent);
 
+	if (npc.g_AttachedParticles.Length + 1 > Settings_GetMaxParticles())
+		return -1;
+
 	char name[255], attachment[255];
 	GetNativeString(2, name, sizeof(name));
 	GetNativeString(3, attachment, sizeof(attachment));
@@ -2776,6 +2845,9 @@ public int Native_PNPCAttachModel(Handle plugin, int numParams)
 {
 	int ent = GetNativeCell(1);
 	PNPC npc = view_as<PNPC>(ent);
+
+	if (npc.g_AttachedWeapons.Length + npc.g_AttachedCosmetics.Length + 1 > Settings_GetMaxAttachments())
+		return -1;
 
 	char model[255], attachment[255], sequence[255];
 	GetNativeString(2, model, sizeof(model));
@@ -2862,6 +2934,17 @@ public int Native_PNPCAttachModel(Handle plugin, int numParams)
 
 public void PNPC_SpawnGib(char model[255], int skin, float pos[3], float ang[3], float vel[3])
 {
+	if (Settings_WillExceedGibLimit(g_GibsList))
+	{
+		int oldest = EntRefToEntIndex(g_GibsList.Pop());
+		if (IsValidEntity(oldest))
+		{
+			MakeEntityFadeOut(oldest, 2);
+			b_IsGib[oldest] = false;
+			PNPC_RemoveFromList(oldest, true);
+		}
+	}
+
 	char skinChar[16];
 	IntToString(skin, skinChar, sizeof(skinChar));
 	int gib = SpawnPhysicsProp(model, 0, skinChar, 99999.0, true, 1.0, pos, ang, vel, 10.0);
@@ -2874,6 +2957,8 @@ public void PNPC_SpawnGib(char model[255], int skin, float pos[3], float ang[3],
 		SetEntProp(gib, Prop_Send, "m_iTeamNum", 0);
 
 		CreateTimer(5.0, PNPC_BeginGibFadeout, EntIndexToEntRef(gib), TIMER_FLAG_NO_MAPCHANGE);
+		b_IsGib[gib] = true;
+		g_GibsList.Push(EntIndexToEntRef(gib));
 	}
 }
 

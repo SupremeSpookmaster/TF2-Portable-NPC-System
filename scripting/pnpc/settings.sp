@@ -35,3 +35,39 @@ public void Settings_Load()
 
 	DeleteCfg(conf);
 }
+
+/**
+ * Checks if there would be too many NPCs after spawning another one.
+ * 
+ * @param NPCs		Current list of NPCs.
+ * 
+ * @return	True if spawning one more NPC will exceed the limit, false otherwise.
+ */
+public bool Settings_WillExceedNPCLimit(Queue NPCs)
+{
+	if (i_MaxNPCs < 0)
+		return false;
+
+	return NPCs.Length + 1 > i_MaxNPCs;
+}
+
+public int Settings_GetMaxNPCsMethod() { return i_MaxNPCsMethod; }
+
+/**
+ * Checks if there would be too many gibs after spawning another one.
+ * 
+ * @param Gibs		Current list of gibs.
+ * 
+ * @return	True if spawning one more gib will exceed the limit, false otherwise.
+ */
+public bool Settings_WillExceedGibLimit(Queue Gibs)
+{
+	if (i_MaxGibs < 0)
+		return false;
+
+	return Gibs.Length + 1 > i_MaxGibs;
+}
+
+public int Settings_GetMaxAttachments() { return i_MaxAttachments; }
+public int Settings_GetMaxParticles() { return i_MaxParticles; }
+public bool Settings_AllowExplosions() { return !b_CustomExplosions; }
