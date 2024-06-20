@@ -774,7 +774,7 @@ public any Native_PNPC_GetArgF(Handle plugin, int numParams)
 	}
 
 	Format(path, sizeof(path), "%s.%s", path, key);
-	int returnVal = GetFloatFromConfigMap(conf, path, defaultVal);
+	float returnVal = GetFloatFromConfigMap(conf, path, defaultVal);
 	
 	DeleteCfg(conf);
 

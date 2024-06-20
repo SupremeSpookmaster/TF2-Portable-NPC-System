@@ -549,7 +549,7 @@ methodmap PNPC < CBaseCombatCharacter
 	 * 
 	 * @return		The float value associated with the given aspect's specified key.
 	 */
-	public native float GetArgF(char[] aspect, char[] plugin, char[] key, float defaultVal = 0);
+	public native float GetArgF(char[] aspect, char[] plugin, char[] key, float defaultVal = 0.0);
 
 	/**
 	 * Retrieves a string associated with a given aspect of this PNPC, stored in the output buffer.
@@ -564,6 +564,8 @@ methodmap PNPC < CBaseCombatCharacter
 	 * @return		The string value associated with the given aspect's specified key, stored in the output buffer.
 	 */
 	public native void GetArgS(char[] aspect, char[] plugin, char[] key, char[] output, int size, char[] defaultVal = "");
+
+	public native int AttachParticle()
 
 	property int Index
 	{
