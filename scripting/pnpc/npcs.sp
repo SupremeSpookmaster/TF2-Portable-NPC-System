@@ -1059,7 +1059,7 @@ void PNPC_OnCreate(int npc)
 	alive.b_Exists = true;
 	I_AM_DEAD[npc] = false;
 
-	npc.PlayRandomSound("sound_spawn");
+	alive.PlayRandomSound("sound_spawn");
 }
 
 void PNPC_OnDestroy(int npc)

@@ -32,15 +32,6 @@ methodmap PNPC_Template __nullable__
 	public native int Spawn(float pos[3], float ang[3], int owner = -1, TFTeam team = TFTeam_Spectator);
 
 	/**
-	 * Triggers a sound cue based on the cues in this PNPC's config.
-	 * 
-	 * @param cue			The sound cue to trigger.
-	 * 
-	 * @return		True if a sound was successfully played.
-	 */
-	public native bool PlayRandomSound(char cue[255]);
-
-	/**
 	 * Retrieves the config file used for this PNPC template, relative to sourcemod/configs/npcs.
 	 * 
 	 * @param output		Output buffer.
@@ -579,6 +570,15 @@ methodmap PNPC < CBaseCombatCharacter
 	 * @return		The string value associated with the given aspect's specified key, stored in the output buffer.
 	 */
 	public native void GetArgS(char[] aspect, char[] plugin, char[] key, char[] output, int size, char[] defaultVal = "");
+
+	/**
+	 * Triggers a sound cue based on the cues in this PNPC's config.
+	 * 
+	 * @param cue			The sound cue to trigger.
+	 * 
+	 * @return		True if a sound was successfully played.
+	 */
+	public native bool PlayRandomSound(char cue[255]);
 
 	property int Index
 	{
