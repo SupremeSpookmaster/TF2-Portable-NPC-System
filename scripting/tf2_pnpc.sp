@@ -45,8 +45,7 @@ public Plugin myinfo =
 //			- "Aspects", AKA passive effects.
 //			- "Abilities", AKA special abilities that can only be activated by custom NPC logic.
 //			- Movement and combat will typically only be used by extremely basic NPCs, whereas aspects and abilities are used to create more complex NPCs.
-//		- Allow server owners to configure several settings:
-//			- Max NPCs, max gibs, max model attachments per NPC, whether or not NPCs should have visible health bars, whether or not the NPC's remaining HP should be displayed on the user's HUD when the NPC is damaged.
+//		- Allow server owners to configure several settings (see data/pnpc/settings.cfg).
 //		- Some day down the road (not immediately), add the Fake Player Model system. The basic functionality should actually be fairly easy to implement given all of the control we have over animations.
 //			- Copy the user's current sequence, pose parameters, and gestures to the NPC every frame, then when we animate the NPC we stop copying until the animation is done.
 //			- The actual player should be teleported off of the map, and SetClientViewEntity should be used to make them view everything from the NPC's perspective.
