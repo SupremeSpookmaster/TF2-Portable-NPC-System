@@ -27,8 +27,11 @@ public Plugin myinfo =
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
-//		- Expand on particles by adding AddParticle and RemoveAllParticles natives. Should work identically to model attachments, just for particles instead.
+//		- Test the following sound cues:
+//			- sound_killed (added, need to test)
+//			- sound_hurt (added, need to test)
+//			- sound_impact (added, need to test)
+//			- sound_spawn (added, need to test)
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
@@ -42,8 +45,7 @@ public Plugin myinfo =
 //			- "Aspects", AKA passive effects.
 //			- "Abilities", AKA special abilities that can only be activated by custom NPC logic.
 //			- Movement and combat will typically only be used by extremely basic NPCs, whereas aspects and abilities are used to create more complex NPCs.
-//		- Allow server owners to configure several settings:
-//			- Max NPCs, max gibs, max model attachments per NPC, whether or not NPCs should have visible health bars, whether or not the NPC's remaining HP should be displayed on the user's HUD when the NPC is damaged.
+//		- Allow server owners to configure several settings (see data/pnpc/settings.cfg).
 //		- Some day down the road (not immediately), add the Fake Player Model system. The basic functionality should actually be fairly easy to implement given all of the control we have over animations.
 //			- Copy the user's current sequence, pose parameters, and gestures to the NPC every frame, then when we animate the NPC we stop copying until the animation is done.
 //			- The actual player should be teleported off of the map, and SetClientViewEntity should be used to make them view everything from the NPC's perspective.
@@ -61,6 +63,7 @@ public Plugin myinfo =
 //		- Projectiles phase through NPCs that have no team affiliation. PassFilter does not fix this. Find an alternative solution.
 //			- Maybe SetCollisionGroup?
 //		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
+//		- Once NPCs are capable of attacking: add the "sound_kill" cue and test it.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
