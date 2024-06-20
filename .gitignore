@@ -16,9 +16,9 @@
 
 #Source Code
 !tf2_pnpc.sp
-!pnpc/npcs.sp
-!pnpc/templates.sp
-!pnpc/settings.sp
+!npcs.sp
+!templates.sp
+!settings.sp
 
 #Include Files
 !pnpc.inc
