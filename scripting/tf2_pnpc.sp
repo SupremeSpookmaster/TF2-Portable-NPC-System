@@ -21,6 +21,7 @@ public Plugin myinfo =
 
 #include "pnpc/npcs.sp"
 #include "pnpc/templates.sp"
+#include "pnpc/settings.sp"
 
 //PERSONAL NOTES:
 //		- Make custom melee hitreg so it doesn't sound like you're hitting a wall every time you hit an NPC with melee.
@@ -81,6 +82,7 @@ public void OnPluginStart()
 	RegAdminCmd("pnpc_spawn", PNPC_Spawn, ADMFLAG_KICK, "Portable NPC System: Spawns the specified PNPC at your crosshair.");
 	RegAdminCmd("pnpc_destroy", PNPC_Destroy, ADMFLAG_KICK, "Portable NPC System: Kills the PNPC you are aiming at.");
 	RegAdminCmd("pnpc_destroyall", PNPC_DestroyAll, ADMFLAG_KICK, "Portable NPC System: Kills every currently active PNPC.");
+	RegAdminCmd("pnpc_reloadsettings", PNPC_ReloadSettings, ADMFLAG_KICK, "Portable NPC System: Reloads the settings stored in settings.cfg.");
 	
 	PNPC_MakeForwards();
 }
@@ -107,6 +109,7 @@ public OnMapStart()
 {
 	Templates_MapStart();
 	PNPC_MapStart();
+	Settings_Load();
 	
 	PrecacheSound(SND_ADMINCOMMAND);
 	PrecacheSound(SND_ADMINCOMMAND_ERROR);
@@ -141,11 +144,24 @@ public int PNPC_KillAll()
 
 public Action PNPC_ReloadNPCs(int client, int args)
 {	
+	Templates_LoadNPCs();
+
 	if (IsValidClient(client))
 	{
 		CPrintToChat(client, "{orange}[Portable NPC System] {default}Reloaded data/pnpc/npcs.cfg.");
 		EmitSoundToClient(client, SND_ADMINCOMMAND);
-		Templates_LoadNPCs();
+	}	
+	
+	return Plugin_Continue;
+}
+
+public Action PNPC_ReloadSettings(int client, int args)
+{	
+	Settings_Load();
+	if (IsValidClient(client))
+	{
+		CPrintToChat(client, "{orange}[Portable NPC System] {default}Reloaded data/pnpc/settings.cfg.");
+		EmitSoundToClient(client, SND_ADMINCOMMAND);
 	}	
 	
 	return Plugin_Continue;

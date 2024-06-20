@@ -4237,7 +4237,7 @@ public int Native_PNPCSetParticlesFromConfig(Handle plugin, int numParams)
 			float yOff = GetFloatFromConfigMap(instance, "y_offset", 0.0);
 			float zOff = GetFloatFromConfigMap(instance, "z_offset", 0.0);
 
-			AttachParticleToEntity(npc.Index, particle, attachment, _, xOff, yOff, zOff);
+			npc.AttachParticle(particle, attachment, _, xOff, yOff, zOff);
 
 			slot++;
 			IntToString(slot, slotChar, sizeof(slotChar));
