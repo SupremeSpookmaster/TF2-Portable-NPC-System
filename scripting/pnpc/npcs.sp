@@ -2817,7 +2817,7 @@ public int Native_PNPCAttachParticle(Handle plugin, int numParams)
 	int ent = GetNativeCell(1);
 	PNPC npc = view_as<PNPC>(ent);
 
-	if (npc.g_AttachedParticles.Length + 1 > Settings_GetMaxParticles())
+	if (npc.g_AttachedParticles.Length + 1 > Settings_GetMaxParticles() && Settings_GetMaxParticles() > -1)
 		return -1;
 
 	char name[255], attachment[255];
@@ -2846,7 +2846,7 @@ public int Native_PNPCAttachModel(Handle plugin, int numParams)
 	int ent = GetNativeCell(1);
 	PNPC npc = view_as<PNPC>(ent);
 
-	if (npc.g_AttachedWeapons.Length + npc.g_AttachedCosmetics.Length + 1 > Settings_GetMaxAttachments())
+	if (npc.g_AttachedWeapons.Length + npc.g_AttachedCosmetics.Length + 1 > Settings_GetMaxAttachments() && Settings_GetMaxAttachments() > -1)
 		return -1;
 
 	char model[255], attachment[255], sequence[255];
