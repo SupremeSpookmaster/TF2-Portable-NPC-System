@@ -393,12 +393,27 @@ methodmap PNPC < CBaseCombatCharacter
 	public native int AttachModel(char[] model, char[] attachment = "", char[] sequence = "", int skin = -1, float scale = 1.0, bool bonemerge = true, bool weapon = false);
 
 	/**
+	 * Attaches a particle to the PNPC.
+	 * 
+	 * @param particle		The particle to attach.
+	 * @param attachment	The point to attach to.
+	 * @param lifespan		The duration for which the particle should exist.
+	 * @param xOff			Optional X-axis offset.
+	 * @param yOff			Optional Y-axis offset.
+	 * @param zOff			Optional Z-axis offset.
+	 * 
+	 * @return	The entity index of the attached particle.
+	 */
+	public native int AttachParticle(char[] particle, char[] attachment = "", float lifespan = 0.0, float xOff = 0.0, float yOff = 0.0, float zOff = 0.0);
+
+	/**
 	 * Removes all specified models attached via PNPC.AttachModel.
 	 * 
 	 * @param cosmetics		Set to true to remove models classified as cosmetics.
 	 * @param weapons		Set to true to remove models classified as weapons.
+	 * @param particles		Set to true to remove particles.
 	 */
-	public native void RemoveAttachments(bool cosmetics = true, bool weapons = true);
+	public native void RemoveAttachments(bool cosmetics = true, bool weapons = true, bool particles = true);
 
 	/**
 	 * Ignites the PNPC.
@@ -565,8 +580,6 @@ methodmap PNPC < CBaseCombatCharacter
 	 */
 	public native void GetArgS(char[] aspect, char[] plugin, char[] key, char[] output, int size, char[] defaultVal = "");
 
-	public native int AttachParticle()
-
 	property int Index
 	{
 		public native get();
@@ -634,6 +647,12 @@ methodmap PNPC < CBaseCombatCharacter
 	}
 
 	property ArrayList g_AttachedWeapons
+	{
+		public native get();
+		public native set(ArrayList value);
+	}
+
+	property ArrayList g_AttachedParticles
 	{
 		public native get();
 		public native set(ArrayList value);

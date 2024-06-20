@@ -27,8 +27,11 @@ public Plugin myinfo =
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Add sound cues for: sound_damaged, sound_impact, sound_kill, and sound_killed.
-//		- Expand on particles by adding AddParticle and RemoveAllParticles natives. Should work identically to model attachments, just for particles instead.
+//		- Test the following sound cues:
+//			- sound_killed (added, need to test)
+//			- sound_hurt (added, need to test)
+//			- sound_impact (added, need to test)
+//			- sound_spawn (added, need to test)
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
@@ -61,6 +64,7 @@ public Plugin myinfo =
 //		- Projectiles phase through NPCs that have no team affiliation. PassFilter does not fix this. Find an alternative solution.
 //			- Maybe SetCollisionGroup?
 //		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
+//		- Once NPCs are capable of attacking: add the "sound_kill" cue and test it.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {

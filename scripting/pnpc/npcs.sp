@@ -284,6 +284,7 @@ ArrayList g_Gibs[2049];
 ArrayList g_GibAttachments[2049];
 ArrayList g_AttachedModels[2049];
 ArrayList g_AttachedWeaponModels[2049];
+ArrayList g_AttachedParticles[2049];
 
 DynamicHook g_DHookGrenadeExplode;
 DynamicHook g_DHookStickyExplode;
@@ -375,6 +376,7 @@ void PNPC_MapEnd()
 		delete g_GibAttachments[i];
 		delete g_AttachedModels[i];
 		delete g_AttachedWeaponModels[i];
+		delete g_AttachedParticles[i];
 	}
 }
 
@@ -605,6 +607,7 @@ void PNPC_MakeNatives()
 
 	//Attachments:
 	CreateNative("PNPC.AttachModel", Native_PNPCAttachModel);
+	CreateNative("PNPC.AttachParticle", Native_PNPCAttachParticle);
 	CreateNative("PNPC.g_AttachedCosmetics.get", Native_PNPCGetAttachedCosmetics);
 	CreateNative("PNPC.g_AttachedCosmetics.set", Native_PNPCSetAttachedCosmetics);
 	CreateNative("PNPC.g_AttachedWeapons.get", Native_PNPCGetAttachedWeapons);
@@ -612,6 +615,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.RemoveAttachments", Native_PNPCRemoveAttachments);
 	CreateNative("PNPC.SetParticlesFromConfig", Native_PNPCSetParticlesFromConfig);
 	CreateNative("PNPC.SetAttachmentsFromConfig", Native_PNPCSetAttachmentsFromConfig);
+	CreateNative("PNPC.g_AttachedParticles.get", Native_PNPCGetAttachedParticles);
+	CreateNative("PNPC.g_AttachedParticles.set", Native_PNPCSetAttachedParticles);
 
 	//Afterburn:
 	CreateNative("PNPC.b_Burning.get", Native_PNPCGetBurning);
@@ -1053,6 +1058,8 @@ void PNPC_OnCreate(int npc)
 
 	alive.b_Exists = true;
 	I_AM_DEAD[npc] = false;
+
+	npc.PlayRandomSound("sound_spawn");
 }
 
 void PNPC_OnDestroy(int npc)
@@ -1076,11 +1083,13 @@ void PNPC_OnDestroy(int npc)
 	dead.SetProp(Prop_Data, "pnpc_pPath", -1);
 
 	PNPC_RemoveFromPaths(dead);
+	dead.PlayRandomSound("sound_killed");
 
 	delete g_Gibs[npc];
 	delete g_GibAttachments[npc];
 	delete g_AttachedModels[npc];
 	delete g_AttachedWeaponModels[npc];
+	delete g_AttachedParticles[npc];
 	i_BleedStacks[npc] = 0;
 
 	strcopy(PNPC_ConfigName[npc], 255, "");
@@ -1712,25 +1721,34 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 		PNPC_HealEntity(attacker, RoundToFloor(damage * 0.6), 1.0, npc.i_Milker);
 	}
 
-	if (!StrEqual(PNPC_BleedParticle[victim], "") && damage > 0.0)
+	if (damage > 0.0)
 	{
-		float dPos[3];
-		dPos = damagePosition;
+		npc.PlayRandomSound("sound_impact");
 
-		if (Vector_Is_Null(dPos))
+		if (GetGameTime() >= f_NextFlinch[victim])
 		{
-			dPos = GetWorldSpaceCenter(victim);
-			for (int i = 0; i < 3; i++)
-				dPos[i] += GetRandomFloat(-20.0 * npc.f_Scale, 20.0 * npc.f_Scale);
+			if (!StrEqual(PNPC_FlinchSequence[victim], ""))
+				npc.AddGesture(PNPC_FlinchSequence[victim]);
+
+			npc.PlayRandomSound("sound_hurt");
+
+			f_NextFlinch[victim] = GetGameTime() + 0.2;
 		}
 
-		SpawnParticle(dPos, PNPC_BleedParticle[victim], 0.66);	//TODO: Make this a TE entity. Also do the same to crit text.
-	}
+		if (!StrEqual(PNPC_BleedParticle[victim], ""))
+		{
+			float dPos[3];
+			dPos = damagePosition;
 
-	if (!StrEqual(PNPC_FlinchSequence[victim], "") && GetGameTime() >= f_NextFlinch[victim])
-	{
-		npc.AddGesture(PNPC_FlinchSequence[victim]);
-		f_NextFlinch[victim] = GetGameTime() + 0.2;
+			if (Vector_Is_Null(dPos))
+			{
+				dPos = GetWorldSpaceCenter(victim);
+				for (int i = 0; i < 3; i++)
+					dPos[i] += GetRandomFloat(-20.0 * npc.f_Scale, 20.0 * npc.f_Scale);
+			}
+
+			SpawnParticle(dPos, PNPC_BleedParticle[victim], 0.66);	//TODO: Make this a TE entity. Also do the same to crit text.
+		}
 	}
 
 	if (view_as<PNPC>(victim).i_Health < 1)
@@ -2145,7 +2163,19 @@ public int Native_PNPCSetTeam(Handle plugin, int numParams)
 	else
 		SetEntProp(ent, Prop_Send, "m_iTeamNum", 4);
 
+	PNPC npc = view_as<PNPC>(ent);
+	npc.SetAttachmentsFromConfig();
+	RequestFrame(PNPC_SetParticlesNextFrame, npc);
+
 	return 0; 
+}
+
+public void PNPC_SetParticlesNextFrame(PNPC npc)
+{
+	if (!npc.b_Exists)
+		return;
+
+	npc.SetParticlesFromConfig();
 }
 
 public any Native_PNPCGetSkin(Handle plugin, int numParams) { return GetEntProp(GetNativeCell(1), Prop_Send, "m_nSkin"); }
@@ -2716,6 +2746,32 @@ public int Native_PNPCGib(Handle plugin, int numParams)
 	return 0;
 }
 
+public int Native_PNPCAttachParticle(Handle plugin, int numParams)
+{
+	int ent = GetNativeCell(1);
+	PNPC npc = view_as<PNPC>(ent);
+
+	char name[255], attachment[255];
+	GetNativeString(2, name, sizeof(name));
+	GetNativeString(3, attachment, sizeof(attachment));
+	float lifespan = GetNativeCell(4);
+	float xOff = GetNativeCell(5);
+	float yOff = GetNativeCell(6);
+	float zOff = GetNativeCell(7);
+
+	int particle = AttachParticleToEntity(npc.Index, name, attachment, lifespan, xOff, yOff, zOff);
+	if (IsValidEntity(particle))
+	{
+		if (npc.g_AttachedParticles == null)
+			npc.g_AttachedParticles = new ArrayList(255);
+
+		PushArrayCell(npc.g_AttachedParticles, EntIndexToEntRef(particle));
+		return particle;
+	}
+
+	return -1;
+}
+
 public int Native_PNPCAttachModel(Handle plugin, int numParams)
 {
 	int ent = GetNativeCell(1);
@@ -2896,6 +2952,14 @@ public int Native_PNPCSetAttachedWeapons(Handle plugin, int numParams)
 	return 0;
 }
 
+public any Native_PNPCGetAttachedParticles(Handle plugin, int numParams) { return g_AttachedParticles[GetNativeCell(1)]; }
+public int Native_PNPCSetAttachedParticles(Handle plugin, int numParams)
+{
+	g_AttachedParticles[GetNativeCell(1)] = GetNativeCell(2);
+
+	return 0;
+}
+
 public int Native_PNPCRemoveAttachments(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
@@ -2922,6 +2986,18 @@ public int Native_PNPCRemoveAttachments(Handle plugin, int numParams)
 		}
 
 		delete npc.g_AttachedWeapons;
+	}
+
+	if (GetNativeCell(4) && npc.g_AttachedParticles != null)
+	{
+		for (int i = 0; i < GetArraySize(npc.g_AttachedParticles); i++)
+		{
+			int ent = EntRefToEntIndex(GetArrayCell(npc.g_AttachedParticles, i));
+			if (IsValidEntity(ent))
+				RemoveEntity(ent);
+		}
+
+		delete npc.g_AttachedParticles;
 	}
 
 	return 0;
