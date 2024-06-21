@@ -19,6 +19,7 @@
 !npcs.sp
 !templates.sp
 !settings.sp
+!viewmodels.sp
 
 #Include Files
 !pnpc.inc

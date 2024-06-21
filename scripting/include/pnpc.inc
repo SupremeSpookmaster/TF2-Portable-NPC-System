@@ -236,7 +236,7 @@ methodmap PNPC < CBaseCombatCharacter
 	public native INextBot GetBot();
 
 	/**
-	 * Sets the PNPC's current sequence. The sequence is automatically checked with LookupSequence.
+	 * Sets the PNPC's current sequence. The sequence is automatically checked with LookupActivity.
 	 * 
 	 * @param	sequence	The sequence to set.
 	 * 
@@ -825,6 +825,83 @@ methodmap PNPC < CBaseCombatCharacter
 	}
 
 	property float f_DeathDropHeight
+	{
+		public native get();
+		public native set(float value);
+	}
+}
+
+methodmap PNPC_ViewModel < CBaseCombatCharacter
+{
+	/**
+	 * Creates a new custom viewmodel entity, and assigns it to a specified player.
+	 * This viewmodel copies all of the animations of the "real" viewmodel, but can be manually animated
+	 * via the SetSequence and SetActivity natives.
+	 * 
+	 * @param owner		The client who uses this viewmodel.
+	 * @param model		The model used by this viewmodel.
+	 * @param activity	The activity to force upon spawning this viewmodel, EX: "ACT_DRAW_MELEE".
+	 * @param skin		The skin to use for the viewmodel. -1: automatically set based on the owner's team.
+	 * @param rate		Animation playback rate.
+	 */
+	public native PNPC_ViewModel(int owner, char[] model, char[] activity, int skin = -1, float rate = 1.0);
+
+	/**
+	 * Retrieves the viewmodel's current model, stored in the output buffer.
+	 * 
+	 * @param output		Output buffer.
+	 * @param size			Output buffer size.
+	 * 
+	 * @return	The viewmodel's model, stored in the output buffer.
+	 */
+	public native void GetModel(char[] output, int size);
+
+	/**
+	 * Sets the viewmodel's current model.
+	 * 
+	 * @param model		The new model to set. You must precache this manually.
+	 */
+	public native void SetModel(char[] model);
+
+	/**
+	 * Sets the viewmodel's current sequence. The sequence is automatically checked with LookupActivity.
+	 * 
+	 * @param	sequence	The sequence to set.
+	 * 
+	 * @return	True if the sequence exists and was successfully set, false otherwise.
+	 */
+	public native bool SetSequence(char[] sequence);
+
+	/**
+	 * Sets the viewmodel's current activity. The activity is automatically checked with LookupActivity.
+	 * 
+	 * @param	activity	The activity to set.
+	 * 
+	 * @return	True if the activity exists and was successfully set, false otherwise.
+	 */
+	public native bool SetActivity(char[] activity);
+
+	/**
+	 * Retrieves the index of the given activity.
+	 * 
+	 * @param activity	The activity to lookup.
+	 * 
+	 * @return	The activity's index, -1 if it does not exist.
+	 */
+	public native int LookupActivity(char[] activity);
+
+	property int Index
+	{
+		public native get();
+	}
+
+	property int i_Owner
+	{
+		public native get();
+		public native set(int value);
+	}
+
+	property float f_PlaybackRate
 	{
 		public native get();
 		public native set(float value);
