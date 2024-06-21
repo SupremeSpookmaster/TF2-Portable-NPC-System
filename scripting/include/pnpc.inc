@@ -236,7 +236,7 @@ methodmap PNPC < CBaseCombatCharacter
 	public native INextBot GetBot();
 
 	/**
-	 * Sets the PNPC's current sequence. The sequence is automatically checked with LookupActivity.
+	 * Sets the PNPC's current sequence. The sequence is automatically checked with LookupSequence.
 	 * 
 	 * @param	sequence	The sequence to set.
 	 * 
@@ -864,7 +864,7 @@ methodmap PNPC_ViewModel < CBaseCombatCharacter
 	public native void SetModel(char[] model);
 
 	/**
-	 * Sets the viewmodel's current sequence. The sequence is automatically checked with LookupActivity.
+	 * Sets the viewmodel's current sequence. The sequence is automatically checked with LookupSequence.
 	 * 
 	 * @param	sequence	The sequence to set.
 	 * 
@@ -902,6 +902,12 @@ methodmap PNPC_ViewModel < CBaseCombatCharacter
 	}
 
 	property float f_PlaybackRate
+	{
+		public native get();
+		public native set(float value);
+	}
+
+	property float f_Cycle
 	{
 		public native get();
 		public native set(float value);
