@@ -39,6 +39,11 @@ public Plugin myinfo =
 //			- Melee should be easy, ranged will require muzzle flashes.
 //			- Perhaps we should hide the *real* viewmodel, then have our custom VM copy its animation data until we decide to animate it?
 //			- Replace CF's viewmodel animation native with one that uses this system.
+//		- Make mediguns work on NPCs.
+//			- Need the gamedata thing that lets me choose if a medigun can attach to a certain target. Copy from Ghostbuster rework's plugin to save time.
+//			- Heal logic has already been written, copy from CF.
+//			- MAYBE make ûbercharges work?
+//			- Needs to have a forward (something like PNPC_OnMedigunAttachedToPNPC) to let devs filter it.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
