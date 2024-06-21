@@ -831,40 +831,43 @@ methodmap PNPC < CBaseCombatCharacter
 	}
 }
 
-methodmap PNPC_ViewModel < CBaseCombatCharacter
+//TODO: It would be a good idea to go back and make the main PNPC methodmap inherit from this eventually.
+methodmap PNPC_Animator < CBaseCombatCharacter
 {
 	/**
-	 * Creates a new custom viewmodel entity, and assigns it to a specified player.
-	 * This viewmodel copies all of the animations of the "real" viewmodel, but can be manually animated
-	 * via the SetSequence and SetActivity natives.
+	 * Creates a new custom animator entity.
 	 * 
-	 * @param owner		The client who uses this viewmodel.
-	 * @param model		The model used by this viewmodel.
-	 * @param activity	The activity to force upon spawning this viewmodel, EX: "ACT_DRAW_MELEE".
-	 * @param skin		The skin to use for the viewmodel. -1: automatically set based on the owner's team.
+	 * @param model		The model used by this animator.
+	 * @param activity	The activity to force upon spawning this animator, EX: "ACT_INTRO".
+	 * @param pos		The location to spawn the animator at.
+	 * @param ang		The angles to spawn the animator with.
+	 * @param skin		The skin to use for the animator.
 	 * @param rate		Animation playback rate.
+	 * @param scale		Animator model scale.
+	 * 
+	 * @return	The animator's methodmap, or -1 on failure.
 	 */
-	public native PNPC_ViewModel(int owner, char[] model, char[] activity, int skin = -1, float rate = 1.0);
+	public native PNPC_Animator(char[] model, char[] activity, float pos[3] = NULL_VECTOR, float ang[3] = NULL_VECTOR, int skin = 0, float rate = 1.0, float scale = 1.0);
 
 	/**
-	 * Retrieves the viewmodel's current model, stored in the output buffer.
+	 * Retrieves the animator's current model, stored in the output buffer.
 	 * 
 	 * @param output		Output buffer.
 	 * @param size			Output buffer size.
 	 * 
-	 * @return	The viewmodel's model, stored in the output buffer.
+	 * @return	The animator's model, stored in the output buffer.
 	 */
 	public native void GetModel(char[] output, int size);
 
 	/**
-	 * Sets the viewmodel's current model.
+	 * Sets the animator's current model.
 	 * 
 	 * @param model		The new model to set. You must precache this manually.
 	 */
 	public native void SetModel(char[] model);
 
 	/**
-	 * Sets the viewmodel's current sequence. The sequence is automatically checked with LookupSequence.
+	 * Sets the animator's current sequence. The sequence is automatically checked with LookupSequence.
 	 * 
 	 * @param	sequence	The sequence to set.
 	 * 
@@ -873,7 +876,7 @@ methodmap PNPC_ViewModel < CBaseCombatCharacter
 	public native bool SetSequence(char[] sequence);
 
 	/**
-	 * Sets the viewmodel's current activity. The activity is automatically checked with LookupActivity.
+	 * Sets the animator's current activity. The activity is automatically checked with LookupActivity.
 	 * 
 	 * @param	activity	The activity to set.
 	 * 
@@ -890,12 +893,36 @@ methodmap PNPC_ViewModel < CBaseCombatCharacter
 	 */
 	public native int LookupActivity(char[] activity);
 
+	/**
+	 * Adds a gesture to the animator.
+	 * 
+	 * @param gesture		The gesture to add. EX: "ACT_MP_ATTACK_STAND_MELEE".
+	 * @param cancel		If true: cancel any currently-active gestures.
+	 * @param duration		The duration of the gesture.
+	 * @param autoKill		If true: automatically remove the gesture once its animation is finished.
+	 * @param playbackRate	The rate at which the gesture should be animated.
+	 */
+	public native void AddGesture(char[] gesture, bool cancel = true, float duration = 1.0, bool autoKill = true, float playbackRate = 1.0);
+
+	/**
+	 * Removes the given gesture from the animator.
+	 * 
+	 * @param gesture		The gesture to remove.
+	 */
+	public native void RemoveGesture(char[] gesture);
+
 	property int Index
 	{
 		public native get();
 	}
 
 	property int i_Owner
+	{
+		public native get();
+		public native set(int value);
+	}
+
+	property int i_Skin
 	{
 		public native get();
 		public native set(int value);
@@ -908,6 +935,12 @@ methodmap PNPC_ViewModel < CBaseCombatCharacter
 	}
 
 	property float f_Cycle
+	{
+		public native get();
+		public native set(float value);
+	}
+
+	property float f_Scale
 	{
 		public native get();
 		public native set(float value);

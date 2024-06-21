@@ -22,10 +22,9 @@ public Plugin myinfo =
 #include "pnpc/npcs.sp"
 #include "pnpc/templates.sp"
 #include "pnpc/settings.sp"
-#include "pnpc/viewmodels.sp"
+#include "pnpc/animator.sp"
 
 //PERSONAL NOTES:
-//		- Turn the PNPC_ViewModel methodmap into PNPC_Animator and have the viewmodel inherit from it. This will save a lot of time when making the fake player model system later.
 //		- Make custom melee hitreg so it doesn't sound like you're hitting a wall every time you hit an NPC with melee.
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
@@ -80,7 +79,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	PNPC_MakeNatives();
 	Templates_MakeNatives();
-	ViewModels_MakeNatives();
+	Animator_MakeNatives();
 	return APLRes_Success;
 }
 
@@ -96,7 +95,7 @@ public void OnPluginStart()
 	RegAdminCmd("pnpc_reloadsettings", PNPC_ReloadSettings, ADMFLAG_KICK, "Portable NPC System: Reloads the settings stored in settings.cfg.");
 	
 	PNPC_MakeForwards();
-	ViewModels_PluginStart();
+	Animator_PluginStart();
 }
 
 #define SND_ADMINCOMMAND			"ui/cyoa_ping_in_progress.wav"
