@@ -836,6 +836,8 @@ methodmap PNPC_Animator < CBaseCombatCharacter
 {
 	/**
 	 * Creates a new custom animator entity.
+	 * Animators are specialized lightweight NPCs which cannot take damage or collide with other entities.
+	 * They provide absolute control over animations, which makes them perfect for things like custom viewmodels or special VFX.
 	 * 
 	 * @param model		The model used by this animator.
 	 * @param activity	The activity to force upon spawning this animator, EX: "ACT_INTRO".
