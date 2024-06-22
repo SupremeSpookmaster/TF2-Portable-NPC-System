@@ -1141,6 +1141,17 @@ forward void PNPC_OnPNPCCreated(int entity);
 forward void PNPC_OnPNPCDestroyed(int entity);
 
 /**
+ * Called when checking whether or not a medigun should be allowed to heal a PNPC.
+ * 
+ * @param npc		The PNPC.
+ * @param client	The player holding the medigun.
+ * @param medigun	The medigun.
+ * 
+ * @return	Return false to prevent the medigun from attaching, otherwise return true.
+ */
+forward bool PNPC_OnCheckMedigunCanAttach(PNPC npc, int client, int medigun);
+
+/**
  * Checks if a given PNPC has a specified aspect.
  *
  * @param NPC			The PNPC whose aspects to check.
@@ -1149,7 +1160,7 @@ forward void PNPC_OnPNPCDestroyed(int entity);
  *
  * @return True if the NPC's character has the specified aspect, false if not.
  */
-//native bool PNPC_HasAspect(int NPC, char pluginName[255], char aspectName[255]);
+native bool PNPC_HasAspect(int NPC, char pluginName[255], char aspectName[255]);
 
 /**
  * Gets an int value from a specified aspect's arg.
@@ -1161,7 +1172,7 @@ forward void PNPC_OnPNPCDestroyed(int entity);
  *
  * @return An int equal to the value obtained from the given aspect's specified arg, -1 if no such value was present.
  */
-//native int PNPC_GetArgI(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
+native int PNPC_GetArgI(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
 
 /**
  * Gets a float value from a specified aspect's arg.
@@ -1173,7 +1184,7 @@ forward void PNPC_OnPNPCDestroyed(int entity);
  *
  * @return A float equal to the value obtained from the given aspect's specified arg, -1.0 if no such value was present.
  */
-//native float PNPC_GetArgF(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
+native float PNPC_GetArgF(int NPC, char pluginName[255], char aspectName[255], char argName[255]);
 
 /**
  * Gets a string value from a specified aspect's arg.
@@ -1187,7 +1198,7 @@ forward void PNPC_OnPNPCDestroyed(int entity);
  *
  * @return The string obtained from the given aspect's specified arg (empty if the arg was not found), stored in the output buffer.
  */
-//native PNPC_GetArgS(int NPC, char pluginName[255], char aspectName[255], char argName[255], char output[255], int size);
+native PNPC_GetArgS(int NPC, char pluginName[255], char aspectName[255], char argName[255], char output[255], int size);
 
 /**
  * Retrieves the coordinates of the center of the given entity based on its collision hull, stored in the output buffer.

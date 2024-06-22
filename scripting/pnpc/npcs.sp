@@ -275,6 +275,7 @@ GlobalForward g_OnPNPCGassed;
 GlobalForward g_OnJarCollide;
 GlobalForward g_OnProjectileExplode;
 GlobalForward g_OnHeal;
+GlobalForward g_OnCheckMedigunCanHealNPC;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
@@ -431,6 +432,7 @@ void PNPC_MakeForwards()
 	g_OnJarCollide = new GlobalForward("PNPC_OnPNPCJarCollide", ET_Single, Param_Cell, Param_Cell, Param_Cell);
 	g_OnProjectileExplode = new GlobalForward("PNPC_OnPNPCProjectileExplode", ET_Single, Param_Cell, Param_Cell, Param_Cell);
 	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
+	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Single, Param_Any, Param_Cell, Param_Cell);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");
 	AcFac.SetEventCallback(EventResponderType_OnActorEmoted, PluginBot_OnActorEmoted);*/
@@ -451,6 +453,7 @@ void PNPC_MakeForwards()
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);	//return index
 	if((g_hLookupActivity = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create Call for LookupActivity.");
 
+	//Ragdoll:
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gd, SDKConf_Virtual, "CBaseAnimating::BecomeRagdollOnClient");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
@@ -458,15 +461,16 @@ void PNPC_MakeForwards()
 	if(!SDK_Ragdoll)
 		LogError("[Gamedata] Could not find CBaseAnimating::BecomeRagdollOnClient");
 
+	//Projectile explosion virtuals:
 	g_DHookGrenadeExplode = DHook_CreateVirtual(gd, "CBaseGrenade::Explode");
 	g_DHookStickyExplode = DHook_CreateVirtual(gd, "CBaseGrenade::Detonate");
 	g_DHookFireballExplode = DHook_CreateVirtual(gd, "CTFProjectile_SpellFireball::Explode");
 	g_DHookRocketExplode = DHook_CreateVirtual(gd, "CTFBaseRocket::Explode");
 
+	//Projectile explosion detours:
 	DHook_CreateDetour(gd, "JarExplode()", PNPC_OnJarExplodePre);
 	DHook_CreateDetour(gd, "CTFProjectile_Flare::Explode_Air()", PNPC_OnFlareExplodePre);
 	DHook_CreateDetour(gd, "NextBotGroundLocomotion::UpdateGroundConstraint", PNPC_UpdateGroundConstraint_Pre, PNPC_UpdateGroundConstraint_Post);
-
 	g_DHookPillCollide = CheckedDHookCreateFromConf(gd, "CTFGrenadePipebombProjectile::PipebombTouch");
 
 	//WorldSpaceCenter:
@@ -475,7 +479,37 @@ void PNPC_MakeForwards()
 	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_ByRef);
 	if ((g_hSDKWorldSpaceCenter = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CBaseEntity::WorldSpaceCenter offset!");
 
+	//Medigun attachment:
+	Handle dtMedigunAllowedToHealTarget = DHookCreateFromConf(gd, "CWeaponMedigun::AllowedToHealTarget()");
+	if (!dtMedigunAllowedToHealTarget) 
+		SetFailState("Failed to setup detour for CWeaponMedigun::AllowedToHealTarget()");
+	DHookEnableDetour(dtMedigunAllowedToHealTarget, false, PNPC_CanMedigunHealTarget);
+
 	delete gd;
+}
+
+MRESReturn PNPC_CanMedigunHealTarget(int medigun, Handle hReturn, Handle hParams)
+{
+	int client = GetEntPropEnt(medigun, Prop_Send, "m_hOwnerEntity");
+	int target = DHookGetParam(hParams, 1);
+
+	if (PNPC_IsNPC(target) && PNPC_IsValidTarget(target, TF2_GetClientTeam(client)))
+	{
+		bool result = true;
+
+		Call_StartForward(g_OnCheckMedigunCanHealNPC);
+
+		Call_PushCell(view_as<PNPC>(target));
+		Call_PushCell(client);
+		Call_PushCell(target);
+
+		Call_Finish(result);
+		
+		DHookSetReturn(hReturn, result);
+		return MRES_Supercede;
+	}
+
+	return MRES_Ignored;
 }
 
 public MRESReturn PNPC_UpdateGroundConstraint_Pre(DHookParam param)
