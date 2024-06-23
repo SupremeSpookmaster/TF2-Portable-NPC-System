@@ -968,6 +968,7 @@ public void PNPC_OnEntityCreated(int entity, const char[] classname)
 public void PNPC_OnEntityDestroyed(int entity)
 {
 	i_PillCollideTarget[entity] = -1;
+	i_PathTarget[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
 	if (b_IsGib[entity])
