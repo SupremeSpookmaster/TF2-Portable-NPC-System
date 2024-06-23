@@ -42,6 +42,10 @@ public Plugin myinfo =
 //		- Make mediguns work on NPCs.
 //			- We do not know if TF2's medigun heal logic will work on NPCs by default. It most likely won't, in which case we will need a workaround. Heal logic has already been written, copy from CF.
 //			- MAYBE make ûbercharges work?
+//		- BUGS:
+//			- sound_killed triggers late sometimes
+//			- If an NPC is destroyed and then another one is created on the same frame, the new NPC will steal the old one's internal logic????????????
+//			- NPCs can walk on gibs, need to prevent that. Also make them unable to traverse prop_physics entities.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.

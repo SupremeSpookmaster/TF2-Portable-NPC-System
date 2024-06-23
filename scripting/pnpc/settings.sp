@@ -45,10 +45,10 @@ public void Settings_Load()
  */
 public bool Settings_WillExceedNPCLimit(Queue NPCs)
 {
-	if (i_MaxNPCs < 0)
+	if (i_MaxNPCs < 0 || NPCs == null)
 		return false;
 
-	return NPCs.Length + 1 > i_MaxNPCs;
+	return NPCs.Length > i_MaxNPCs;
 }
 
 public int Settings_GetMaxNPCsMethod() { return i_MaxNPCsMethod; }
@@ -62,10 +62,10 @@ public int Settings_GetMaxNPCsMethod() { return i_MaxNPCsMethod; }
  */
 public bool Settings_WillExceedGibLimit(Queue Gibs)
 {
-	if (i_MaxGibs < 0)
+	if (i_MaxGibs < 0 || Gibs == null)
 		return false;
 
-	return Gibs.Length + 1 > i_MaxGibs;
+	return Gibs.Length > i_MaxGibs;
 }
 
 public int Settings_GetMaxAttachments() { return i_MaxAttachments; }

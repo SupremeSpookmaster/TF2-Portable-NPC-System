@@ -33,15 +33,6 @@ public void Templates_MakeNatives()
 	CreateNative("PNPC_Template.g_ConfigMap.get", Native_PNPCTemplate_GetConfigMap);
 	CreateNative("PNPC_Template.g_ConfigMap.set", Native_PNPCTemplate_SetConfigMap);
 	CreateNative("PNPC_Template.Index.get", Native_PNPCTemplate_GetIndex);
-	CreateNative("PNC_Template.GetConfigMap", Native_PNPCTemplate_GetConfigMapCopy);
-}
-
-public any Native_PNPCTemplate_GetConfigMapCopy(Handle plugin, int numParams)
-{
-	char filePath[255];
-	Format(filePath, sizeof(filePath), "configs/npcs/%s.cfg", Template_ConfigName[GetNativeCell(1)]);
-
-	return new ConfigMap(filePath);
 }
 
 public int Native_PNPCTemplate_Constructor(Handle plugin, int numParams)
@@ -98,8 +89,9 @@ public int Native_PNPCTemplate_Spawn(Handle plugin, int numParams)
 
 	char name[255], model[255], confName[255];
 	template.g_ConfigMap.Get("npc.visuals.model", model, sizeof(model));
-	template.GetName(name);
-	template.GetConfigName(confName);
+	template.GetName(name, sizeof(name));
+	template.GetConfigName(confName, sizeof(confName));
+	CPrintToChatAll("Template's config name is %s", confName);
 
 	int health = GetIntFromConfigMap(template.g_ConfigMap, "npc.stats.health", 100);
 	float speed = GetFloatFromConfigMap(template.g_ConfigMap, "npc.stats.speed", 300.0);
@@ -141,7 +133,18 @@ public void Template_ApplyVFXPostSpawn(PNPC npc)
 	npc.SetParticlesFromConfig();
 }
 
-public int Native_PNPCTemplate_GetConfigName(Handle plugin, int numParams) {  SetNativeString(2, Template_ConfigName[GetNativeCell(1)], 255); return 0; }
+public int Native_PNPCTemplate_GetConfigName(Handle plugin, int numParams) 
+{
+	char name[255];
+	strcopy(name, sizeof(name), Template_ConfigName[GetNativeCell(1)]);
+	if (GetNativeCell(4) && !StrEqual(name, ""))
+		Format(name, sizeof(name), "configs/npcs/%s.cfg", name);
+
+	SetNativeString(2, name, GetNativeCell(3));
+
+	return 0; 
+}
+
 public int Native_PNPCTemplate_SetConfigName(Handle plugin, int numParams)
 {
 	char name[255];
@@ -462,8 +465,8 @@ public int PNPC_SpawnNPC(char name[255])
 	for (int i = 0; i < MAXIMUM_TEMPLATES && Templates[i].b_Exists; i++)
 	{		
 		char confName[255], realName[255];
-		Templates[i].GetConfigName(confName);
-		Templates[i].GetName(realName);
+		Templates[i].GetConfigName(confName, sizeof(confName));
+		Templates[i].GetName(realName, sizeof(realName));
 
 		if (StrEqual(name, confName) || StrContains(realName, name, false) != -1)
 		{

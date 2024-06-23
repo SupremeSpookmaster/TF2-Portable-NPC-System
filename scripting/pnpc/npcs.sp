@@ -31,6 +31,19 @@
 #define SND_EXPLOSION_GENERIC_3	")weapons/explode3.wav"
 #define SND_EXPLOSION_FIREBALL	")misc/halloween/spell_fireball_impact.wav"
 
+int PNPC_SndChans[10] = {
+	SNDCHAN_AUTO,
+	SNDCHAN_BODY,
+	SNDCHAN_ITEM,
+	SNDCHAN_REPLACE,
+	SNDCHAN_STATIC,
+	SNDCHAN_STREAM,
+	SNDCHAN_USER_BASE,
+	SNDCHAN_VOICE,
+	SNDCHAN_VOICE_BASE,
+	SNDCHAN_WEAPON
+};
+
 static char SFX_GenericExplosion[][] = {
 	SND_EXPLOSION_GENERIC_1,
 	SND_EXPLOSION_GENERIC_2,
@@ -239,6 +252,7 @@ float f_NextFlinch[2049] = { 0.0, ... };
 float f_MilkEndTime[2049] = { 0.0, ... };
 float f_JarateEndTime[2049] = { 0.0, ... };
 float f_GasEndTime[2049] = { 0.0, ... };
+float IsValidAt[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 
 bool b_IsInUpdateGroundConstraint = false;
@@ -710,7 +724,6 @@ void PNPC_MakeNatives()
 	//Config:
 	CreateNative("PNPC.GetConfigName", Native_PNPC_GetConfigName);
 	CreateNative("PNPC.SetConfigName", Native_PNPC_SetConfigName);
-	CreateNative("PNPC.GetConfigMap", Native_PNPC_GetConfigMap);
 	CreateNative("PNPC.HasAspect", Native_PNPC_HasAspect);
 	CreateNative("PNPC.GetArgI", Native_PNPC_GetArgI);
 	CreateNative("PNPC.GetArgF", Native_PNPC_GetArgF);
@@ -732,7 +745,14 @@ void PNPC_MakeNatives()
 public any Native_PNPC_HasAspect(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
-	ConfigMap conf = npc.GetConfigMap();
+
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+		return false;
+
+	ConfigMap conf = new ConfigMap(mapPath);
+
 	if (conf == null)
 		return false;
 
@@ -777,15 +797,22 @@ public any Native_PNPC_HasAspect(Handle plugin, int numParams)
 public int Native_PNPC_GetArgI(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
-	ConfigMap conf = npc.GetConfigMap();
+	int defaultVal = GetNativeCell(5);
+
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+		return defaultVal;
+
+	ConfigMap conf = new ConfigMap(mapPath);
+
 	if (conf == null)
-		return false;
+		return defaultVal;
 
 	char aspect[255], pluginName[255], key[255], path[255];
 	GetNativeString(2, aspect, sizeof(aspect));
 	GetNativeString(3, pluginName, sizeof(pluginName));
 	GetNativeString(4, key, sizeof(key));
-	int defaultVal = GetNativeCell(5);
 
 	if (!npc.HasAspect(aspect, pluginName, path, sizeof(path)))
 	{
@@ -804,15 +831,22 @@ public int Native_PNPC_GetArgI(Handle plugin, int numParams)
 public any Native_PNPC_GetArgF(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
-	ConfigMap conf = npc.GetConfigMap();
+	float defaultVal = GetNativeCell(5);
+
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+		return defaultVal;
+
+	ConfigMap conf = new ConfigMap(mapPath);
+
 	if (conf == null)
-		return false;
+		return defaultVal;
 
 	char aspect[255], pluginName[255], key[255], path[255];
 	GetNativeString(2, aspect, sizeof(aspect));
 	GetNativeString(3, pluginName, sizeof(pluginName));
 	GetNativeString(4, key, sizeof(key));
-	float defaultVal = GetNativeCell(5);
 
 	if (!npc.HasAspect(aspect, pluginName, path, sizeof(path)))
 	{
@@ -831,15 +865,30 @@ public any Native_PNPC_GetArgF(Handle plugin, int numParams)
 public int Native_PNPC_GetArgS(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
-	ConfigMap conf = npc.GetConfigMap();
-	if (conf == null)
-		return false;
 
-	char aspect[255], pluginName[255], key[255], path[255], defaultVal[255], returnVal[255];
+	char defaultVal[255];
+	GetNativeString(7, defaultVal, sizeof(defaultVal));
+	
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+	{
+		SetNativeString(5, defaultVal, GetNativeCell(6));
+		return 0;
+	}
+
+	ConfigMap conf = new ConfigMap(mapPath);
+
+	if (conf == null)
+	{
+		SetNativeString(5, defaultVal, GetNativeCell(6));
+		return 0;
+	}
+
+	char aspect[255], pluginName[255], key[255], path[255], returnVal[255];
 	GetNativeString(2, aspect, sizeof(aspect));
 	GetNativeString(3, pluginName, sizeof(pluginName));
 	GetNativeString(4, key, sizeof(key));
-	GetNativeString(7, defaultVal, sizeof(defaultVal));
 
 	if (!npc.HasAspect(aspect, pluginName, path, sizeof(path)))
 	{
@@ -857,13 +906,24 @@ public int Native_PNPC_GetArgS(Handle plugin, int numParams)
 	return 0;
 }
 
-public int Native_PNPC_GetConfigName(Handle plugin, int numParams) { SetNativeString(2, PNPC_ConfigName[GetNativeCell(1)], GetNativeCell(3)); return 0; }
+public int Native_PNPC_GetConfigName(Handle plugin, int numParams) 
+{ 
+	char name[255];
+	strcopy(name, sizeof(name), PNPC_ConfigName[GetNativeCell(1)]);
+	if (GetNativeCell(4) && !StrEqual(name, ""))
+		Format(name, sizeof(name), "configs/npcs/%s.cfg", name);
+
+	SetNativeString(2, name, GetNativeCell(3));
+
+	return 0; 
+}
 
 public int Native_PNPC_SetConfigName(Handle plugin, int numParams)
 {
 	char conf[255];
 	GetNativeString(2, conf, sizeof(conf));
-	strcopy(PNPC_ConfigName[GetNativeCell(1)], 255, conf);
+	int ent = GetNativeCell(1);
+	Format(PNPC_ConfigName[ent], 255, "%s", conf);
 	return 0;
 }
 
@@ -1089,21 +1149,6 @@ void PNPC_CalculateExplosionBaseStats(int launcher, float &damage, float &radius
 
 void PNPC_OnCreate(int npc)
 {
-	if (Settings_WillExceedNPCLimit(g_NPCsList))
-	{
-		if (Settings_GetMaxNPCsMethod() <= 0)
-		{
-			RemoveEntity(npc);
-			return;
-		}
-		else
-		{
-			int oldest = EntRefToEntIndex(g_NPCsList.Pop());
-			if (IsValidEntity(oldest))
-				view_as<PNPC>(oldest).Gib();
-		}
-	}
-
 	PNPC alive = view_as<PNPC>(npc);
 
 	for (int i = MaxClients + 1; i < 2049; i++)
@@ -1124,7 +1169,6 @@ void PNPC_OnCreate(int npc)
 	alive.b_Exists = true;
 	I_AM_DEAD[npc] = false;
 
-	alive.PlayRandomSound("sound_spawn");
 	g_NPCsList.Push(EntIndexToEntRef(npc));
 }
 
@@ -1134,30 +1178,36 @@ void PNPC_RemoveFromList(int entity, bool isAGib = false)
 
 	if (!isAGib)
 	{
-		while (!g_NPCsList.Empty)
+		if (g_NPCsList != null)
 		{
-			int ent = EntRefToEntIndex(g_NPCsList.Pop());
-			if (ent != entity && IsValidEntity(ent))
-				replacement.Push(EntIndexToEntRef(ent));
-		}
+			while (!g_NPCsList.Empty)
+			{
+				int ent = EntRefToEntIndex(g_NPCsList.Pop());
+				if (ent != entity && IsValidEntity(ent))
+					replacement.Push(EntIndexToEntRef(ent));
+			}
 
-		delete g_NPCsList;
-		g_NPCsList = replacement.Clone();
-		delete replacement;
+			delete g_NPCsList;
+			g_NPCsList = replacement.Clone();
+		}
 	}
 	else
 	{
-		while (!g_GibsList.Empty)
+		if (g_GibsList != null)
 		{
-			int ent = EntRefToEntIndex(g_GibsList.Pop());
-			if (ent != entity && IsValidEntity(ent))
-				replacement.Push(EntIndexToEntRef(ent));
-		}
+			while (!g_GibsList.Empty)
+			{
+				int ent = EntRefToEntIndex(g_GibsList.Pop());
+				if (ent != entity && IsValidEntity(ent))
+					replacement.Push(EntIndexToEntRef(ent));
+			}
 
-		delete g_GibsList;
-		g_GibsList = replacement.Clone();
-		delete replacement;
+			delete g_GibsList;
+			g_GibsList = replacement.Clone();
+		}
 	}
+
+	delete replacement;
 }
 
 void PNPC_OnDestroy(int npc)
@@ -1237,8 +1287,24 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 	int ent = CreateEntityByName(NPC_NAME);
 	if (IsValidEntity(ent))
 	{
+		if (Settings_WillExceedNPCLimit(g_NPCsList))
+		{
+			if (Settings_GetMaxNPCsMethod() <= 0)
+			{
+				RemoveEntity(ent);
+				return -1;
+			}
+			else
+			{
+				int oldest = EntRefToEntIndex(g_NPCsList.Pop());
+				if (IsValidEntity(oldest))
+					view_as<PNPC>(oldest).Gib();
+			}
+		}
+
 		PNPC npc = view_as<PNPC>(ent);
 		CBaseNPC base = npc.GetBaseNPC();
+		IsValidAt[ent] = GetGameTime() + 0.1;
 
 		npc.g_Logic = logic;
 		npc.g_LogicPlugin = GetPluginHandle(logicPlugin);
@@ -1292,6 +1358,8 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		SDKHook(ent, SDKHook_ThinkPost, PNPC_ThinkPost);
 		SDKHook(ent, SDKHook_TraceAttack, PNPC_TraceAttack);
 		SDKHook(ent, SDKHook_Touch, PNPC_Touch);
+
+		npc.PlayRandomSound("sound_spawn");
 
 		return ent;
 	}
@@ -2263,9 +2331,12 @@ public int Native_PNPCSetTeam(Handle plugin, int numParams)
 	else
 		SetEntProp(ent, Prop_Send, "m_iTeamNum", 4);
 
-	PNPC npc = view_as<PNPC>(ent);
-	npc.SetAttachmentsFromConfig();
-	RequestFrame(PNPC_SetParticlesNextFrame, npc);
+	if (GetGameTime() >= IsValidAt[ent])
+	{
+		PNPC npc = view_as<PNPC>(ent);
+		npc.SetAttachmentsFromConfig();
+		RequestFrame(PNPC_SetParticlesNextFrame, npc);
+	}
 
 	return 0; 
 }
@@ -2851,7 +2922,11 @@ public int Native_PNPCAttachParticle(Handle plugin, int numParams)
 	int ent = GetNativeCell(1);
 	PNPC npc = view_as<PNPC>(ent);
 
-	if (npc.g_AttachedParticles.Length + 1 > Settings_GetMaxParticles() && Settings_GetMaxParticles() > -1)
+	int num = 0;
+	if (npc.g_AttachedParticles != null)
+		num += npc.g_AttachedParticles.Length;
+
+	if (num + 1 > Settings_GetMaxParticles() && Settings_GetMaxParticles() > -1)
 		return -1;
 
 	char name[255], attachment[255];
@@ -2880,7 +2955,13 @@ public int Native_PNPCAttachModel(Handle plugin, int numParams)
 	int ent = GetNativeCell(1);
 	PNPC npc = view_as<PNPC>(ent);
 
-	if (npc.g_AttachedWeapons.Length + npc.g_AttachedCosmetics.Length + 1 > Settings_GetMaxAttachments() && Settings_GetMaxAttachments() > -1)
+	int num = 0;
+	if (npc.g_AttachedWeapons != null)
+		num += npc.g_AttachedWeapons.Length;
+	if (npc.g_AttachedCosmetics != null)
+		num += npc.g_AttachedCosmetics.Length;
+
+	if (num + 1 > Settings_GetMaxAttachments() && Settings_GetMaxAttachments() > -1)
 		return -1;
 
 	char model[255], attachment[255], sequence[255];
@@ -2968,6 +3049,9 @@ public int Native_PNPCAttachModel(Handle plugin, int numParams)
 
 public void PNPC_SpawnGib(char model[255], int skin, float pos[3], float ang[3], float vel[3])
 {
+	if (g_GibsList == null)
+		g_GibsList = new Queue();
+
 	if (Settings_WillExceedGibLimit(g_GibsList))
 	{
 		int oldest = EntRefToEntIndex(g_GibsList.Pop());
@@ -4100,20 +4184,27 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 	char cue[255], config[255];
 	GetNativeString(2, cue, sizeof(cue));
 	Format(cue, sizeof(cue), "npc.sounds.%s", cue);
-	npc.GetConfigName(config, sizeof(config));
-
-	Format(config, sizeof(config), "configs/npcs/%s.cfg", config);
+	npc.GetConfigName(config, sizeof(config), true);
+	if (StrEqual(config, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+	{
+		CPrintToChatAll("Sound failed because config is blank.");
+		return false;
+	}
 
 	//Check 1: Does our NPC even have a ConfigMap?
 	ConfigMap conf = new ConfigMap(config);
 	if (conf == null)
+	{
+		CPrintToChatAll("Sound failed because configmap was null.");
 		return false;
+	}
 
 	//Check 2: Our NPC has a ConfigMap, but does their sounds section actually have an entry for our cue?
 	ConfigMap cueSection = conf.GetSection(cue);
 	if (cueSection == null)
 	{
 		DeleteCfg(conf);
+		CPrintToChatAll("Sound failed because subsection was null.");
 		return false;
 	}
 
@@ -4148,14 +4239,18 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 		default:	//This should literally never be possible, but we can never be too safe...
 		{
 			DeleteCfg(conf);
+			CPrintToChatAll("Sound failed because KeyValType was default.");
 			return false;
 		}
 	}
 
 	//Check 4: Make sure our sound actually exists before we attempt to play it.
-	if (!CheckFile(soundToPlay))
+	char check[255];
+	Format(check, sizeof(check), "sound/%s", soundToPlay);
+	if (!CheckFile(check))
 	{
 		DeleteCfg(conf);
+		CPrintToChatAll("Sound failed because the sound doesn't exist (%s).", check);
 		return false;
 	}
 
@@ -4163,7 +4258,7 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 
 	int level = 100;
 	float volume = 1.0;
-	int channel = SNDCHAN_VOICE;
+	int channel = 7;
 	bool global = false;
 	int maxPitch = 100;
 	int minPitch = 100;
@@ -4186,10 +4281,15 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 				minPitch = GetIntFromConfigMap(soundSection, "pitch_min", 100);
 				maxPitch = GetIntFromConfigMap(soundSection, "pitch_max", 100);
 			}
+			else
+			{
+				CPrintToChatAll("Sound failed because chance failed.");
+			}
 		}
 		else
 		{
 			DeleteCfg(conf);
+			CPrintToChatAll("Sound failed because soundSection was null.");
 			return false;
 		}
 	}
@@ -4197,9 +4297,9 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 	if (success)
 	{
 		if (global)
-			EmitSoundToAll(soundToPlay, _, channel, level, _, volume, GetRandomInt(minPitch, maxPitch));
+			EmitSoundToAll(soundToPlay, _, PNPC_SndChans[channel], level, _, volume, GetRandomInt(minPitch, maxPitch));
 		else
-			EmitSoundToAll(soundToPlay, npc.Index, channel, level, _, volume, GetRandomInt(minPitch, maxPitch));
+			EmitSoundToAll(soundToPlay, npc.Index, PNPC_SndChans[channel], level, _, volume, GetRandomInt(minPitch, maxPitch));
 	}
 
 	DeleteCfg(conf);
@@ -4207,18 +4307,17 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 	return success;
 }
 
-public any Native_PNPC_GetConfigMap(Handle plugin, int numParams)
-{
-	char filePath[255];
-	Format(filePath, sizeof(filePath), "configs/npcs/%s.cfg", PNPC_ConfigName[GetNativeCell(1)]);
-	return new ConfigMap(filePath);
-}
-
 public int Native_PNPCSetGibsFromConfig(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
 
-	ConfigMap conf = npc.GetConfigMap();
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+		return 0;
+
+	ConfigMap conf = new ConfigMap(mapPath);
+	
 	if (conf == null)
 		return 0;
 
@@ -4319,7 +4418,13 @@ public int Native_PNPCSetParticlesFromConfig(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
 
-	ConfigMap conf = npc.GetConfigMap();
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+		return 0;
+
+	ConfigMap conf = new ConfigMap(mapPath);
+
 	if (conf == null)
 		return 0;
 
@@ -4373,7 +4478,13 @@ public int Native_PNPCSetAttachmentsFromConfig(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
 
-	ConfigMap conf = npc.GetConfigMap();
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+		return 0;
+
+	ConfigMap conf = new ConfigMap(mapPath);
+
 	if (conf == null)
 		return 0;
 
