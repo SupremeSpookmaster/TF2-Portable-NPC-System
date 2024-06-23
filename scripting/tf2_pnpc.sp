@@ -29,11 +29,6 @@ public Plugin myinfo =
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Test the following sound cues:
-//			- sound_killed (added, need to test)
-//			- sound_hurt (added, need to test)
-//			- sound_impact (added, need to test)
-//			- sound_spawn (added, need to test)
 //		- Make backstabs compatible with NPCs.
 //		- Add a system that replaces a player's viewmodel with an NPC that can be animated.
 //			- Melee should be easy, ranged will require muzzle flashes.
@@ -41,6 +36,7 @@ public Plugin myinfo =
 //			- Replace CF's viewmodel animation native with one that uses this system.
 //		- Make mediguns work on NPCs.
 //			- We do not know if TF2's medigun heal logic will work on NPCs by default. It most likely won't, in which case we will need a workaround. Heal logic has already been written, copy from CF.
+//				- We need to implement health bars first to even see if the heal is working.
 //			- MAYBE make ûbercharges work?
 //		- BUGS:
 //			- If an NPC is destroyed and then another one is created on the same frame, the new NPC will steal the old one's internal logic????????????
