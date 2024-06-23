@@ -1231,7 +1231,6 @@ void PNPC_OnDestroy(int npc)
 	dead.SetProp(Prop_Data, "pnpc_pPath", -1);
 
 	PNPC_RemoveFromPaths(dead);
-	dead.PlayRandomSound("sound_killed");
 
 	delete g_Gibs[npc];
 	delete g_GibAttachments[npc];
@@ -1244,6 +1243,9 @@ void PNPC_OnDestroy(int npc)
 	strcopy(PNPC_Name[npc], 255, "");
 
 	dead.b_Exists = false;
+	if (!I_AM_DEAD[npc])
+		dead.PlayRandomSound("sound_killed");
+
 	I_AM_DEAD[npc] = true;
 
 	PNPC_RemoveFromList(npc);
@@ -1847,6 +1849,7 @@ public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage,
 		npc.Extinguish();
 		npc.RemoveMilk();
 		npc.RemoveJarate();
+		npc.PlayRandomSound("sound_killed");
 		I_AM_DEAD[victim] = true;
 
 		if (shouldGib)
@@ -3069,15 +3072,23 @@ public void PNPC_SpawnGib(char model[255], int skin, float pos[3], float ang[3],
 				
 	if (IsValidEntity(gib))
 	{
-		SetEntityCollisionGroup(gib, 1);
 		SetEntityRenderMode(gib, RENDER_TRANSALPHA);
-		SetEntityCollisionGroup(gib, 1);
 		SetEntProp(gib, Prop_Send, "m_iTeamNum", 0);
+		DispatchKeyValue(gib, "physicsmode", "2");
+		DispatchKeyValue(gib, "spawnflags", "2");
+		SetEntityCollisionGroup(gib, 2);
 
 		CreateTimer(5.0, PNPC_BeginGibFadeout, EntIndexToEntRef(gib), TIMER_FLAG_NO_MAPCHANGE);
 		b_IsGib[gib] = true;
 		g_GibsList.Push(EntIndexToEntRef(gib));
 	}
+}
+
+public void Gib_SetCollisionGroupNextFrame(int ref)
+{
+	int gib = EntRefToEntIndex(ref);
+	if (IsValidEntity(gib))
+		SetEntityCollisionGroup(gib, 1);
 }
 
 public Action PNPC_BeginGibFadeout(Handle timer, int ref)
@@ -4061,12 +4072,18 @@ public Action PNPC_PassFilter(int ent1, int ent2, bool &result)
 	if (!PNPC_IsNPC(ent1) && !PNPC_IsNPC(ent2))
 		return Plugin_Continue;
 
+	if (b_IsGib[ent1] || b_IsGib[ent2])
+	{
+		result = false;
+		return Plugin_Handled;
+	}
+
 	if (b_IsProjectile[ent1] || b_IsProjectile[ent2])
 	{
 		if (b_IsInUpdateGroundConstraint)
 		{
 			result = false;
-			return Plugin_Changed;
+			return Plugin_Handled;
 		}
 		else
 		{
@@ -4186,25 +4203,18 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 	Format(cue, sizeof(cue), "npc.sounds.%s", cue);
 	npc.GetConfigName(config, sizeof(config), true);
 	if (StrEqual(config, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
-	{
-		CPrintToChatAll("Sound failed because config is blank.");
 		return false;
-	}
 
 	//Check 1: Does our NPC even have a ConfigMap?
 	ConfigMap conf = new ConfigMap(config);
 	if (conf == null)
-	{
-		CPrintToChatAll("Sound failed because configmap was null.");
 		return false;
-	}
 
 	//Check 2: Our NPC has a ConfigMap, but does their sounds section actually have an entry for our cue?
 	ConfigMap cueSection = conf.GetSection(cue);
 	if (cueSection == null)
 	{
 		DeleteCfg(conf);
-		CPrintToChatAll("Sound failed because subsection was null.");
 		return false;
 	}
 
@@ -4239,7 +4249,6 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 		default:	//This should literally never be possible, but we can never be too safe...
 		{
 			DeleteCfg(conf);
-			CPrintToChatAll("Sound failed because KeyValType was default.");
 			return false;
 		}
 	}
@@ -4250,7 +4259,6 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 	if (!CheckFile(check))
 	{
 		DeleteCfg(conf);
-		CPrintToChatAll("Sound failed because the sound doesn't exist (%s).", check);
 		return false;
 	}
 
@@ -4281,15 +4289,10 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 				minPitch = GetIntFromConfigMap(soundSection, "pitch_min", 100);
 				maxPitch = GetIntFromConfigMap(soundSection, "pitch_max", 100);
 			}
-			else
-			{
-				CPrintToChatAll("Sound failed because chance failed.");
-			}
 		}
 		else
 		{
 			DeleteCfg(conf);
-			CPrintToChatAll("Sound failed because soundSection was null.");
 			return false;
 		}
 	}
