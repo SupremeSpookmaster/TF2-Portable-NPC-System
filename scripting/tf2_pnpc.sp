@@ -40,7 +40,6 @@ public Plugin myinfo =
 //			- MAYBE make ûbercharges work?
 //		- BUGS:
 //			- If an NPC is destroyed and then another one is created on the same frame, the new NPC will steal the old one's internal logic????????????
-//			- PlayRandomSound is incompatible with sound formats (example: ")vo/my_sound.mp3") because of how it checks for file existence, figure out a solution. This issue is also shared by CF's sound native, so port the fix to that when done.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.

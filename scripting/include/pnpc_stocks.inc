@@ -55,6 +55,14 @@ enum ParticleAttachment_t {
 #define PARTICLE_DISPATCH_FROM_ENTITY		(1<<0)
 #define PARTICLE_DISPATCH_RESET_PARTICLES	(1<<1)
 
+stock bool IsCharSoundscript(char character)
+{
+	if (IsCharAlpha(character) || IsCharNumeric(character) || character == '_' || character == '/' || character == '\\' || character == '.')
+		return false;
+	
+	return true;
+}
+
 stock float ApproachAngle(float target, float value, float speed)
 {
 	target = anglemod(target);

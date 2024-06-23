@@ -4255,7 +4255,14 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 
 	//Check 4: Make sure our sound actually exists before we attempt to play it.
 	char check[255];
-	Format(check, sizeof(check), "sound/%s", soundToPlay);
+	Format(check, sizeof(check), "sound/");
+	for (int i = 0; i < sizeof(soundToPlay); i++)
+	{
+		char character = soundToPlay[i];
+		if (!IsCharSoundscript(character))
+			Format(check, sizeof(check), "%s%c", check, character);
+	}
+
 	if (!CheckFile(check))
 	{
 		DeleteCfg(conf);
