@@ -35,10 +35,12 @@ public Plugin myinfo =
 //			- Melee should be easy, ranged will require muzzle flashes.
 //			- Perhaps we should hide the *real* viewmodel, then have our custom VM copy its animation data until we decide to animate it?
 //			- Replace CF's viewmodel animation native with one that uses this system.
+//		- Projectile explosions MIGHT be blocked by players now, test it
 //		- Make mediguns work on NPCs.
 //			- We do not know if TF2's medigun heal logic will work on NPCs by default. It most likely won't, in which case we will need a workaround. Heal logic has already been written, copy from CF.
 //				- We need to implement health bars first to even see if the heal is working.
 //			- MAYBE make ûbercharges work?
+//		- Allow server owners to configure health bars and melee hitreg.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
@@ -52,10 +54,7 @@ public Plugin myinfo =
 //			- "Aspects", AKA passive effects.
 //			- "Abilities", AKA special abilities that can only be activated by custom NPC logic.
 //			- Movement and combat will typically only be used by extremely basic NPCs, whereas aspects and abilities are used to create more complex NPCs.
-//		- Allow server owners to configure several settings:
-//			- Health Bars
-//			- Kill Feed
-//			- Melee Hitreg (requires custom melee hitreg system to be in-place)
+//		- Implement NPC kill feed and allow server owners to configure it in settings.cfg.
 //		- Some day down the road (not immediately), add the Fake Player Model system. The basic functionality should actually be fairly easy to implement given all of the control we have over animations.
 //			- Copy the user's current sequence, pose parameters, and gestures to the NPC every frame, then when we animate the NPC we stop copying until the animation is done.
 //			- The actual player should be teleported off of the map, and SetClientViewEntity should be used to make them view everything from the NPC's perspective.
@@ -71,7 +70,6 @@ public Plugin myinfo =
 //				- All: Have parameters for both an on-hit function and a filter function to determine what can/cannot be hit, as well as animation and sound parameters.
 //		- Add an option to make NPCs automatically enter their air/swim animations if airborne or in the water.
 //		- Projectiles phase through NPCs that have no team affiliation. PassFilter does not fix this. Find an alternative solution.
-//			- Maybe SetCollisionGroup?
 //		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
 //		- Once NPCs are capable of attacking: add the "sound_kill" cue and test it.
 
