@@ -211,6 +211,11 @@ methodmap PNPC < CBaseCombatCharacter
 	public native void SetAttachmentsFromConfig();
 
 	/**
+	 * Automatically applies the settings for this PNPC's visual health bar, using its config.
+	 */
+	public native void SetHealthBarFromConfig();
+
+	/**
 	 * Retrieves the PNPC's locomotion interface.
 	 */
 	public native CBaseNPC_Locomotion GetLocomotion();
@@ -570,9 +575,31 @@ methodmap PNPC < CBaseCombatCharacter
 	 */
 	public native bool PlayRandomSound(char cue[255]);
 
+	/**
+	 * Updates this PNPC's visual health bar, provided it has one.
+	 */
+	public native void UpdateHealthBar();
+
 	property int Index
 	{
 		public native get();
+	}
+
+	property int i_HealthBar
+	{
+		public native get();
+	}
+
+	property int i_HealthBarType
+	{
+		public native get();
+		public native set(int value);
+	}
+
+	property int i_HealthBarDisplay
+	{
+		public native get();
+		public native set(int value);
 	}
 
 	property bool b_Exists

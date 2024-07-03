@@ -240,6 +240,9 @@ int i_Jarater[2049] = { -1, ... };
 int i_Gasser[2049] = { -1, ... };
 int i_PillCollideTarget[2049] = { -1, ... };
 int i_PathTarget[2049] = { -1, ... };
+int i_HealthBar[2049] = { -1, ... };
+int i_HealthBarType[2049] = { -1, ... };
+int i_HealthBarDisplay[2049] = { -1, ... };
 
 float PNPC_Speed[2049] = { 0.0, ... };
 float PNPC_ThinkRate[2049] = { 0.0, ... };
@@ -253,6 +256,8 @@ float f_MilkEndTime[2049] = { 0.0, ... };
 float f_JarateEndTime[2049] = { 0.0, ... };
 float f_GasEndTime[2049] = { 0.0, ... };
 float IsValidAt[2049] = { 0.0, ... };
+float f_NextSlowScan[2049] = { 0.0, ... };
+float f_HealthBarHeight[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 
 bool b_IsInUpdateGroundConstraint = false;
@@ -733,6 +738,15 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.GetName", Native_PNPC_GetName);
 	CreateNative("PNPC.SetName", Native_PNPC_SetName);
 
+	//Health Bars:
+	CreateNative("PNPC.UpdateHealthBar", Native_PNPC_UpdateHealthBar);
+	CreateNative("PNPC.SetHealthBarFromConfig", Native_PNPCSetHealthBarFromConfig);
+	CreateNative("PNPC.i_HealthBar.get", Native_PNPCGetHealthBar);
+	CreateNative("PNPC.i_HealthBarType.get", Native_PNPCGetHealthBarType);
+	CreateNative("PNPC.i_HealthBarType.set", Native_PNPCSetHealthBarType);
+	CreateNative("PNPC.i_HealthBarDisplay.get", Native_PNPCGetHealthBarDisplay);
+	CreateNative("PNPC.i_HealthBarDisplay.set", Native_PNPCSetHealthBarDisplay);
+
 	//Global (not specific to the PNPC methodmap) Natives:
 	CreateNative("PNPC_Explosion", Native_PNPCExplosion);
 	CreateNative("PNPC_IsNPC", Native_PNPCIsThisAnNPC);
@@ -740,6 +754,48 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_IsValidTarget", Native_PNPC_IsValidTarget);
 	CreateNative("PNPC_WorldSpaceCenter", Native_PNPC_WorldSpaceCenter);
 	CreateNative("PNPC_GetClosestTarget", Native_PNPC_GetClosestTarget);
+}
+
+public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+
+	int bar = npc.i_HealthBar;
+	if (!IsValidEntity(bar))
+		return 0;
+
+	//TODO: Different health bar types should appear different, also should fade from green to red depending on how high/low its health is
+	char message[255];
+	Format(message, sizeof(message), "%i/%i", npc.i_Health, npc.i_MaxHealth);
+	WorldText_SetMessage(bar, message);
+
+	return 0;
+}
+
+public int Native_PNPCGetHealthBar(Handle plugin, int numParams) { return EntRefToEntIndex(i_HealthBar[GetNativeCell(1)]); }
+
+public int Native_PNPCGetHealthBarType(Handle plugin, int numParams) { return i_HealthBarType[GetNativeCell(1)]; }
+public int Native_PNPCSetHealthBarType(Handle plugin, int numParams)
+{
+	int defaultType = Settings_GetHealthBarType();
+	if (defaultType == 0)
+		i_HealthBarType[GetNativeCell(1)] = GetNativeCell(2);
+	else
+		i_HealthBarType[GetNativeCell(1)] = defaultType;
+
+	return 0;
+}
+
+public int Native_PNPCGetHealthBarDisplay(Handle plugin, int numParams) { return i_HealthBarDisplay[GetNativeCell(1)]; }
+public int Native_PNPCSetHealthBarDisplay(Handle plugin, int numParams)
+{
+	int defaultType = Settings_GetHealthBarDisplay();
+	if (defaultType == 0)
+		i_HealthBarDisplay[GetNativeCell(1)] = GetNativeCell(2);
+	else
+		i_HealthBarDisplay[GetNativeCell(1)] = defaultType;
+
+	return 0;
 }
 
 public any Native_PNPC_HasAspect(Handle plugin, int numParams)
@@ -971,6 +1027,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	i_PathTarget[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
+	f_NextSlowScan[entity] = 0.0;
 	if (b_IsGib[entity])
 	{
 		PNPC_RemoveFromList(entity, true);
@@ -1231,6 +1288,10 @@ void PNPC_OnDestroy(int npc)
 	}
 	dead.SetProp(Prop_Data, "pnpc_pPath", -1);
 
+	int bar = dead.i_HealthBar;
+	if (IsValidEntity(bar))
+		RemoveEntity(bar);
+
 	PNPC_RemoveFromPaths(dead);
 
 	delete g_Gibs[npc];
@@ -1332,6 +1393,21 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
+
+		npc.SetHealthBarFromConfig();
+
+		if (npc.i_HealthBarType > 0)
+		{
+			int bar = WorldText_Create(pos, ang, "", 8.0);
+			if (IsValidEntity(bar))
+			{
+				i_HealthBar[ent] = EntIndexToEntRef(bar);
+				WorldText_AttachToEntity(bar, ent, "root", _, _, f_HealthBarHeight[ent]);
+				npc.UpdateHealthBar();
+				WorldText_SetOrientation(bar, ORIENTATION_ALWAYS_FACE_PLAYER);
+				//TODO: SetTransmit based on display mode, also set fade distance so it's not always rendering for every single NPC on the map
+			}
+		}
 
 		CBaseNPC_Locomotion loco = npc.GetLocomotion();
 		loco.SetCallback(LocomotionCallback_ShouldCollideWith, PNPC_ShouldCollide);
@@ -1927,6 +2003,10 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 	{
 		PNPC_OnKilled(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 	}
+	else
+	{
+		view_as<PNPC>(victim).UpdateHealthBar();
+	}
 }
 
 public void PNPC_AttemptIgnite(int victim, int attacker, int inflictor, int weapon, float damage)
@@ -2198,16 +2278,23 @@ public void PNPC_InternalLogic(int ref)
 		return;
 	}
 
-	PNPC_BurnLogic(npc, gt);
-	PNPC_MilkLogic(npc, gt);
-	PNPC_JarateLogic(npc, gt);
-	PNPC_GasLogic(npc, gt);
 	PNPC_SetMovePose(npc);
-	PNPC_CheckTriggerHurt(npc);
 
-	if (IsValidEntity(npc.i_PathTarget))
+	if (gt >= f_NextSlowScan[ent])
 	{
-		npc.SetGoalEntity(npc.i_PathTarget);
+		PNPC_BurnLogic(npc, gt);
+		PNPC_MilkLogic(npc, gt);
+		PNPC_JarateLogic(npc, gt);
+		PNPC_GasLogic(npc, gt);
+		PNPC_CheckTriggerHurt(npc);
+		npc.UpdateHealthBar();
+
+		if (IsValidEntity(npc.i_PathTarget))
+		{
+			npc.SetGoalEntity(npc.i_PathTarget);
+		}
+
+		f_NextSlowScan[ent] = gt + 0.1;
 	}
 
 	npc.GetPathFollower().Update(npc.GetBot());
@@ -3862,6 +3949,9 @@ public any Native_PNPCHealEntity(Handle plugin, int numParams)
 		}
 		
 		SetEntProp(target, Prop_Send, "m_iHealth", newHP);
+
+		if (PNPC_IsNPC(target))
+			view_as<PNPC>(target).UpdateHealthBar();
 	}
 
 	return success;
@@ -4413,6 +4503,29 @@ public int Native_PNPCSetGibsFromConfig(Handle plugin, int numParams)
 	}
 
 	DeleteCfg(conf);
+
+	return 0;
+}
+
+public int Native_PNPCSetHealthBarFromConfig(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+
+	//TODO: PNPCs with no config should use the default options set in settings.cfg
+
+	char mapPath[255];
+	npc.GetConfigName(mapPath, sizeof(mapPath), true);
+	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+		return 0;
+
+	ConfigMap conf = new ConfigMap(mapPath);
+	
+	if (conf == null)
+		return 0;
+
+	npc.i_HealthBarType = GetIntFromConfigMap(conf, "npc.visuals.health_bar", 0);
+	npc.i_HealthBarDisplay = GetIntFromConfigMap(conf, "npc.visuals.health_bar_display", 0);
+	f_HealthBarHeight[npc.Index] = GetFloatFromConfigMap(conf, "npc.visuals.health_bar_height", 100.0);
 
 	return 0;
 }

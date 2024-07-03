@@ -71,3 +71,5 @@ public bool Settings_WillExceedGibLimit(Queue Gibs)
 public int Settings_GetMaxAttachments() { return i_MaxAttachments; }
 public int Settings_GetMaxParticles() { return i_MaxParticles; }
 public bool Settings_AllowExplosions() { return !b_CustomExplosions; }
+public int Settings_GetHealthBarType() { return i_HealthBars; }
+public int Settings_GetHealthBarDisplay() { return i_HealthBarsDisplay; }

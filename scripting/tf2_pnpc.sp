@@ -18,6 +18,7 @@ public Plugin myinfo =
 
 #include <pnpc_stocks>
 #include <pnpc>
+#include <worldtext>
 
 #include "pnpc/npcs.sp"
 #include "pnpc/templates.sp"
