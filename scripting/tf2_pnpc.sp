@@ -27,6 +27,7 @@ public Plugin myinfo =
 
 //PERSONAL NOTES:
 //		- Make custom melee hitreg so it doesn't sound like you're hitting a wall every time you hit an NPC with melee.
+//			- Server owners should be able to enable or disable this.
 //			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
@@ -40,7 +41,7 @@ public Plugin myinfo =
 //			- We do not know if TF2's medigun heal logic will work on NPCs by default. It most likely won't, in which case we will need a workaround. Heal logic has already been written, copy from CF.
 //				- We need to implement health bars first to even see if the heal is working.
 //			- MAYBE make ûbercharges work?
-//		- Allow server owners to configure health bars and melee hitreg.
+//		- On-hit effects such as igniting still work against NPCs, need to fix this.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.

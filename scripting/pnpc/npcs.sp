@@ -243,6 +243,7 @@ int i_PathTarget[2049] = { -1, ... };
 int i_HealthBar[2049] = { -1, ... };
 int i_HealthBarType[2049] = { -1, ... };
 int i_HealthBarDisplay[2049] = { -1, ... };
+int i_HealthBarOwner[2049] = { -1, ... };
 
 float PNPC_Speed[2049] = { 0.0, ... };
 float PNPC_ThinkRate[2049] = { 0.0, ... };
@@ -259,6 +260,7 @@ float IsValidAt[2049] = { 0.0, ... };
 float f_NextSlowScan[2049] = { 0.0, ... };
 float f_HealthBarHeight[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
+float f_LastDamagedAt[2049][2049];
 
 bool b_IsInUpdateGroundConstraint = false;
 bool IExist[2049] = { false, ... };
@@ -764,12 +766,99 @@ public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
 	if (!IsValidEntity(bar))
 		return 0;
 
-	//TODO: Different health bar types should appear different, also should fade from green to red depending on how high/low its health is
+	float ratio = float(npc.i_Health) / float(npc.i_MaxHealth);
+
+	int r, g, b;
+
+	if (ratio > 1.0)
+	{
+		r = 120;
+		g = 120;
+		b = 255;
+	}
+	else
+	{
+		int level = RoundFloat(ratio * 255.0);
+		r = 255 - level;
+		g = level;
+	}
+
+	WorldText_SetColor(bar, r, g, b);
+
 	char message[255];
-	Format(message, sizeof(message), "%i/%i", npc.i_Health, npc.i_MaxHealth);
+
+	switch (npc.i_HealthBarType)
+	{
+		case 1:
+		{
+			Format(message, sizeof(message), "HP: %i/%i", npc.i_Health, npc.i_MaxHealth);
+		}
+		case 2:
+		{
+			Format(message, sizeof(message), "HP: %iPUTAPERCENTAGEHERE", RoundFloat(100.0 * ratio));
+			ReplaceString(message, sizeof(message), "PUTAPERCENTAGEHERE", "%");
+		}
+		default:
+		{
+			Format(message, sizeof(message), "HP: [");
+
+			int segmentSize = RoundToFloor(float(npc.i_MaxHealth) / 10.0);
+			for (int i = 0; i < npc.i_MaxHealth; i += segmentSize)
+			{
+				if (i <= npc.i_Health)	//Case 1: "i" has not surpassed our current health yet, thus we get a full segment
+					Format(message, sizeof(message), "%s|", message);
+				else
+					Format(message, sizeof(message), "%s-", message);
+			}
+
+			Format(message, sizeof(message), "%s]", message);
+		}
+	}
+
 	WorldText_SetMessage(bar, message);
 
 	return 0;
+}
+
+public Action HealthBarTransmit(int entity, int client)
+{
+	int owner = EntRefToEntIndex(i_HealthBarOwner[entity])
+	if (!IsValidEntity(owner) || !PNPC_IsNPC(owner))
+		return Plugin_Handled;
+
+	PNPC npc = view_as<PNPC>(owner);
+
+	switch(npc.i_HealthBarDisplay)
+	{
+		case 0:
+			return Plugin_Continue;
+		case 1:
+		{
+			if (PNPC_IsValidTarget(client, npc.i_Team))
+				return Plugin_Continue;
+			else
+				return Plugin_Handled;
+		}
+		case 2:
+			if (!PNPC_IsValidTarget(client, npc.i_Team))
+				return Plugin_Continue;
+			else
+				return Plugin_Handled;
+		case 3:
+		{
+			if (GetGameTime() - 3.0 <= f_LastDamagedAt[npc.Index][client])
+				return Plugin_Continue;
+			else
+				return Plugin_Handled;
+		}
+		default:
+		{
+			if (PNPC_IsValidTarget(client, npc.i_Team) || GetGameTime() - 3.0 <= f_LastDamagedAt[npc.Index][client])
+				return Plugin_Continue;
+			else
+				return Plugin_Handled;
+		}
+	}
 }
 
 public int Native_PNPCGetHealthBar(Handle plugin, int numParams) { return EntRefToEntIndex(i_HealthBar[GetNativeCell(1)]); }
@@ -1025,6 +1114,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 {
 	i_PillCollideTarget[entity] = -1;
 	i_PathTarget[entity] = -1;
+	i_HealthBarOwner[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
 	f_NextSlowScan[entity] = 0.0;
@@ -1402,10 +1492,11 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 			if (IsValidEntity(bar))
 			{
 				i_HealthBar[ent] = EntIndexToEntRef(bar);
+				i_HealthBarOwner[bar] = EntIndexToEntRef(ent);
 				WorldText_AttachToEntity(bar, ent, "root", _, _, f_HealthBarHeight[ent]);
 				npc.UpdateHealthBar();
 				WorldText_SetOrientation(bar, ORIENTATION_ALWAYS_FACE_PLAYER);
-				//TODO: SetTransmit based on display mode, also set fade distance so it's not always rendering for every single NPC on the map
+				SDKHook(bar, SDKHook_SetTransmit, HealthBarTransmit);
 			}
 		}
 
@@ -1929,6 +2020,10 @@ public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage,
 		npc.PlayRandomSound("sound_killed");
 		I_AM_DEAD[victim] = true;
 
+		int bar = npc.i_HealthBar;
+		if (IsValidEntity(bar))
+			RemoveEntity(bar);
+
 		if (shouldGib)
 		{
 			npc.Gib();
@@ -1998,6 +2093,8 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 			SpawnParticle(dPos, PNPC_BleedParticle[victim], 0.66);	//TODO: Make this a TE entity. Also do the same to crit text.
 		}
 	}
+
+	f_LastDamagedAt[victim][attacker] = GetGameTime();
 
 	if (view_as<PNPC>(victim).i_Health < 1)
 	{
@@ -4511,23 +4608,34 @@ public int Native_PNPCSetHealthBarFromConfig(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
 
-	//TODO: PNPCs with no config should use the default options set in settings.cfg
-
 	char mapPath[255];
 	npc.GetConfigName(mapPath, sizeof(mapPath), true);
 	if (StrEqual(mapPath, ""))	//This check should not be necessary, but ConfigMap generation REALLY doesn't like it when you try to generate a ConfigMap with a blank string...
+	{
+		PNPC_SetDefaultHealthBar(npc);
 		return 0;
+	}
 
 	ConfigMap conf = new ConfigMap(mapPath);
 	
 	if (conf == null)
+	{
+		PNPC_SetDefaultHealthBar(npc);
 		return 0;
+	}
 
 	npc.i_HealthBarType = GetIntFromConfigMap(conf, "npc.visuals.health_bar", 0);
 	npc.i_HealthBarDisplay = GetIntFromConfigMap(conf, "npc.visuals.health_bar_display", 0);
 	f_HealthBarHeight[npc.Index] = GetFloatFromConfigMap(conf, "npc.visuals.health_bar_height", 100.0);
 
 	return 0;
+}
+
+public void PNPC_SetDefaultHealthBar(PNPC npc)
+{
+	npc.i_HealthBarType = Settings_GetHealthBarType();
+	npc.i_HealthBarDisplay = Settings_GetHealthBarDisplay();
+	f_HealthBarHeight[npc.Index] = 100.0;
 }
 
 public int Native_PNPCClearGibs(Handle plugin, int numParams)
