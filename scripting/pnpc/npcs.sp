@@ -297,6 +297,7 @@ GlobalForward g_OnJarCollide;
 GlobalForward g_OnProjectileExplode;
 GlobalForward g_OnHeal;
 GlobalForward g_OnCheckMedigunCanHealNPC;
+GlobalForward g_OnHealthBarUpdated;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
@@ -454,6 +455,7 @@ void PNPC_MakeForwards()
 	g_OnProjectileExplode = new GlobalForward("PNPC_OnPNPCProjectileExplode", ET_Single, Param_Cell, Param_Cell, Param_Cell);
 	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
 	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Single, Param_Any, Param_Cell, Param_Cell);
+	g_OnHealthBarUpdated = new GlobalForward("PNPC_OnHealthBarDisplayed", ET_Event, Param_Any, Param_String, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");
 	AcFac.SetEventCallback(EventResponderType_OnActorEmoted, PluginBot_OnActorEmoted);*/
@@ -769,6 +771,7 @@ public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
 	float ratio = float(npc.i_Health) / float(npc.i_MaxHealth);
 
 	int r, g, b;
+	int a = 255;
 
 	if (ratio > 1.0)
 	{
@@ -782,8 +785,6 @@ public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
 		r = 255 - level;
 		g = level;
 	}
-
-	WorldText_SetColor(bar, r, g, b);
 
 	char message[255];
 
@@ -815,7 +816,24 @@ public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
 		}
 	}
 
-	WorldText_SetMessage(bar, message);
+	Action result;
+
+	Call_StartForward(g_OnHealthBarUpdated);
+
+	Call_PushCell(npc);
+	Call_PushStringEx(message, sizeof(message), SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+	Call_PushCellRef(r);
+	Call_PushCellRef(g);
+	Call_PushCellRef(b);
+	Call_PushCellRef(a);
+
+	Call_Finish(result);
+
+	if (result != Plugin_Stop && result != Plugin_Handled)
+	{
+		WorldText_SetColor(bar, r, g, b, a);
+		WorldText_SetMessage(bar, message);
+	}
 
 	return 0;
 }

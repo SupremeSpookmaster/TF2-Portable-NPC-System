@@ -1144,6 +1144,20 @@ forward bool PNPC_OnPNPCProjectileExplode(int rocket, int owner, int launcher);
 forward Action PNPC_OnPNPCHeal(int target, int &amount, float &maxHeal, int &healer);
 
 /**
+ * Called when a PNPC's health bar is about to be updated and displayed to the world.
+ * 
+ * @param npc		The PNPC.
+ * @param text		The health bar's text.
+ * @param r			The R value of the health bar's color.
+ * @param g			The G value of the health bar's color.
+ * @param b			The B value of the health bar's color.
+ * @param a			The alpha value of the health bar's color. 
+ * 
+ * @return Plugin_Changed if you changed a value, Plugin_Handled/Plugin_Stop to prevent the health bar from being updated (this does not hide the health bar, change PNPC.i_HealthBarDisplay for that), Plugin_Continue to do nothing.
+ */
+forward Action PNPC_OnHealthBarDisplayed(PNPC npc, char[] text, int &r, int &g, int &b, int &a);
+
+/**
  * Called when a PNPC is created.
  * 
  * @param entity	The PNPC.
