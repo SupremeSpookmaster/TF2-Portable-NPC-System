@@ -5,6 +5,8 @@ int i_MaxAttachments = -1;
 int i_MaxParticles = -1;
 int i_HealthBars = -1;
 int i_HealthBarsDisplay = -1;
+int i_DefaultHealthBar = -1;
+int i_DefaultHealthBarDisplay = -1;
 
 bool b_KillFeed = false;
 bool b_MeleeHitreg = false;
@@ -28,6 +30,8 @@ public void Settings_Load()
 	i_MaxParticles = GetIntFromConfigMap(conf, "settings.npc_particles_max", -1);
 	i_HealthBars = GetIntFromConfigMap(conf, "settings.npc_health_bars", 0);
 	i_HealthBarsDisplay = GetIntFromConfigMap(conf, "settings.npc_health_bars_display", 0);
+	i_DefaultHealthBar = GetIntFromConfigMap(conf, "settings.default_health_bars", 0);
+	i_DefaultHealthBarDisplay = GetIntFromConfigMap(conf, "settings.default_health_bars_display", 0);
 	b_KillFeed = GetBoolFromConfigMap(conf, "settings.npc_killfeed", true);
 	conf.Get("settings.npc_default_name", s_DefaultName, sizeof(s_DefaultName));
 	b_MeleeHitreg = GetBoolFromConfigMap(conf, "settings.custom_melee_hitreg", true);
@@ -73,3 +77,5 @@ public int Settings_GetMaxParticles() { return i_MaxParticles; }
 public bool Settings_AllowExplosions() { return !b_CustomExplosions; }
 public int Settings_GetHealthBarType() { return i_HealthBars; }
 public int Settings_GetHealthBarDisplay() { return i_HealthBarsDisplay; }
+public int Settings_GetDefaultHealthBarType() { return i_DefaultHealthBar; }
+public int Settings_GetDefaultHealthBarDisplay() { return i_DefaultHealthBarDisplay; }

@@ -42,6 +42,7 @@ public Plugin myinfo =
 //				- We need to implement health bars first to even see if the heal is working.
 //			- MAYBE make ûbercharges work?
 //		- On-hit effects such as igniting still work against NPCs, need to fix this.
+//		- Health bars that should be visible to allies are not, in fact, visible to allies. Figure this out later, too tired now.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.

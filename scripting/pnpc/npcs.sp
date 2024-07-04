@@ -806,7 +806,7 @@ public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
 			int segmentSize = RoundToFloor(float(npc.i_MaxHealth) / 10.0);
 			for (int i = 0; i < npc.i_MaxHealth; i += segmentSize)
 			{
-				if (i <= npc.i_Health)	//Case 1: "i" has not surpassed our current health yet, thus we get a full segment
+				if (i <= npc.i_Health)
 					Format(message, sizeof(message), "%s|", message);
 				else
 					Format(message, sizeof(message), "%s-", message);
@@ -1398,7 +1398,7 @@ void PNPC_OnDestroy(int npc)
 
 	int bar = dead.i_HealthBar;
 	if (IsValidEntity(bar))
-		RemoveEntity(bar);
+		WorldText_MimicHitNumbers(bar, _, _, 0.2);
 
 	PNPC_RemoveFromPaths(dead);
 
@@ -2040,7 +2040,7 @@ public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage,
 
 		int bar = npc.i_HealthBar;
 		if (IsValidEntity(bar))
-			RemoveEntity(bar);
+			WorldText_MimicHitNumbers(bar, _, _, 0.2);
 
 		if (shouldGib)
 		{
@@ -4642,8 +4642,17 @@ public int Native_PNPCSetHealthBarFromConfig(Handle plugin, int numParams)
 		return 0;
 	}
 
-	npc.i_HealthBarType = GetIntFromConfigMap(conf, "npc.visuals.health_bar", 0);
-	npc.i_HealthBarDisplay = GetIntFromConfigMap(conf, "npc.visuals.health_bar_display", 0);
+	int I_Sure_Hope_Nobody_Randomly_Chooses_This = -294710;
+	int val = GetIntFromConfigMap(conf, "npc.visuals.health_bar", I_Sure_Hope_Nobody_Randomly_Chooses_This);
+	if (val == I_Sure_Hope_Nobody_Randomly_Chooses_This)
+		val = Settings_GetDefaultHealthBarType();
+	npc.i_HealthBarType = val;
+
+	val = GetIntFromConfigMap(conf, "npc.visuals.health_bar_display", I_Sure_Hope_Nobody_Randomly_Chooses_This);
+	if (val == I_Sure_Hope_Nobody_Randomly_Chooses_This)
+		val = Settings_GetDefaultHealthBarDisplay();
+	npc.i_HealthBarDisplay = val;
+
 	f_HealthBarHeight[npc.Index] = GetFloatFromConfigMap(conf, "npc.visuals.health_bar_height", 100.0);
 
 	return 0;
@@ -4651,8 +4660,18 @@ public int Native_PNPCSetHealthBarFromConfig(Handle plugin, int numParams)
 
 public void PNPC_SetDefaultHealthBar(PNPC npc)
 {
-	npc.i_HealthBarType = Settings_GetHealthBarType();
-	npc.i_HealthBarDisplay = Settings_GetHealthBarDisplay();
+	int val = Settings_GetHealthBarType();
+	if (val == 0)
+		npc.i_HealthBarType = Settings_GetDefaultHealthBarType();
+	else
+		npc.i_HealthBarType = val;
+
+	val = Settings_GetHealthBarDisplay();
+	if (val == 0)
+		npc.i_HealthBarDisplay = Settings_GetDefaultHealthBarDisplay();
+	else
+		npc.i_HealthBarDisplay = val;
+
 	f_HealthBarHeight[npc.Index] = 100.0;
 }
 
