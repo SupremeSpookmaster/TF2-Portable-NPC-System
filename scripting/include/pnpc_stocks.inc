@@ -2412,3 +2412,32 @@ stock float GetAttributeValue(int entity, int attribute, float defaultVal)
 		
 	return TF2Attrib_GetValue(addy);
 }
+
+//Note that this does not account for crit heals.
+float Medigun_CalculateHealRate(int medigun, int client)
+{
+	float BaseHealingRate = 24.0;
+	BaseHealingRate *= GetAttributeValue(medigun, 7, 1.0);
+	BaseHealingRate *= GetAttributeValue(medigun, 8, 1.0);
+	float mastery = 0.25 * GetAttributeValue(medigun, 493, 0.0);
+	BaseHealingRate *= (1.0 + mastery);
+	
+	if (TF2_IsPlayerInCondition(client, TFCond_RuneHaste))
+		BaseHealingRate *= 2.0;
+		
+	if (TF2_IsPlayerInCondition(client, TFCond_KingAura) || TF2_IsPlayerInCondition(client, TFCond_KingRune))
+		BaseHealingRate *= 1.5;
+		
+	return BaseHealingRate;
+}
+
+float Medigun_CalculateOverhealMultiplier(int medigun, int client)
+{
+	float BaseOverhealMult = 1.5;
+	BaseOverhealMult *= GetAttributeValue(medigun, 11, 1.0);
+	BaseOverhealMult *= GetAttributeValue(medigun, 105, 1.0);
+	float mastery = 0.25 * GetAttributeValue(medigun, 482, 0.0);
+	BaseOverhealMult *= (1.0 + mastery);
+		
+	return BaseOverhealMult;
+}

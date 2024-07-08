@@ -259,6 +259,7 @@ float f_GasEndTime[2049] = { 0.0, ... };
 float IsValidAt[2049] = { 0.0, ... };
 float f_NextSlowScan[2049] = { 0.0, ... };
 float f_HealthBarHeight[2049] = { 0.0, ... };
+float f_MedigunHealthBucket[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 float f_LastDamagedAt[2049][2049];
 
@@ -552,9 +553,46 @@ public Action PNPC_MedigunHealLogic(Handle medical, int ref)
 {
 	int ent = EntRefToEntIndex(ref);
 	if (!PNPC_IsPNPC(ent))
-		return Plugin_Continue;
+		return Plugin_Stop;
 
-	//TODO: Logic520
+	for (int i = 0; i < GetArraySize(g_AttachedMediguns[ent]); i++)
+	{
+		int medigun = EntRefToEntIndex(GetArrayCell(g_AttachedMediguns[ent], i));
+		bool success = IsValidEntity(medigun);
+
+		if (success)
+			success = GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget") == ent;
+
+		int owner = GetEntPropEnt(medigun, Prop_Send, "m_hOwnerEntity");
+		if (success)
+			success = IsValidMulti(owner);
+
+		if (success)
+		{
+			float amt = Medigun_CalculateHealRate(medigun, owner);
+			if (amt >= 1.0)
+			{
+				int heals = RoundToFloor(amt);
+				float remainder = amt - float(heals);
+
+				float overhealMult = Medigun_CalculateOverhealMultiplier(medigun, owner);
+				PNPC_HealEntity(ent, heals, overhealMult, owner);
+				
+				//TODO: Give übercharge if it is not already applied
+			}
+		}
+		else
+		{
+			RemoveFromArray(g_AttachedMediguns[ent], i);
+			if (GetArraySize(g_AttachedMediguns[ent]) < 1)
+			{
+				delete g_AttachedMediguns[ent];
+				return Plugin_Stop;
+			}
+		}
+	}
+
+	return Plugin_Continue;
 }
 
 public MRESReturn PNPC_UpdateGroundConstraint_Pre(DHookParam param)
@@ -1158,6 +1196,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
 	f_NextSlowScan[entity] = 0.0;
+	f_MedigunHealthBucket[entity] = 0.0;
 	if (b_IsGib[entity])
 	{
 		PNPC_RemoveFromList(entity, true);
@@ -1429,6 +1468,7 @@ void PNPC_OnDestroy(int npc)
 	delete g_AttachedModels[npc];
 	delete g_AttachedWeaponModels[npc];
 	delete g_AttachedParticles[npc];
+	delete g_AttachedMediguns[npc];
 	i_BleedStacks[npc] = 0;
 
 	strcopy(PNPC_ConfigName[npc], 255, "");

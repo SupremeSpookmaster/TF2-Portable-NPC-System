@@ -38,10 +38,14 @@ public Plugin myinfo =
 //			- Replace CF's viewmodel animation native with one that uses this system.
 //		- Projectile explosions MIGHT be blocked by players now, test it
 //		- Make mediguns work on NPCs.
-//			- When a medigun attaches to an NPC, that medigun should be added to a list of mediguns that are currently attached to that NPC. Every 0.1s, cycle through every medigun in the list, distribute their healing to the NPC, and give übercharge. This logic should be terminated and the list deleted if no mediguns are attached.
+//			- Mostly done, just need to give über for NPC healing and then test.
+//			- Maybe add the overheal aura to overhealed NPCs?
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs.
+//		- CBS does not change his melee when hitting NPCs.
+//		- Anything involving damage/healing dealt to NPCs will not work. THis includes:
+//			- All ult charge and special resource mechanics.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
