@@ -38,10 +38,10 @@ public Plugin myinfo =
 //			- Replace CF's viewmodel animation native with one that uses this system.
 //		- Projectile explosions MIGHT be blocked by players now, test it
 //		- Make mediguns work on NPCs.
-//			- We do not know if TF2's medigun heal logic will work on NPCs by default. It most likely won't, in which case we will need a workaround. Heal logic has already been written, copy from CF.
-//				- We need to implement health bars first to even see if the heal is working.
-//			- MAYBE make ûbercharges work?
-//		- On-hit effects such as igniting still work against NPCs, need to fix this.
+//			- When a medigun attaches to an NPC, that medigun should be added to a list of mediguns that are currently attached to that NPC. Every 0.1s, cycle through every medigun in the list, distribute their healing to the NPC, and give übercharge. This logic should be terminated and the list deleted if no mediguns are attached.
+//		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
+//		- Doktor Medick's medigun effects do not work on NPCs.
+//		- Doktor Medick's Cocainum does not work on NPCs.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
@@ -73,6 +73,7 @@ public Plugin myinfo =
 //		- Projectiles phase through NPCs that have no team affiliation. PassFilter does not fix this. Find an alternative solution.
 //		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
 //		- Once NPCs are capable of attacking: add the "sound_kill" cue and test it.
+//		- MAYBE make übercharge effects work on NPCs?
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {

@@ -1481,8 +1481,6 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		npc.g_Logic = logic;
 		npc.g_LogicPlugin = GetPluginHandle(logicPlugin);
 		npc.i_Team = team;
-		npc.i_Health = health;
-		npc.i_MaxHealth = maxHealth;
 		npc.SetModel(model);
 		npc.i_Skin = skin;
 		npc.f_Scale = scale;
@@ -1501,6 +1499,8 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
+		npc.i_Health = health;
+		npc.i_MaxHealth = maxHealth;
 
 		npc.SetHealthBarFromConfig();
 
@@ -2056,6 +2056,9 @@ public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage,
 public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3])
 {
 	PNPC npc = view_as<PNPC>(victim);
+
+	if (IsAlly(victim, attacker))
+		return;
 
 	Event event = CreateEvent("npc_hurt");
 	if(event != null) 
@@ -2702,6 +2705,7 @@ public int Native_PNPCSetHealth(Handle plugin, int numParams)
 	int ent = GetNativeCell(1);
 	int hp = GetNativeCell(2);
 	SetEntProp(ent, Prop_Data, "m_iHealth", hp);
+	view_as<PNPC>(ent).UpdateHealthBar();
 
 	return 0; 
 }
