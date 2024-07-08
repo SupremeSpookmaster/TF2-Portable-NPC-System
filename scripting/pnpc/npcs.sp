@@ -309,6 +309,7 @@ ArrayList g_GibAttachments[2049];
 ArrayList g_AttachedModels[2049];
 ArrayList g_AttachedWeaponModels[2049];
 ArrayList g_AttachedParticles[2049];
+ArrayList g_AttachedMediguns[2049];
 
 DynamicHook g_DHookGrenadeExplode;
 DynamicHook g_DHookStickyExplode;
@@ -529,10 +530,31 @@ MRESReturn PNPC_CanMedigunHealTarget(int medigun, Handle hReturn, Handle hParams
 		Call_Finish(result);
 		
 		DHookSetReturn(hReturn, result);
+
+		if (result)
+		{
+			if (g_AttachedMediguns[target] == null)
+			{
+				CreateTimer(0.1, PNPC_MedigunHealLogic, EntIndexToEntRef(target), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+				g_AttachedMediguns[target] = new ArrayList(255);
+			}
+
+			PushArrayCell(g_AttachedMediguns[target], EntIndexToEntRef(medigun));
+		}
+
 		return MRES_Supercede;
 	}
 
 	return MRES_Ignored;
+}
+
+public Action PNPC_MedigunHealLogic(Handle medical, int ref)
+{
+	int ent = EntRefToEntIndex(ref);
+	if (!PNPC_IsPNPC(ent))
+		return Plugin_Continue;
+
+	//TODO: Logic520
 }
 
 public MRESReturn PNPC_UpdateGroundConstraint_Pre(DHookParam param)
