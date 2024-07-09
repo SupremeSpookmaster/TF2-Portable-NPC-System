@@ -2444,3 +2444,12 @@ float Medigun_CalculateOverhealMultiplier(int medigun)
 		
 	return BaseOverhealMult;
 }
+
+float Medigun_CalculateUberRate(int medigun)
+{
+	float BaseUberMult = 1.0;
+	BaseUberMult *= GetAttributeValue(medigun, 9, 1.0);
+	BaseUberMult *= GetAttributeValue(medigun, 10, 1.0);
+		
+	return BaseUberMult;
+}

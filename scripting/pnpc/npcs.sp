@@ -581,8 +581,17 @@ public Action PNPC_MedigunHealLogic(Handle medical, int ref)
 
 				float overhealMult = Medigun_CalculateOverhealMultiplier(medigun);
 				PNPC_HealEntity(ent, heals, overhealMult, owner);
-				
-				//TODO: Give übercharge if it is not already applied
+
+				float currentCharge = GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel");
+				if (currentCharge < 1.0)
+				{
+					float uberAmt = 0.025 * Medigun_CalculateUberRate(medigun) * 0.1;
+					currentCharge += uberAmt;
+					if (currentCharge > 1.0)
+						currentCharge = 1.0;
+
+					SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", currentCharge);
+				}
 			}
 		}
 		else
