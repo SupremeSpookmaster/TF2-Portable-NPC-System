@@ -2431,7 +2431,7 @@ float Medigun_CalculateHealRate(int medigun, int client)
 	return BaseHealingRate;
 }
 
-float Medigun_CalculateOverhealMultiplier(int medigun, int client)
+float Medigun_CalculateOverhealMultiplier(int medigun)
 {
 	float BaseOverhealMult = 1.5;
 	BaseOverhealMult *= GetAttributeValue(medigun, 11, 1.0);

@@ -38,12 +38,13 @@ public Plugin myinfo =
 //			- Replace CF's viewmodel animation native with one that uses this system.
 //		- Projectile explosions MIGHT be blocked by players now, test it
 //		- Make mediguns work on NPCs.
-//			- Mostly done, just need to give über for NPC healing and then test.
+//			- Mostly done, just need to give über for NPC healing.
 //			- Maybe add the overheal aura to overhealed NPCs?
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
-//		- Doktor Medick's Cocainum does not work on NPCs.
+//		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
 //		- CBS does not change his melee when hitting NPCs.
+//		- The m_iHealth property is fucking stupid, it uses Prop_Data for entities and Prop_Send for clients. Need to fix this in EVERY plugin used for CF...
 //		- Anything involving damage/healing dealt to NPCs will not work. THis includes:
 //			- All ult charge and special resource mechanics.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:

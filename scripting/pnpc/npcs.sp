@@ -552,7 +552,7 @@ MRESReturn PNPC_CanMedigunHealTarget(int medigun, Handle hReturn, Handle hParams
 public Action PNPC_MedigunHealLogic(Handle medical, int ref)
 {
 	int ent = EntRefToEntIndex(ref);
-	if (!PNPC_IsPNPC(ent))
+	if (!PNPC_IsNPC(ent))
 		return Plugin_Stop;
 
 	for (int i = 0; i < GetArraySize(g_AttachedMediguns[ent]); i++)
@@ -569,13 +569,13 @@ public Action PNPC_MedigunHealLogic(Handle medical, int ref)
 
 		if (success)
 		{
-			float amt = Medigun_CalculateHealRate(medigun, owner);
-			if (amt >= 1.0)
+			f_MedigunHealthBucket[medigun] += (Medigun_CalculateHealRate(medigun, owner) * 0.1);
+			if (f_MedigunHealthBucket[medigun] >= 1.0)
 			{
-				int heals = RoundToFloor(amt);
-				float remainder = amt - float(heals);
+				int heals = RoundToFloor(f_MedigunHealthBucket[medigun]);
+				f_MedigunHealthBucket[medigun] -= float(heals);
 
-				float overhealMult = Medigun_CalculateOverhealMultiplier(medigun, owner);
+				float overhealMult = Medigun_CalculateOverhealMultiplier(medigun);
 				PNPC_HealEntity(ent, heals, overhealMult, owner);
 				
 				//TODO: Give übercharge if it is not already applied
@@ -4107,7 +4107,11 @@ public any Native_PNPCHealEntity(Handle plugin, int numParams)
 
 	int maxHP = TF2Util_GetEntityMaxHealth(target);
 	int totalMax = RoundFloat(float(maxHP) * maxHeal);
-	int current = GetEntProp(target, Prop_Send, "m_iHealth");
+	int current;
+	if (IsValidClient(target))
+		current = GetEntProp(target, Prop_Send, "m_iHealth");
+	else
+		current = GetEntProp(target, Prop_Data, "m_iHealth");
 	
 	bool success = true;
 
@@ -4129,7 +4133,10 @@ public any Native_PNPCHealEntity(Handle plugin, int numParams)
 			newHP -= diff;
 		}
 		
-		SetEntProp(target, Prop_Send, "m_iHealth", newHP);
+		if (IsValidClient(target))
+			SetEntProp(target, Prop_Send, "m_iHealth", newHP);
+		else
+			SetEntProp(target, Prop_Data, "m_iHealth", newHP);
 
 		if (PNPC_IsNPC(target))
 			view_as<PNPC>(target).UpdateHealthBar();
