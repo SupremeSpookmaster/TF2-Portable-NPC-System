@@ -37,7 +37,6 @@ public Plugin myinfo =
 //			- Perhaps we should hide the *real* viewmodel, then have our custom VM copy its animation data until we decide to animate it?
 //			- Replace CF's viewmodel animation native with one that uses this system.
 //		- Projectile explosions MIGHT be blocked by players now, test it.
-//		- NPC overheal needs to decay over time. This should be controlled via a property called f_OverhealDecayRate.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).

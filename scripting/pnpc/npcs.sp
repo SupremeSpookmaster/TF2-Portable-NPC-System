@@ -263,6 +263,7 @@ float f_NextSlowScan[2049] = { 0.0, ... };
 float f_HealthBarHeight[2049] = { 0.0, ... };
 float f_MedigunHealthBucket[2049] = { 0.0, ... };
 float f_OverhealDecayRate[2049] = { 0.0, ... };
+float f_DecayBucket[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 float f_LastDamagedAt[2049][2049];
 
@@ -1220,6 +1221,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	b_IsProjectile[entity] = false;
 	f_NextSlowScan[entity] = 0.0;
 	f_MedigunHealthBucket[entity] = 0.0;
+	f_DecayBucket[entity] = 0.0;
 	if (b_IsGib[entity])
 	{
 		PNPC_RemoveFromList(entity, true);
@@ -1576,6 +1578,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		npc.SetBoundingBox(DEFAULT_MINS, DEFAULT_MAXS);
 		npc.SetConfigName(configName);
 		npc.SetName(name);
+		npc.f_OverhealDecayRate = 5.0;	//Generic default value, should make this customizable via settings.cfg down the road
 
 		if (lifespan > 0.0)
 			npc.f_EndTime = GetGameTime() + lifespan;
@@ -2483,6 +2486,7 @@ public void PNPC_InternalLogic(int ref)
 
 	PNPC_SetMovePose(npc);
 
+	//Logic that does not need to be done every frame should be put in here for the sake of optimization:
 	if (gt >= f_NextSlowScan[ent])
 	{
 		PNPC_BurnLogic(npc, gt);
@@ -2490,6 +2494,7 @@ public void PNPC_InternalLogic(int ref)
 		PNPC_JarateLogic(npc, gt);
 		PNPC_GasLogic(npc, gt);
 		PNPC_CheckTriggerHurt(npc);
+		PNPC_OverhealDecay(npc);
 		npc.UpdateHealthBar();
 
 		if (IsValidEntity(npc.i_PathTarget))
@@ -2503,6 +2508,23 @@ public void PNPC_InternalLogic(int ref)
 	npc.GetPathFollower().Update(npc.GetBot());
 
 	RequestFrame(PNPC_InternalLogic, ref);
+}
+
+public void PNPC_OverhealDecay(PNPC npc)
+{
+	if (npc.i_Health > npc.i_MaxHealth)
+	{
+		f_DecayBucket[npc.Index] += npc.f_OverhealDecayRate * 0.1;
+		if (f_DecayBucket[npc.Index] >= 1.0)
+		{
+			int lost = RoundToFloor(f_DecayBucket[npc.Index]);
+			if (npc.i_Health - lost < npc.i_MaxHealth)
+				lost = (npc.i_Health - npc.i_MaxHealth);
+
+			f_DecayBucket[npc.Index] -= float(lost);
+			npc.i_Health -= lost;
+		}
+	}
 }
 
 public void PNPC_CheckTriggerHurt(PNPC npc)
