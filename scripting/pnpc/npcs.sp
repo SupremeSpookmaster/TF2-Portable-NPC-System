@@ -8,6 +8,8 @@
 #define VFX_JARATE				"peejar_drips"
 #define VFX_GAS_RED				"gas_can_drips_red"
 #define VFX_GAS_BLUE			"gas_can_drips_blue"
+#define VFX_OVERHEAL_RED		"overhealedplayer_red_pluses"
+#define VFX_OVERHEAL_BLUE		"overhealedplayer_blue_pluses"
 
 #define PARTICLE_JAR_EXPLODE_MILK			"peejar_impact_milk"
 #define PARTICLE_JAR_EXPLODE_JARATE			"peejar_impact"
@@ -351,6 +353,8 @@ void PNPC_MapStart()
 	PrecacheParticleEffect(VFX_JARATE);
 	PrecacheParticleEffect(VFX_GAS_RED);
 	PrecacheParticleEffect(VFX_GAS_BLUE);
+	PrecacheParticleEffect(VFX_OVERHEAL_RED);
+	PrecacheParticleEffect(VFX_OVERHEAL_BLUE);
 
 	PrecacheEffect("ParticleEffect");
 	PrecacheEffect("ParticleEffectStop");
@@ -2768,6 +2772,7 @@ public int Native_PNPCSetHealth(Handle plugin, int numParams)
 	int hp = GetNativeCell(2);
 	SetEntProp(ent, Prop_Data, "m_iHealth", hp);
 	view_as<PNPC>(ent).UpdateHealthBar();
+	CheckApplyOverhealParticle(view_as<PNPC>(ent));
 
 	return 0; 
 }
@@ -4139,10 +4144,24 @@ public any Native_PNPCHealEntity(Handle plugin, int numParams)
 			SetEntProp(target, Prop_Data, "m_iHealth", newHP);
 
 		if (PNPC_IsNPC(target))
+		{
 			view_as<PNPC>(target).UpdateHealthBar();
+			CheckApplyOverhealParticle(view_as<PNPC>(target));
+		}
 	}
 
 	return success;
+}
+
+public void CheckApplyOverhealParticle(PNPC npc)
+{
+	if (!npc.b_Exists)
+		return;
+
+	if (npc.i_Health > npc.i_MaxHealth)
+		AttachParticle_TE(npc.Index, npc.i_Team == TFTeam_Red ? VFX_OVERHEAL_RED : VFX_OVERHEAL_BLUE);
+	else
+		RemoveParticle_TE(npc.Index, npc.i_Team == TFTeam_Red ? VFX_OVERHEAL_RED : VFX_OVERHEAL_BLUE);
 }
 
 public any Native_PNPCGetJarated(Handle plugin, int numParams) { return f_JarateEndTime[GetNativeCell(1)] > GetGameTime(); }

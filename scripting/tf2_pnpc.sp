@@ -39,7 +39,6 @@ public Plugin myinfo =
 //		- Projectile explosions MIGHT be blocked by players now, test it
 //		- Make mediguns work on NPCs.
 //			- Mostly done, just need to give über for NPC healing.
-//			- Maybe add the overheal aura to overhealed NPCs?
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
