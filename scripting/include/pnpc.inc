@@ -846,6 +846,12 @@ methodmap PNPC < CBaseCombatCharacter
 		public native get();
 		public native set(float value);
 	}
+
+	property float f_OverhealDecayRate
+	{
+		public native get();
+		public native set(float value);
+	}
 }
 
 //TODO: It would be a good idea to go back and make the main PNPC methodmap inherit from this eventually.

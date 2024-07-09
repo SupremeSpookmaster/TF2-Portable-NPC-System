@@ -262,6 +262,7 @@ float IsValidAt[2049] = { 0.0, ... };
 float f_NextSlowScan[2049] = { 0.0, ... };
 float f_HealthBarHeight[2049] = { 0.0, ... };
 float f_MedigunHealthBucket[2049] = { 0.0, ... };
+float f_OverhealDecayRate[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 float f_LastDamagedAt[2049][2049];
 
@@ -671,6 +672,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.i_Health.get", Native_PNPCGetHealth);
 	CreateNative("PNPC.i_MaxHealth.set", Native_PNPCSetMaxHealth);
 	CreateNative("PNPC.i_MaxHealth.get", Native_PNPCGetMaxHealth);
+	CreateNative("PNPC.f_OverhealDecayRate.set", Native_PNPCSetOverhealDecayRate);
+	CreateNative("PNPC.f_OverhealDecayRate.get", Native_PNPCGetOverhealDecayRate);
 
 	//Exists:
 	CreateNative("PNPC.b_Exists.set", Native_PNPCSetExists);
@@ -831,6 +834,13 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_IsValidTarget", Native_PNPC_IsValidTarget);
 	CreateNative("PNPC_WorldSpaceCenter", Native_PNPC_WorldSpaceCenter);
 	CreateNative("PNPC_GetClosestTarget", Native_PNPC_GetClosestTarget);
+}
+
+public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
+public int Native_PNPCSetOverhealDecayRate(Handle plugin, int numParams)
+{
+	f_OverhealDecayRate[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
