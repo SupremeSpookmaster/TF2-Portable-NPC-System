@@ -546,13 +546,44 @@ MRESReturn PNPC_CanMedigunHealTarget(int medigun, Handle hReturn, Handle hParams
 				g_AttachedMediguns[target] = new ArrayList(255);
 			}
 
-			PushArrayCell(g_AttachedMediguns[target], EntIndexToEntRef(medigun));
+			if (!PNPC_AlreadyBeingHealedByMedigun(target, medigun))
+				PushArrayCell(g_AttachedMediguns[target], EntIndexToEntRef(medigun));
 		}
+		else if (PNPC_AlreadyBeingHealedByMedigun(target, medigun))
+			PNPC_RemoveMedigun(target, medigun);
 
 		return MRES_Supercede;
 	}
 
 	return MRES_Ignored;
+}
+
+public bool PNPC_AlreadyBeingHealedByMedigun(int target, int medigun)
+{
+	if (GetArraySize(g_AttachedMediguns[target]) < 1)
+		return false;
+
+	for (int i = 0; i < GetArraySize(g_AttachedMediguns[target]); i++)
+	{
+		int other = EntRefToEntIndex(GetArrayCell(g_AttachedMediguns[target], i));
+		if (other == medigun)
+			return true;
+	}
+
+	return false;
+}
+
+public void PNPC_RemoveMedigun(int target, int medigun)
+{
+	if (GetArraySize(g_AttachedMediguns[target]) < 1)
+		return;
+
+	for (int i = 0; i < GetArraySize(g_AttachedMediguns[target]); i++)
+	{
+		int other = EntRefToEntIndex(GetArrayCell(g_AttachedMediguns[target], i));
+		if (other == medigun)
+			RemoveFromArray(g_AttachedMediguns[target], i);
+	}
 }
 
 public Action PNPC_MedigunHealLogic(Handle medical, int ref)
@@ -584,15 +615,23 @@ public Action PNPC_MedigunHealLogic(Handle medical, int ref)
 				float overhealMult = Medigun_CalculateOverhealMultiplier(medigun);
 				PNPC_HealEntity(ent, heals, overhealMult, owner);
 
-				float currentCharge = GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel");
-				if (currentCharge < 1.0)
+				//This wall of TFCond checks is a quick hack to prevent medics from popping über and then healing an NPC to massively extend (or even infinitely have) their übercharge.
+				//The obvious negative side effect is that this will block über building in edge cases where a player simply *has* these conditions without popping über and they decide to
+				//heal an NPC, but that's such an infrequent and inconsequential occurrence that it really won't matter in practice. Fix it if you REALLY need to, I won't do it myself.
+				if (!TF2_IsPlayerInCondition(owner, TFCond_Ubercharged) && !TF2_IsPlayerInCondition(owner, TFCond_MegaHeal)
+				&& !TF2_IsPlayerInCondition(owner, TFCond_Kritzkrieged) && !TF2_IsPlayerInCondition(owner, TFCond_UberBulletResist)
+				&& !TF2_IsPlayerInCondition(owner, TFCond_UberBlastResist) && !TF2_IsPlayerInCondition(owner, TFCond_UberFireResist))
 				{
-					float uberAmt = 0.025 * Medigun_CalculateUberRate(medigun) * 0.1;
-					currentCharge += uberAmt;
-					if (currentCharge > 1.0)
-						currentCharge = 1.0;
+					float currentCharge = GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel");
+					if (currentCharge < 1.0)
+					{
+						float uberAmt = 0.025 * Medigun_CalculateUberRate(medigun) * 0.1;
+						currentCharge += uberAmt;
+						if (currentCharge > 1.0)
+							currentCharge = 1.0;
 
-					SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", currentCharge);
+						SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", currentCharge);
+					}
 				}
 			}
 		}
@@ -1587,8 +1626,8 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
-		npc.i_Health = health;
 		npc.i_MaxHealth = maxHealth;
+		npc.i_Health = health;
 
 		npc.SetHealthBarFromConfig();
 
@@ -2512,7 +2551,7 @@ public void PNPC_InternalLogic(int ref)
 
 public void PNPC_OverhealDecay(PNPC npc)
 {
-	if (npc.i_Health > npc.i_MaxHealth)
+	if (npc.i_Health > npc.i_MaxHealth && g_AttachedMediguns[npc.Index] == null)
 	{
 		f_DecayBucket[npc.Index] += npc.f_OverhealDecayRate * 0.1;
 		if (f_DecayBucket[npc.Index] >= 1.0)
@@ -2811,9 +2850,15 @@ public int Native_PNPCSetHealth(Handle plugin, int numParams)
 {
 	int ent = GetNativeCell(1);
 	int hp = GetNativeCell(2);
+	PNPC npc = view_as<PNPC>(ent);
+
+	if (npc.i_MaxHealth < hp && npc.i_MaxHealth >= npc.i_Health)
+		AttachParticle_TE(npc.Index, npc.i_Team == TFTeam_Red ? VFX_OVERHEAL_RED : VFX_OVERHEAL_BLUE);
+	else if (npc.i_MaxHealth < npc.i_Health && hp <= npc.i_MaxHealth)
+		RemoveParticle_TE(npc.Index, npc.i_Team == TFTeam_Red ? VFX_OVERHEAL_RED : VFX_OVERHEAL_BLUE);
+
 	SetEntProp(ent, Prop_Data, "m_iHealth", hp);
-	view_as<PNPC>(ent).UpdateHealthBar();
-	CheckApplyOverhealParticle(view_as<PNPC>(ent));
+	npc.UpdateHealthBar();
 
 	return 0; 
 }
@@ -4179,30 +4224,15 @@ public any Native_PNPCHealEntity(Handle plugin, int numParams)
 			newHP -= diff;
 		}
 		
-		if (IsValidClient(target))
+		if (PNPC_IsNPC(target))
+			view_as<PNPC>(target).i_Health = newHP;
+		else if (IsValidClient(target))
 			SetEntProp(target, Prop_Send, "m_iHealth", newHP);
 		else
 			SetEntProp(target, Prop_Data, "m_iHealth", newHP);
-
-		if (PNPC_IsNPC(target))
-		{
-			view_as<PNPC>(target).UpdateHealthBar();
-			CheckApplyOverhealParticle(view_as<PNPC>(target));
-		}
 	}
 
 	return success;
-}
-
-public void CheckApplyOverhealParticle(PNPC npc)
-{
-	if (!npc.b_Exists)
-		return;
-
-	if (npc.i_Health > npc.i_MaxHealth)
-		AttachParticle_TE(npc.Index, npc.i_Team == TFTeam_Red ? VFX_OVERHEAL_RED : VFX_OVERHEAL_BLUE);
-	else
-		RemoveParticle_TE(npc.Index, npc.i_Team == TFTeam_Red ? VFX_OVERHEAL_RED : VFX_OVERHEAL_BLUE);
 }
 
 public any Native_PNPCGetJarated(Handle plugin, int numParams) { return f_JarateEndTime[GetNativeCell(1)] > GetGameTime(); }
