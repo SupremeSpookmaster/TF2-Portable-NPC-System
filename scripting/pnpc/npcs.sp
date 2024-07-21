@@ -264,6 +264,8 @@ float f_HealthBarHeight[2049] = { 0.0, ... };
 float f_MedigunHealthBucket[2049] = { 0.0, ... };
 float f_OverhealDecayRate[2049] = { 0.0, ... };
 float f_DecayBucket[2049] = { 0.0, ... };
+float f_MeleeBoundsMult[2049] = { 0.0, ... };
+float f_MeleeRangeMult[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 float f_LastDamagedAt[2049][2049];
 
@@ -443,17 +445,44 @@ public float PNPC_PathCost(INextBot bot, CNavArea area, CNavArea from_area, CNav
 	return from_area.GetCostSoFar() + cost;
 }
 
+public int TF2Items_OnGiveNamedItem_Post(int client, String:classname[], int itemDefinitionIndex, int itemLevel, int itemQuality, int entityIndex)
+{
+	DataPack pack = new DataPack();
+	RequestFrame(PNPC_OnMeleeEquipped, pack);
+	WritePackCell(pack, GetClientUserId(client));
+	WritePackCell(pack, EntIndexToEntRef(entityIndex));
+}
+
+public void PNPC_OnMeleeEquipped(DataPack pack)
+{
+	ResetPack(pack);
+	int client = GetClientOfUserId(ReadPackCell(pack));
+	int weapon = EntRefToEntIndex(ReadPackCell(pack));
+	delete pack;
+
+	if (!IsValidEntity(weapon) || !IsValidMulti(client))
+		return;
+
+	if (weapon == GetPlayerWeaponSlot(client, 2))
+	{
+		f_MeleeBoundsMult[client] = GetAttributeValue(weapon, 263, 1.0);
+		f_MeleeRangeMult[client] = GetAttributeValue(weapon, 264, 1.0);
+		TF2Attrib_SetByDefIndex(weapon, 263, 0.0);
+		TF2Attrib_SetByDefIndex(weapon, 264, 0.0);
+
+		//TODO: Detour any and all SetByDefIndex or GetByDefIndex in plugins using #include <pnpc> to a special function which sets/returns f_MeleeBoundsMult and f_MeleeRangeMult.
+	}
+}
+
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[]weaponname, bool &result)
 {
 	if (weapon != GetPlayerWeaponSlot(client, 2) || !Settings_AllowMeleeHitreg())
 		return Plugin_Continue;
 
-	float rangeMult = 1.0, boundsMult = 1.0;
-	boundsMult = GetAttributeValue(weapon, 263, 1.0);
-	rangeMult = GetAttributeValue(weapon, 264, 1.0);
+	float rangeMult = f_MeleeRangeMult[client], boundsMult = f_MeleeBoundsMult[client];
 
-	TF2Attrib_SetByDefIndex(weapon, 263, 0.0);
-	TF2Attrib_SetByDefIndex(weapon, 264, 0.0);
+	//TF2Attrib_SetByDefIndex(weapon, 263, 0.0);
+	//TF2Attrib_SetByDefIndex(weapon, 264, 0.0);
 
 	if (StrContains(weaponname, "tf_weapon_knife") != -1)
 		PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, result);
@@ -491,32 +520,7 @@ public Action PNPC_DelayedCustomMelee(Handle delayed, DataPack pack)
 
 public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit)
 {
-	DataPack pack = new DataPack();
-	RequestFrame(PNPC_RevertMeleeAttributes, pack);
-	WritePackCell(pack, GetClientUserId(client));
-	WritePackCell(pack, EntIndexToEntRef(weapon));
-	WritePackFloat(pack, rangeMult);
-	WritePackFloat(pack, boundsMult);
-
 	CPrintToChat(client, "Did melee attack.");
-}
-
-public void PNPC_RevertMeleeAttributes(DataPack pack)
-{
-	ResetPack(pack);
-
-	int client = GetClientOfUserId(ReadPackCell(pack));
-	int weapon = EntRefToEntIndex(ReadPackCell(pack));
-	float rangeMult = ReadPackFloat(pack);
-	float boundsMult = ReadPackFloat(pack);
-
-	delete pack;
-
-	if (!IsValidMulti(client) || !IsValidEntity(weapon))
-		return;
-
-	TF2Attrib_SetByDefIndex(weapon, 263, boundsMult);
-	TF2Attrib_SetByDefIndex(weapon, 264, rangeMult);
 }
 
 void PNPC_MakeForwards()
