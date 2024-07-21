@@ -443,6 +443,82 @@ public float PNPC_PathCost(INextBot bot, CNavArea area, CNavArea from_area, CNav
 	return from_area.GetCostSoFar() + cost;
 }
 
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[]weaponname, bool &result)
+{
+	if (weapon != GetPlayerWeaponSlot(client, 2) || !Settings_AllowMeleeHitreg())
+		return Plugin_Continue;
+
+	float rangeMult = 1.0, boundsMult = 1.0;
+	boundsMult = GetAttributeValue(weapon, 263, 1.0);
+	rangeMult = GetAttributeValue(weapon, 264, 1.0);
+
+	TF2Attrib_SetByDefIndex(weapon, 263, 0.0);
+	TF2Attrib_SetByDefIndex(weapon, 264, 0.0);
+
+	if (StrContains(weaponname, "tf_weapon_knife") != -1)
+		PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, result);
+	else
+	{
+		DataPack pack = new DataPack();
+		CreateDataTimer(0.25, PNPC_DelayedCustomMelee, pack, TIMER_FLAG_NO_MAPCHANGE);
+		WritePackCell(pack, GetClientUserId(client));
+		WritePackCell(pack, EntIndexToEntRef(weapon));
+		WritePackFloat(pack, rangeMult);
+		WritePackFloat(pack, boundsMult);
+		WritePackCell(pack, result);
+	}
+
+	return Plugin_Continue;
+}
+
+public Action PNPC_DelayedCustomMelee(Handle delayed, DataPack pack)
+{
+	ResetPack(pack);
+
+	int client = GetClientOfUserId(ReadPackCell(pack));
+	int weapon = EntRefToEntIndex(ReadPackCell(pack));
+	float rangeMult = ReadPackFloat(pack);
+	float boundsMult = ReadPackFloat(pack);
+	bool crit = ReadPackCell(pack);
+
+	if (!IsValidMulti(client) || !IsValidEntity(weapon))
+		return Plugin_Continue;
+
+	PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, crit);
+
+	return Plugin_Continue;
+}
+
+public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit)
+{
+	DataPack pack = new DataPack();
+	RequestFrame(PNPC_RevertMeleeAttributes, pack);
+	WritePackCell(pack, GetClientUserId(client));
+	WritePackCell(pack, EntIndexToEntRef(weapon));
+	WritePackFloat(pack, rangeMult);
+	WritePackFloat(pack, boundsMult);
+
+	CPrintToChat(client, "Did melee attack.");
+}
+
+public void PNPC_RevertMeleeAttributes(DataPack pack)
+{
+	ResetPack(pack);
+
+	int client = GetClientOfUserId(ReadPackCell(pack));
+	int weapon = EntRefToEntIndex(ReadPackCell(pack));
+	float rangeMult = ReadPackFloat(pack);
+	float boundsMult = ReadPackFloat(pack);
+
+	delete pack;
+
+	if (!IsValidMulti(client) || !IsValidEntity(weapon))
+		return;
+
+	TF2Attrib_SetByDefIndex(weapon, 263, boundsMult);
+	TF2Attrib_SetByDefIndex(weapon, 264, rangeMult);
+}
+
 void PNPC_MakeForwards()
 {
 	g_OnPNPCCreated = new GlobalForward("PNPC_OnPNPCCreated", ET_Ignore, Param_Cell);
