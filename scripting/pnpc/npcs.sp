@@ -549,6 +549,9 @@ public Action PNPC_DelayedCustomMelee(Handle delayed, DataPack pack)
 	return Plugin_Continue;
 }
 
+#define MELEE_RANGE 64.0
+#define MELEE_BOUNDS 22.0
+
 public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit, bool canStab)
 {
 	Call_StartForward(g_OnMeleeLogicBegin);
@@ -605,7 +608,20 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 		}
 		else	//We hit a surface, do impact sounds and VFX
 		{
-			//TODO: Impact effectss
+			float pos[3];
+			float angles[3];
+			GetClientEyeAngles(client, angles);
+			GetClientEyePosition(client, pos);
+			float impactEndPos[3];
+			GetAngleVectors(angles, impactEndPos, NULL_VECTOR, NULL_VECTOR);
+			ScaleVector(impactEndPos, MELEE_RANGE);
+			AddVectors(impactEndPos, hitPos, impactEndPos);
+
+			TR_TraceRayFilter(hitPos, impactEndPos, MASK_SHOT_HULL, RayType_EndPoint, BulletAndMeleeTrace, client);
+			if(TR_DidHit())
+			{
+				UTIL_ImpactTrace(client, pos, DMG_CLUB);
+			}
 		}
 	}
 
@@ -640,9 +656,6 @@ stock void SDKCall_GetShootSound(int entity, int index, char[] buffer, int lengt
 	if(SDKGetShootSound)
 		SDKCall(SDKGetShootSound, entity, buffer, length, index);
 }
-
-#define MELEE_RANGE 64.0
-#define MELEE_BOUNDS 22.0
 
 public void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float boundsMult, float rangeMult)
 {

@@ -26,16 +26,9 @@ public Plugin myinfo =
 #include "pnpc/animator.sp"
 
 //PERSONAL NOTES:
-//		- Make custom melee hitreg so it doesn't sound like you're hitting a wall every time you hit an NPC with melee.
-//			- Server owners should be able to enable or disable this.
-//			- Instead of a custom attribute, just grab the 263 and 264 attributes from all melee weapons at the moment they attack and apply those to a global array, then set the attributes to 0.0 and restore them after running our custom melee logic.
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Make backstabs compatible with NPCs.
-//		- Add a system that replaces a player's viewmodel with an NPC that can be animated.
-//			- Melee should be easy, ranged will require muzzle flashes.
-//			- Perhaps we should hide the *real* viewmodel, then have our custom VM copy its animation data until we decide to animate it?
-//			- Replace CF's viewmodel animation native with one that uses this system.
 //		- Projectile explosions MIGHT be blocked by players now, test it.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
@@ -77,6 +70,10 @@ public Plugin myinfo =
 //		- Fix the SpawnNPC method freaking out when it fails to find the specified template.
 //		- Once NPCs are capable of attacking: add the "sound_kill" cue and test it.
 //		- MAYBE make übercharge effects work on NPCs?
+//		- Add a system that replaces a player's viewmodel with an NPC that can be animated.
+//			- Melee should be easy, ranged will require muzzle flashes.
+//			- Perhaps we should hide the *real* viewmodel, then have our custom VM copy its animation data until we decide to animate it?
+//			- Replace CF's viewmodel animation native with one that uses this system.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
