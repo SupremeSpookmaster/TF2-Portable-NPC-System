@@ -541,7 +541,33 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	float hitPos[3];
 	TR_GetEndPosition(hitPos, trace);
 
-	
+	//TODO: Weapon sounds
+
+	float damage = 65.0;
+	char classname[255];
+	GetEntityClassname(weapon, classname, sizeof(classname));
+	if (StrContains(classname, "tf_weapon_bat") != -1)
+		damage = 35.0; 
+	else if (StrContains(classname, "tf_weapon_knife") != -1)	//TODO: Knives should be able to backstab
+		damage = 40.0;
+
+	damage *= GetAttributeValue(weapon, 1, 1.0) * GetAttributeValue(weapon, 2, 1.0);
+
+	int damagetype = DMG_CLUB;
+	if (crit)
+		damagetype |= DMG_ACID;
+
+	if (target > 0 && IsValidEntity(target))
+	{
+		//TODO: Calculate damage force
+		SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
+	}
+	else if (!PNPC_IsValidTarget(target, TF2_GetClientTeam(client)))
+	{
+		//TODO: Impact effectss
+	}
+
+	delete trace;
 }
 
 #define MELEE_RANGE 64.0
@@ -593,6 +619,15 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 	if(b_IsARespawnRoomVisualiser[entity])
 	{
 		return false;
+	}
+
+	if (IsValidEntity(iExclude))
+	{
+		if (HasEntProp(iExclude, Prop_Send, "m_iTeamNum") && HasEntProp(entity, Prop_Send, "m_iTeamNum"))
+		{
+			if (GetEntProp(iExclude, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"))
+				return false;
+		}
 	}
 
 	return true;
