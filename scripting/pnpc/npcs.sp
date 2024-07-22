@@ -305,6 +305,7 @@ GlobalForward g_OnProjectileExplode;
 GlobalForward g_OnHeal;
 GlobalForward g_OnCheckMedigunCanHealNPC;
 GlobalForward g_OnHealthBarUpdated;
+GlobalForward g_OnMeleeLogicBegin;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
@@ -481,11 +482,8 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[]weaponname,
 
 	float rangeMult = f_MeleeRangeMult[client], boundsMult = f_MeleeBoundsMult[client];
 
-	//TF2Attrib_SetByDefIndex(weapon, 263, 0.0);
-	//TF2Attrib_SetByDefIndex(weapon, 264, 0.0);
-
 	if (StrContains(weaponname, "tf_weapon_knife") != -1)
-		PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, result);
+		PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, result, true);
 	else
 	{
 		DataPack pack = new DataPack();
@@ -513,14 +511,27 @@ public Action PNPC_DelayedCustomMelee(Handle delayed, DataPack pack)
 	if (!IsValidMulti(client) || !IsValidEntity(weapon))
 		return Plugin_Continue;
 
-	PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, crit);
+	PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, crit, false);
 
 	return Plugin_Continue;
 }
 
-public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit)
+public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit, bool canStab)
 {
-	CPrintToChat(client, "Did melee attack.");
+	Call_StartForward(g_OnMeleeLogicBegin);
+
+	Call_PushCell(client);
+	Call_PushCell(weapon);
+	Call_PushFloatRef(boundsMult);
+	Call_PushFloatRef(rangeMult);
+	Call_PushCellRef(crit);
+	Call_PushCellRef(canStab);
+
+	Call_Finish();
+
+	CPrintToChat(client, "Did melee attack. Range is %.2f, bounds is %.2f, crit is %i, stab is %i.", rangeMult, boundsMult, crit, canStab);
+
+	
 }
 
 void PNPC_MakeForwards()
@@ -544,6 +555,7 @@ void PNPC_MakeForwards()
 	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
 	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Single, Param_Any, Param_Cell, Param_Cell);
 	g_OnHealthBarUpdated = new GlobalForward("PNPC_OnHealthBarDisplayed", ET_Event, Param_Any, Param_String, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
+	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");
 	AcFac.SetEventCallback(EventResponderType_OnActorEmoted, PluginBot_OnActorEmoted);*/

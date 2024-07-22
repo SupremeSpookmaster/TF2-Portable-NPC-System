@@ -1189,6 +1189,18 @@ forward void PNPC_OnPNPCDestroyed(int entity);
 forward bool PNPC_OnCheckMedigunCanAttach(PNPC npc, int client, int medigun);
 
 /**
+ * Called when the Portable NPC System's custom melee logic is about to initiate a melee attack.
+ * 
+ * @param attacker		The attacker.
+ * @param weapon		The weapon used for the attack.
+ * @param boundsMult	The amount to multiply the melee attack's bounds.
+ * @param rangeMult		The amount to multiply the melee attack's range.
+ * @param crit			Whether or not the attack should crit.
+ * @param canStab		Whether or not the attack should be able to backstab. Note that enabling this will force crit to true as well.
+ */
+forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult, float &rangeMult, bool &crit, bool &canStab);
+
+/**
  * Checks if a given PNPC has a specified aspect.
  *
  * @param NPC			The PNPC whose aspects to check.
