@@ -278,6 +278,7 @@ bool I_AM_DEAD[2049] = { false, ... };
 bool b_PillAlreadyBounced[2049] = { false, ... };
 bool b_IsProjectile[2049] = { false, ... };
 bool b_IsGib[2049] = { false, ... };
+bool b_IsARespawnRoomVisualiser[2049] = { false, ... };
 
 char PNPC_Model[2049][255];
 char PNPC_BleedParticle[2049][255];
@@ -531,7 +532,70 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 	CPrintToChat(client, "Did melee attack. Range is %.2f, bounds is %.2f, crit is %i, stab is %i.", rangeMult, boundsMult, crit, canStab);
 
+	Handle trace;
+	float swingAng[3];
+	PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult);
+
+	int target = TR_GetEntityIndex(trace);
+
+	float hitPos[3];
+	TR_GetEndPosition(hitPos, trace);
+
 	
+}
+
+#define MELEE_RANGE 64.0
+#define MELEE_BOUNDS 22.0
+
+public void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float boundsMult, float rangeMult)
+{
+	float vecSwingMins[3];
+	float vecSwingMaxs[3];
+	for (int i = 0; i < 3; i++)
+	{
+		vecSwingMins[i] = -MELEE_BOUNDS * boundsMult;
+		vecSwingMaxs[i] = MELEE_BOUNDS * boundsMult;
+	}
+
+	float vecSwingStart[3], ang[3], vecSwingEnd[3], vecSwingEndHull[3];
+	GetClientEyePosition(client, vecSwingStart);
+	GetClientEyeAngles(client, ang);
+	
+	GetAngleVectors(ang, swingAng, NULL_VECTOR, NULL_VECTOR);
+
+	vecSwingEnd[0] = vecSwingStart[0] + swingAng[0] * (MELEE_RANGE * rangeMult);
+	vecSwingEnd[1] = vecSwingStart[1] + swingAng[1] * (MELEE_RANGE * rangeMult);
+	vecSwingEnd[2] = vecSwingStart[2] + swingAng[2] * (MELEE_RANGE * rangeMult);
+
+	vecSwingEndHull[0] = vecSwingStart[0] + swingAng[0] * (MELEE_RANGE * 2.1 * rangeMult);
+	vecSwingEndHull[1] = vecSwingStart[1] + swingAng[1] * (MELEE_RANGE * 2.1 * rangeMult);
+	vecSwingEndHull[2] = vecSwingStart[2] + swingAng[2] * (MELEE_RANGE * 2.1 * rangeMult);
+
+	trace = TR_TraceRayFilterEx(vecSwingStart, vecSwingEnd, MASK_SOLID, RayType_EndPoint, BulletAndMeleeTrace, client);
+	if (TR_GetFraction(trace) >= 1.0)
+	{
+		delete trace;
+		trace = TR_TraceHullFilterEx( vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, ( MASK_SOLID ), BulletAndMeleeTrace, client);
+	}
+}
+
+public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
+{
+	if(entity == iExclude)
+		return false;
+
+	if (b_IsProjectile[entity])
+		return false;
+
+	if (I_AM_DEAD[entity])
+		return false;
+
+	if(b_IsARespawnRoomVisualiser[entity])
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void PNPC_MakeForwards()
@@ -1320,6 +1384,9 @@ public void PNPC_OnEntityCreated(int entity, const char[] classname)
 	if (StrContains(classname, "tf_projectile") != -1)
 		b_IsProjectile[entity] = true;
 
+	if (StrContains(classname, "func_respawnroomvisualizer") != -1)
+		b_IsARespawnRoomVisualiser[entity] = true;
+
 	//All projectiles that have any sort of explosion (not including wrap assassin) need to have custom explosion logic so that they work seamlessly with NPCs:
 	if (StrEqual(classname, "tf_projectile_pipe"))
 	{
@@ -1350,6 +1417,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	i_HealthBarOwner[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
+	b_IsARespawnRoomVisualiser[entity] = false;
 	f_NextSlowScan[entity] = 0.0;
 	f_MedigunHealthBucket[entity] = 0.0;
 	f_DecayBucket[entity] = 0.0;
