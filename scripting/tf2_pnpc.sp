@@ -38,6 +38,8 @@ public Plugin myinfo =
 //		- Anything involving damage/healing dealt to NPCs will not work. THis includes:
 //			- All ult charge and special resource mechanics.
 //		- Surprisingly, Gadgeteer's drones actually work as intended against NPCs. This HAS to be too good to be true, test it later.
+//		- Spookmaster Bones' Soul Discard skulls are dealing INSANE damage for some fucked up reason...
+//		- Demopan's Profit Blast does no damage. Probably a line-of-sight issue.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
