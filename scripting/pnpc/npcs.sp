@@ -557,14 +557,17 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	if (crit)
 		damagetype |= DMG_ACID;
 
-	if (target > 0 && IsValidEntity(target))
+	if (IsValidEntity(target))
 	{
-		//TODO: Calculate damage force
-		SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
-	}
-	else if (!PNPC_IsValidTarget(target, TF2_GetClientTeam(client)))
-	{
-		//TODO: Impact effectss
+		if (Entity_Can_Be_Shot(target))	//We hit something that can be harmed, damage it
+		{
+			//TODO: Calculate damage force
+			SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
+		}
+		else	//We hit a surface, do impact sounds and VFX
+		{
+			//TODO: Impact effectss
+		}
 	}
 
 	delete trace;
