@@ -228,6 +228,13 @@ static char Gibs_Spy_Attachments[][] = {
 	"head"
 };
 
+static const char g_KnifeHitFlesh[][] = {
+	"weapons/blade_hit1.wav",
+	"weapons/blade_hit2.wav",
+	"weapons/blade_hit3.wav",
+	"weapons/blade_hit4.wav",
+};
+
 static float DEFAULT_MINS[3] = { -24.0, -24.0, 0.0 };
 static float DEFAULT_MAXS[3] = { 24.0, 24.0, 82.0 };
 
@@ -327,6 +334,7 @@ DynamicHook g_DHookRocketExplode;
 
 Handle g_DHookPillCollide;
 Handle g_hSDKWorldSpaceCenter;
+Handle SDKGetShootSound;
 //DynamicHook g_DHookFlareExplode;
 
 Queue g_NPCsList;
@@ -403,6 +411,9 @@ void PNPC_MapStart()
 	for (int i = 0; i < sizeof(Gibs_Spy_Models); i++)
 		PrecacheModel(Gibs_Spy_Models[i]);
 
+	for (int i = 0; i < sizeof(g_KnifeHitFlesh); i++)
+		PrecacheSound(g_KnifeHitFlesh[i]);
+
 	g_NPCsList = new Queue();
 }
 
@@ -476,6 +487,27 @@ public void PNPC_OnMeleeEquipped(DataPack pack)
 	}
 }
 
+enum
+{
+	ZEROSOUND 						= 0,	
+    SINGLE							= 1,
+    SINGLE_NPC						= 2,
+    WPN_DOUBLE						= 3,
+    DOUBLE_NPC						= 4,
+    BURST							= 5,
+    RELOAD							= 6,
+    RELOAD_NPC						= 7,
+    MELEE_MISS						= 8,
+    MELEE_HIT						= 9,
+    MELEE_HIT_WORLD					= 10,
+    SPECIAL1						= 11,
+    SPECIAL2						= 12,
+    SPECIAL3						= 13,
+    TAUNT							= 14,
+    DEPLOY							= 15,
+
+};
+
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[]weaponname, bool &result)
 {
 	if (weapon != GetPlayerWeaponSlot(client, 2) || !Settings_AllowMeleeHitreg())
@@ -541,7 +573,14 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	float hitPos[3];
 	TR_GetEndPosition(hitPos, trace);
 
-	//TODO: Weapon sounds
+	int Item_Index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+	int soundIndex = PlayCustomWeaponSoundFromPlayerCorrectly(client, target, Item_Index, weapon);	
+	if (soundIndex > 0)
+	{
+		char snd[255];
+		SDKCall_GetShootSound(weapon, soundIndex, snd, sizeof(snd));
+		EmitGameSoundToAll(snd, client);
+	}
 
 	float damage = 65.0;
 	char classname[255];
@@ -571,6 +610,35 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	}
 
 	delete trace;
+}
+
+stock int PlayCustomWeaponSoundFromPlayerCorrectly(int client, int target, int weapon_index, int weapon)
+{
+	if(target == -1)
+		return ZEROSOUND;
+
+	if(target > 0 && (!I_AM_DEAD[target] || target <= MaxClients))
+	{
+		switch(weapon_index)
+		{
+			case 649: //The Spy-cicle, because it has no hit enemy sound.
+			{
+				EmitSoundToAll(g_KnifeHitFlesh[GetRandomInt(0, sizeof(g_KnifeHitFlesh) - 1)], client, SNDCHAN_ITEM, 90, _, 1.0);
+				return ZEROSOUND;
+			}
+		}
+		return MELEE_HIT;
+	}
+	else
+	{
+		return MELEE_HIT_WORLD;
+	}
+}
+
+stock void SDKCall_GetShootSound(int entity, int index, char[] buffer, int length)
+{
+	if(SDKGetShootSound)
+		SDKCall(SDKGetShootSound, entity, buffer, length, index);
 }
 
 #define MELEE_RANGE 64.0
@@ -709,6 +777,13 @@ void PNPC_MakeForwards()
 	if (!dtMedigunAllowedToHealTarget) 
 		SetFailState("Failed to setup detour for CWeaponMedigun::AllowedToHealTarget()");
 	DHookEnableDetour(dtMedigunAllowedToHealTarget, false, PNPC_CanMedigunHealTarget);
+
+	//ShootSound:
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gd, SDKConf_Signature, "CTFWeaponBaseMelee::GetShootSound");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_SetReturnInfo(SDKType_String, SDKPass_Pointer);
+	if((SDKGetShootSound = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create Call for CTFWeaponBaseMelee::GetShootSound");
 
 	delete gd;
 }
