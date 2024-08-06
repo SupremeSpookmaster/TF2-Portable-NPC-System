@@ -28,9 +28,8 @@ public Plugin myinfo =
 //PERSONAL NOTES:
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Do the following to finalize backstabs:
-//			- Apply the backstab kill icon when they are lethal.
-//			- Make all attributes involving backstabs work.
+//		- Make all attributes involving backstabs work.
+//		- For some reason, when a grenade explodes, it credits the thrower for the damage dealt, but doesn't give credit for kills?
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
@@ -77,6 +76,7 @@ public Plugin myinfo =
 //			- Melee should be easy, ranged will require muzzle flashes.
 //			- Perhaps we should hide the *real* viewmodel, then have our custom VM copy its animation data until we decide to animate it?
 //			- Replace CF's viewmodel animation native with one that uses this system.
+//		- Add support for customizable NPC kill icons.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -96,9 +96,27 @@ public void OnPluginStart()
 	RegAdminCmd("pnpc_destroy", PNPC_Destroy, ADMFLAG_KICK, "Portable NPC System: Kills the PNPC you are aiming at.");
 	RegAdminCmd("pnpc_destroyall", PNPC_DestroyAll, ADMFLAG_KICK, "Portable NPC System: Kills every currently active PNPC.");
 	RegAdminCmd("pnpc_reloadsettings", PNPC_ReloadSettings, ADMFLAG_KICK, "Portable NPC System: Reloads the settings stored in settings.cfg.");
+
+	HookEvent("player_death", PlayerKilled_Pre, EventHookMode_Pre);
 	
 	PNPC_MakeForwards();
 	Animator_PluginStart();
+}
+
+public Action PlayerKilled_Pre(Event hEvent, const char[] sEvName, bool bDontBroadcast)
+{
+	int victim = GetClientOfUserId(hEvent.GetInt("userid"));
+	int inflictor = hEvent.GetInt("inflictor_entindex");
+	int attacker = GetClientOfUserId(hEvent.GetInt("attacker"));
+	
+	Action result = Plugin_Continue;
+	
+	if (IsValidClient(victim))
+	{
+		result = PNPC_PlayerKilled_Pre(victim, inflictor, attacker, hEvent);
+	}
+	
+	return result;
 }
 
 #define SND_ADMINCOMMAND			"ui/cyoa_ping_in_progress.wav"

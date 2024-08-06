@@ -275,6 +275,7 @@ float f_MeleeBoundsMult[2049] = { 0.0, ... };
 float f_MeleeRangeMult[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 float f_LastDamagedAt[2049][2049];
+float f_WasBackstabbed[2049][2049];
 
 bool b_IsInUpdateGroundConstraint = false;
 bool IExist[2049] = { false, ... };
@@ -643,6 +644,8 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 						if (IsValidClient(target))
 							PlayCritVictimSound(target);
+
+						f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
 					}
 				}
 			}
@@ -5302,4 +5305,19 @@ public int Native_PNPCSetAttachmentsFromConfig(Handle plugin, int numParams)
 	DeleteCfg(conf);
 
 	return 0;
+}
+
+public Action PNPC_PlayerKilled_Pre(int victim, int inflictor, int attacker, Event &hEvent)
+{
+	if (IsValidClient(attacker))
+	{
+		if (f_WasBackstabbed[attacker][victim] >= GetGameTime())
+		{
+			hEvent.SetString("weapon", "backstab");
+			hEvent.SetString("weapon_logclassname", "Backstab");
+			return Plugin_Changed;
+		}
+	}
+
+	return Plugin_Continue;
 }
