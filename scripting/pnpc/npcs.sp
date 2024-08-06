@@ -4296,10 +4296,11 @@ public int Native_PNPCExplosion(Handle plugin, int numParams)
 	return 0;
 }
 
+//This just always returns true, yes I know it's stupid but the explosion doesn't work otherwise.
 public bool PNPC_BlastTrace(int entity, int attacker)
 {
-	//If the victim does not have a team affiliation: never hit.
-	if (!HasEntProp(entity, Prop_Send, "m_iTeamNum"))
+	//If the victim does not have a team affiliation or is not able to be damaged: never hit.
+	if (!HasEntProp(entity, Prop_Send, "m_iTeamNum") || !Entity_Can_Be_Shot(entity))
 		return true;
 	
 	//If the attacker is not a valid entity or is the console: always hit.
@@ -4369,7 +4370,7 @@ public any Native_PNPCIsThisAnNPC(Handle plugin, int numParams)
 	char classname[255];
 	GetEntityClassname(ent, classname, sizeof(classname));
 
-	if (StrContains(classname, "base_boss") != -1)
+	if (StrContains(classname, "base_boss") != -1 || StrContains(classname, NPC_NAME) != -1)
 		return true;
 
 	return view_as<PNPC>(ent).b_Exists;
