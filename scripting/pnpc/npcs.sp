@@ -314,6 +314,7 @@ GlobalForward g_OnHeal;
 GlobalForward g_OnCheckMedigunCanHealNPC;
 GlobalForward g_OnHealthBarUpdated;
 GlobalForward g_OnMeleeLogicBegin;
+GlobalForward g_OnBackstab;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
@@ -554,6 +555,7 @@ public Action PNPC_DelayedCustomMelee(Handle delayed, DataPack pack)
 
 public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit, bool canStab)
 {
+	bool forceStab = false;
 	Call_StartForward(g_OnMeleeLogicBegin);
 
 	Call_PushCell(client);
@@ -562,10 +564,9 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	Call_PushFloatRef(rangeMult);
 	Call_PushCellRef(crit);
 	Call_PushCellRef(canStab);
+	Call_PushCellRef(forceStab)
 
 	Call_Finish();
-
-	CPrintToChat(client, "Did melee attack. Range is %.2f, bounds is %.2f, crit is %i, stab is %i.", rangeMult, boundsMult, crit, canStab);
 
 	Handle trace;
 	float swingAng[3];
@@ -603,7 +604,49 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	{
 		if (Entity_Can_Be_Shot(target))	//We hit something that can be harmed, damage it
 		{
-			//TODO: Calculate damage force
+			if (canStab)
+			{
+				bool stab = forceStab || IsBehindAndFacingTarget(client, target);
+
+				if (stab)
+				{
+					float maxHP = float(TF2Util_GetEntityMaxHealth(target));
+
+					float stabDMG = maxHP * 3.0;
+
+					bool allowStab = true;
+
+					Call_StartForward(g_OnBackstab);
+
+					Call_PushCell(client);
+					Call_PushCell(target);
+					Call_PushFloatRef(stabDMG);
+
+					Call_Finish(allowStab);
+
+					if (allowStab)
+					{
+						damage = stabDMG;
+						PlayCritSound(client);
+
+						if (StrContains(classname, "tf_weapon_knife") != -1)
+						{
+							int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
+							if (IsValidEntity(viewmodel))
+							{
+								DataPack pack = new DataPack();
+								RequestFrame(DoMeleeAnimationFrameLater, pack);
+								WritePackCell(pack, EntIndexToEntRef(viewmodel));
+								WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+							}
+						}
+
+						if (IsValidClient(target))
+							PlayCritVictimSound(target);
+					}
+				}
+			}
+
 			SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
 		}
 		else	//We hit a surface, do impact sounds and VFX
@@ -626,6 +669,27 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	}
 
 	delete trace;
+}
+
+//Thanks, Artvin:
+void DoMeleeAnimationFrameLater(DataPack pack)
+{
+	pack.Reset();
+	int viewmodel = EntRefToEntIndex(pack.ReadCell());
+	if(viewmodel != INVALID_ENT_REFERENCE)
+	{
+		int animation = 38;
+		switch(pack.ReadCell())
+		{
+			case 225, 356, 423, 461, 574, 649, 1071, 30758:  //Your Eternal Reward, Conniver's Kunai, Saxxy, Wanga Prick, Big Earner, Spy-cicle, Golden Frying Pan, Prinny Machete
+				animation=12;
+
+			case 638:  //Sharp Dresser
+				animation=32;
+		}
+		SetEntProp(viewmodel, Prop_Send, "m_nSequence", animation);
+	}
+	delete pack;
 }
 
 stock int PlayCustomWeaponSoundFromPlayerCorrectly(int client, int target, int weapon_index, int weapon)
@@ -738,7 +802,8 @@ void PNPC_MakeForwards()
 	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
 	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Single, Param_Any, Param_Cell, Param_Cell);
 	g_OnHealthBarUpdated = new GlobalForward("PNPC_OnHealthBarDisplayed", ET_Event, Param_Any, Param_String, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
-	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef);
+	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
+	g_OnBackstab = new GlobalForward("PNPC_OnBackstab", ET_Single, Param_Cell, Param_Cell, Param_FloatByRef);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");
 	AcFac.SetEventCallback(EventResponderType_OnActorEmoted, PluginBot_OnActorEmoted);*/

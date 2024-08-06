@@ -1196,9 +1196,21 @@ forward bool PNPC_OnCheckMedigunCanAttach(PNPC npc, int client, int medigun);
  * @param boundsMult	The amount to multiply the melee attack's bounds.
  * @param rangeMult		The amount to multiply the melee attack's range.
  * @param crit			Whether or not the attack should crit.
- * @param canStab		Whether or not the attack should be able to backstab. Note that enabling this will force crit to true as well.
+ * @param canStab		Whether or not the attack should be able to backstab.
+ * @param forceStab		Set to true to force this attack to be a backstab, IF the weapon can backstab. Note that this will force crit to be true. This bypasses ALL backstab immunity, including razorback and the "backstab immunity" attribute.
  */
-forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult, float &rangeMult, bool &crit, bool &canStab);
+forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult, float &rangeMult, bool &crit, bool &canStab, bool &forceStab);
+
+/**
+ * Called when a player or NPC is backstabbed. Only runs if the Portable NPC System's custom melee hitreg is enabled.
+ * 
+ * @param attacker		The attacker.
+ * @param victim		The entity which was backstabbed.
+ * @param damage		The damage the backstab should deal. Can be changed.
+ * 
+ * @return				True to allow the backstab, false to block it.
+ */
+forward bool PNPC_OnBackstab(int attacker, int victim, float &damage);
 
 /**
  * Checks if a given PNPC has a specified aspect.

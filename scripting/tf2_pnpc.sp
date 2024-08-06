@@ -28,13 +28,15 @@ public Plugin myinfo =
 //PERSONAL NOTES:
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Make backstabs compatible with NPCs.
+//		- Do the following to finalize backstabs:
+//			- Apply the backstab kill icon when they are lethal.
+//			- Make all attributes involving backstabs work.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
 //		- CBS does not change his melee when hitting NPCs.
 //		- The m_iHealth property is fucking stupid, it uses Prop_Data for entities and Prop_Send for clients. Need to fix this in EVERY plugin used for CF...
-//		- Anything involving damage/healing dealt to NPCs will not work. THis includes:
+//		- Anything involving damage/healing dealt to NPCs will not work. This includes:
 //			- All ult charge and special resource mechanics.
 //		- Surprisingly, Gadgeteer's drones actually work as intended against NPCs. This HAS to be too good to be true, test it later.
 //		- Spookmaster Bones' Soul Discard skulls are dealing INSANE damage for some fucked up reason...
