@@ -1195,11 +1195,23 @@ forward bool PNPC_OnCheckMedigunCanAttach(PNPC npc, int client, int medigun);
  * @param weapon		The weapon used for the attack.
  * @param boundsMult	The amount to multiply the melee attack's bounds.
  * @param rangeMult		The amount to multiply the melee attack's range.
+ */
+forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult, float &rangeMult);
+
+/**
+ * Called when the Portable NPC System's custom melee logic found a target and is about to hit them.
+ * 
+ * @param attacker		The attacker.
+ * @param weapon		The weapon used for the attack.
+ * @param target		The entity which is about to be hit.
+ * @param damage		The melee's base damage.
  * @param crit			Whether or not the attack should crit.
  * @param canStab		Whether or not the attack should be able to backstab.
- * @param forceStab		Set to true to force this attack to be a backstab, IF the weapon can backstab. Note that this will force crit to be true. This bypasses ALL backstab immunity, including razorback and the "backstab immunity" attribute.
+ * @param forceStab		Set to true to force this attack to be a backstab. Note that this only works if canStab is true. This does not bypass backstab immunity, such as the razorback or backstab immunity attributes.
+ * 
+ * @return	True to allow the melee hit to go through, false to prevent it.
  */
-forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult, float &rangeMult, bool &crit, bool &canStab, bool &forceStab);
+forward bool PNPC_OnMeleeHit(int attacker, int weapon, int target, float &damage, bool &crit, bool &canStab, bool &forceStab);
 
 /**
  * Called when a player or NPC is backstabbed. Only runs if the Portable NPC System's custom melee hitreg is enabled.

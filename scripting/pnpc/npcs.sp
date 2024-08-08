@@ -316,6 +316,7 @@ GlobalForward g_OnCheckMedigunCanHealNPC;
 GlobalForward g_OnHealthBarUpdated;
 GlobalForward g_OnMeleeLogicBegin;
 GlobalForward g_OnBackstab;
+GlobalForward g_OnMeleeLogicHit;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
@@ -563,9 +564,6 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	Call_PushCell(weapon);
 	Call_PushFloatRef(boundsMult);
 	Call_PushFloatRef(rangeMult);
-	Call_PushCellRef(crit);
-	Call_PushCellRef(canStab);
-	Call_PushCellRef(forceStab)
 
 	Call_Finish();
 
@@ -598,59 +596,113 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	damage *= GetAttributeValue(weapon, 1, 1.0) * GetAttributeValue(weapon, 2, 1.0);
 
 	int damagetype = DMG_CLUB;
-	if (crit)
-		damagetype |= DMG_ACID;
 
 	if (IsValidEntity(target))
 	{
 		if (Entity_Can_Be_Shot(target))	//We hit something that can be harmed, damage it
 		{
+			bool allowMeleeToHit = true;
+
+			//Prevent prop_physics, prop_physics_multiplayer, and all building entities from being backstabbed by default, but still allow devs to allow it via the forward.
 			if (canStab)
 			{
-				bool stab = forceStab || IsBehindAndFacingTarget(client, target);
-
-				if (stab)
+				if (IsABuilding(target))
+					canStab = false;
+				else
 				{
-					float maxHP = float(TF2Util_GetEntityMaxHealth(target));
-
-					float stabDMG = maxHP * 3.0;
-
-					bool allowStab = true;
-
-					Call_StartForward(g_OnBackstab);
-
-					Call_PushCell(client);
-					Call_PushCell(target);
-					Call_PushFloatRef(stabDMG);
-
-					Call_Finish(allowStab);
-
-					if (allowStab)
-					{
-						damage = stabDMG;
-						PlayCritSound(client);
-
-						if (StrContains(classname, "tf_weapon_knife") != -1)
-						{
-							int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
-							if (IsValidEntity(viewmodel))
-							{
-								DataPack pack = new DataPack();
-								RequestFrame(DoMeleeAnimationFrameLater, pack);
-								WritePackCell(pack, EntIndexToEntRef(viewmodel));
-								WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
-							}
-						}
-
-						if (IsValidClient(target))
-							PlayCritVictimSound(target);
-
-						f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
-					}
+					char vicClass[255];
+					GetEntityClassname(target, vicClass, sizeof(vicClass));
+					if (StrContains(vicClass, "physics") != -1)
+						canStab = false;
 				}
 			}
 
-			SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
+			Call_StartForward(g_OnMeleeLogicHit);
+
+			Call_PushCell(client);
+			Call_PushCell(weapon);
+			Call_PushCell(target);
+			Call_PushFloatRef(damage);
+			Call_PushCellRef(crit);
+			Call_PushCellRef(canStab);
+			Call_PushCellRef(forceStab);
+
+			Call_Finish(allowMeleeToHit);
+
+			if (allowMeleeToHit)
+			{
+				if (crit)
+					damagetype |= DMG_ACID;
+
+				if (canStab)
+				{
+					bool stab = forceStab || IsBehindAndFacingTarget(client, target);
+
+					if (stab)
+					{
+						float maxHP = float(TF2Util_GetEntityMaxHealth(target));
+
+						float stabDMG = maxHP * 3.0;
+
+						bool allowStab = true;
+
+						Call_StartForward(g_OnBackstab);
+
+						Call_PushCell(client);
+						Call_PushCell(target);
+						Call_PushFloatRef(stabDMG);
+
+						Call_Finish(allowStab);
+
+						if (allowStab)
+						{
+							damage = stabDMG;
+							PlayCritSound(client);
+
+							if (StrContains(classname, "tf_weapon_knife") != -1)
+							{
+								int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
+								if (IsValidEntity(viewmodel))
+								{
+									DataPack pack = new DataPack();
+									RequestFrame(DoMeleeAnimationFrameLater, pack);
+									WritePackCell(pack, EntIndexToEntRef(viewmodel));
+									WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+								}
+							}
+
+							if (IsValidClient(target))
+								PlayCritVictimSound(target);
+
+							//Attribute 217: Conniver's Kunai effect.
+							//I have taken the liberty of assuming how the overheal should work at varying max health values, as this is not listed anywhere.
+							//At minimum, a stab will heal 33% of the attacker's max health, and at max it will heal for double the attacker's max health.
+							if (GetAttributeValue(weapon, 217, 0.0) > 0.0)
+							{
+								int minHealing = RoundFloat(0.33 * float(TF2Util_GetEntityMaxHealth(client)));
+
+								int current;
+								if (IsValidClient(target))
+									current = GetEntProp(target, Prop_Send, "m_iHealth");
+								else
+									current = GetEntProp(target, Prop_Data, "m_iHealth");
+
+								if (current < minHealing)
+									current = minHealing;
+
+								if (current > RoundFloat(minHealing * 6.0))
+									current = RoundFloat(minHealing * 6.0);
+
+								PNPC_HealEntity(client, current, 3.0);
+							}
+
+							f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
+						}
+					}
+				}
+
+				SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
+			}
 		}
 		else	//We hit a surface, do impact sounds and VFX
 		{
@@ -805,7 +857,8 @@ void PNPC_MakeForwards()
 	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
 	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Single, Param_Any, Param_Cell, Param_Cell);
 	g_OnHealthBarUpdated = new GlobalForward("PNPC_OnHealthBarDisplayed", ET_Event, Param_Any, Param_String, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
-	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
+	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef);
+	g_OnMeleeLogicHit = new GlobalForward("PNPC_OnMeleeHit", ET_Single, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 	g_OnBackstab = new GlobalForward("PNPC_OnBackstab", ET_Single, Param_Cell, Param_Cell, Param_FloatByRef);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");

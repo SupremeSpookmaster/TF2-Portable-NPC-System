@@ -28,8 +28,15 @@ public Plugin myinfo =
 //PERSONAL NOTES:
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Make all attributes involving backstabs work.
-//		- For some reason, when a grenade explodes, it credits the thrower for the damage dealt, but doesn't give credit for kills?
+//		- Make the following attributes involving backstabs work against players:
+//			- Attribute 154: Disguise as victim on stab (pray TF2Util has something that does this, otherwise find out what FF2 does and do that) 
+//			- Attribute 156: Silent Killer (if possible, probably a death flag needs to be set in the playerkilled_post event)
+//			- Attribute 341: Jarate backstabber
+//			- Attribute 402: Backstab immunity
+//			- Attribute 296: Diamondback crit collection on stabs (probably a netprop on the player?)
+//			- Attribute 347: Freeze backstab victims (again, probably a death flag)
+//			- Attribute 52: Block a single stab attempt (remove the first weapon/wearable we find that has this attribute, restore it after a delay, do not block the stab if no weapons/wearables with this attribute remain on the victim)
+//		- Some melee weapons have global sounds for some unholy reason, which makes the frying pan VERY ANNOYING. Fix it.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
