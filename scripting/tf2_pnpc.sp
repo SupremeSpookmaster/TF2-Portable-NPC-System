@@ -30,7 +30,6 @@ public Plugin myinfo =
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Make the following attributes involving backstabs work against players:
 //			- Attribute 154: Disguise as victim on stab (pray TF2Util has something that does this, otherwise find out what FF2 does and do that) 
-//			- Attribute 156: Silent Killer (if possible, probably a death flag needs to be set in the playerkilled_post event)
 //			- Attribute 341: Jarate backstabber
 //			- Attribute 402: Backstab immunity
 //			- Attribute 296: Diamondback crit collection on stabs (probably a netprop on the player?)
