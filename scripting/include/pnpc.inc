@@ -1225,6 +1225,22 @@ forward bool PNPC_OnMeleeHit(int attacker, int weapon, int target, float &damage
 forward bool PNPC_OnBackstab(int attacker, int victim, float &damage);
 
 /**
+ * Called when a player's ragdoll is created.
+ * 
+ * @param victim		The player whose ragdoll spawned.
+ * @param attacker		The player who killed them.
+ * @param inflictor		The entity which killed the victim.
+ * @param freeze		Set to true to freeze the ragdoll (Spycicle ice statue effect).
+ * @param cloaked		Set to true to make the ragdoll immediately cloak and become invisible (Your Eternal Reward effect).
+ * @param ash			Set to true to turn the ragdoll to ash (this is NOT the Cow Mangler effect, I actually have no idea what weapon does this in vanilla TF2, it might be the Mannmelter?)
+ * @param gold			Set to true to turn the ragdoll to gold (Saxxy/Golden Wrench effect).
+ * @param shocked		Set to true to electrocute the ragdoll (dropped über effect).
+ * @param burning		Set to true to light the ragdoll on fire (afterburn effect).
+ * @param gib			Set to true to gib the ragdoll.
+ */
+forward void PNPC_OnPlayerRagdoll(int victim, int attacker, int inflictor, bool &freeze, bool &cloaked, bool &ash, bool &gold, bool &shocked, bool &burning, bool &gib);
+
+/**
  * Checks if a given PNPC has a specified aspect.
  *
  * @param NPC			The PNPC whose aspects to check.

@@ -32,6 +32,7 @@
 #define SND_EXPLOSION_GENERIC_2	")weapons/explode2.wav"
 #define SND_EXPLOSION_GENERIC_3	")weapons/explode3.wav"
 #define SND_EXPLOSION_FIREBALL	")misc/halloween/spell_fireball_impact.wav"
+#define SND_FREEZE				")weapons/icicle_freeze_victim_01.wav"
 
 int PNPC_SndChans[10] = {
 	SNDCHAN_AUTO,
@@ -253,6 +254,7 @@ int i_HealthBar[2049] = { -1, ... };
 int i_HealthBarType[2049] = { -1, ... };
 int i_HealthBarDisplay[2049] = { -1, ... };
 int i_HealthBarOwner[2049] = { -1, ... };
+int i_StabWeapon[MAXPLAYERS + 1] = { -1, ... };
 
 float PNPC_Speed[2049] = { 0.0, ... };
 float PNPC_ThinkRate[2049] = { 0.0, ... };
@@ -317,6 +319,7 @@ GlobalForward g_OnHealthBarUpdated;
 GlobalForward g_OnMeleeLogicBegin;
 GlobalForward g_OnBackstab;
 GlobalForward g_OnMeleeLogicHit;
+GlobalForward g_OnPlayerRagdoll;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
@@ -386,6 +389,7 @@ void PNPC_MapStart()
 	PrecacheSound(SND_EXPLOSION_GENERIC_2);
 	PrecacheSound(SND_EXPLOSION_GENERIC_3);
 	PrecacheSound(SND_EXPLOSION_FIREBALL);
+	PrecacheSound(SND_FREEZE);
 
 	for (int i = 0; i < sizeof(Gibs_Scout_Models); i++)
 		PrecacheModel(Gibs_Scout_Models[i]);
@@ -672,7 +676,16 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 							}
 
 							if (IsValidClient(target))
+							{
 								PlayCritVictimSound(target);
+
+								//Attribute 217: Your Eternal Reward effect.
+								//TODO: Doesn't work, don't know why
+								if (GetAttributeValue(weapon, 154, 0.0) > 0.0)
+								{
+									TF2_DisguisePlayer(client, TF2_GetClientTeam(target), TF2_GetPlayerClass(target), target);
+								}
+							}
 
 							//Attribute 217: Conniver's Kunai effect.
 							//I have taken the liberty of assuming how the overheal should work at varying max health values, as this is not listed anywhere.
@@ -696,7 +709,11 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 								PNPC_HealEntity(client, current, 3.0);
 							}
 
+							if (GetAttributeValue(weapon, 296, 0.0) > 0.0)
+								SetEntProp(client, Prop_Send, "m_iRevengeCrits", GetEntProp(client, Prop_Send, "m_iRevengeCrits") + 2);
+
 							f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
+							i_StabWeapon[client] = EntIndexToEntRef(weapon);
 						}
 					}
 				}
@@ -860,6 +877,7 @@ void PNPC_MakeForwards()
 	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef);
 	g_OnMeleeLogicHit = new GlobalForward("PNPC_OnMeleeHit", ET_Single, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 	g_OnBackstab = new GlobalForward("PNPC_OnBackstab", ET_Single, Param_Cell, Param_Cell, Param_FloatByRef);
+	g_OnPlayerRagdoll = new GlobalForward("PNPC_OnPlayerRagdoll", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");
 	AcFac.SetEventCallback(EventResponderType_OnActorEmoted, PluginBot_OnActorEmoted);*/
@@ -5360,10 +5378,133 @@ public int Native_PNPCSetAttachmentsFromConfig(Handle plugin, int numParams)
 	return 0;
 }
 
+public void PNPC_OnRagdollSpawned(int victim, int attacker, int inflictor)
+{
+	bool freeze = false;
+	bool cloaked = false;
+
+	if (f_WasBackstabbed[attacker][victim] >= GetGameTime())
+	{
+		int stabWeapon = EntRefToEntIndex(i_StabWeapon[attacker]);
+		if (IsValidEntity(stabWeapon))
+		{
+			if (GetAttributeValue(stabWeapon, 347, 0.0) > 0.0)
+				freeze = true;
+			if (GetAttributeValue(stabWeapon, 154, 0.0) > 0.0 || GetAttributeValue(stabWeapon, 156, 0.0) > 0.0)
+				cloaked = true;
+		}
+	}
+
+	//TODO: Check for these if the weapon was melee:
+	bool ash = false;
+	bool gold = false;
+	bool shocked = false;
+	bool burning = false;
+	bool gib = false;
+
+	Call_StartForward(g_OnPlayerRagdoll);
+
+	Call_PushCell(victim);
+	Call_PushCell(attacker);
+	Call_PushCell(inflictor);
+	Call_PushCellRef(freeze);
+	Call_PushCellRef(cloaked);
+	Call_PushCellRef(ash);
+	Call_PushCellRef(gold);
+	Call_PushCellRef(shocked);
+	Call_PushCellRef(burning);
+	Call_PushCellRef(gib);
+
+	Call_Finish();
+
+	//We only replace the ragdoll if we're applying a special effect, otherwise we just let TF2 run its own logic.
+	if (freeze || ash || gold || shocked || burning || gib || cloaked)
+	{
+		DataPack pack = new DataPack();
+		CreateDataTimer(0.1, PNPC_ReplaceRagdoll, pack, TIMER_FLAG_NO_MAPCHANGE);
+		WritePackCell(pack, EntIndexToEntRef(victim));
+		WritePackCell(pack, freeze);
+		WritePackCell(pack, ash);
+		WritePackCell(pack, gold);
+		WritePackCell(pack, shocked);
+		WritePackCell(pack, burning);
+		WritePackCell(pack, gib);
+		WritePackCell(pack, cloaked);
+	}
+}
+
+//Taken from Slender Fortress and edited:
+public Action PNPC_ReplaceRagdoll(Handle replaceit, DataPack pack)
+{
+	ResetPack(pack);
+	int client = EntRefToEntIndex(ReadPackCell(pack));
+	int freeze = ReadPackCell(pack);
+	int ash = ReadPackCell(pack);
+	int gold = ReadPackCell(pack);
+	int shocked = ReadPackCell(pack);
+	int burning = ReadPackCell(pack);
+	int gib = ReadPackCell(pack);
+	int cloaked = ReadPackCell(pack);
+
+	if (!IsValidEntity(client))
+		return Plugin_Continue;
+
+	int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
+
+	if (!IsValidEntity(ragdoll))
+		return Plugin_Continue;
+
+	int ent = CreateEntityByName("tf_ragdoll");
+	if (IsValidEntity(ent))
+	{
+		float pos[3], ang[3], velocity[3], force[3];
+		GetEntPropVector(ragdoll, Prop_Send, "m_vecRagdollOrigin", pos);
+		GetEntPropVector(ragdoll, Prop_Send, "m_vecRagdollVelocity", velocity);
+		GetEntPropVector(ragdoll, Prop_Send, "m_vecForce", force);
+		GetEntPropVector(ragdoll, Prop_Data, "m_angAbsRotation", ang);
+		TeleportEntity(ent, pos, ang, NULL_VECTOR);
+		SetEntPropVector(ent, Prop_Send, "m_vecRagdollOrigin", pos);
+		SetEntPropVector(ent, Prop_Send, "m_vecRagdollVelocity", velocity);
+		SetEntPropVector(ent, Prop_Send, "m_vecForce", force);
+		SetEntPropFloat(ent, Prop_Send, "m_flHeadScale", 1.0);
+		SetEntPropFloat(ent, Prop_Send, "m_flTorsoScale", 1.0);
+		SetEntPropFloat(ent, Prop_Send, "m_flHandScale", 1.0);
+		SetEntProp(ent, Prop_Send, "m_nForceBone", GetEntProp(ragdoll, Prop_Send, "m_nForceBone"));
+		SetEntProp(ent, Prop_Send, "m_bOnGround", GetEntProp(ragdoll, Prop_Send, "m_bOnGround"));
+		SetEntPropEnt(ent, Prop_Send, "m_hPlayer", GetEntPropEnt(ragdoll, Prop_Send, "m_hPlayer"));
+		SetEntProp(ent, Prop_Send, "m_iTeam", GetEntProp(ragdoll, Prop_Send, "m_iTeam"));
+		SetEntProp(ent, Prop_Send, "m_iClass", GetEntProp(ragdoll, Prop_Send, "m_iClass"));
+		SetEntProp(ent, Prop_Send, "m_bWasDisguised", GetEntProp(ragdoll, Prop_Send, "m_bWasDisguised"));
+		SetEntProp(ent, Prop_Send, "m_bFeignDeath", GetEntProp(ragdoll, Prop_Send, "m_bFeignDeath"));
+		SetEntProp(ent, Prop_Send, "m_iDamageCustom", GetEntProp(ragdoll, Prop_Send, "m_iDamageCustom"));
+
+		SetEntProp(ent, Prop_Send, "m_bBecomeAsh", ash);
+		SetEntProp(ent, Prop_Send, "m_bGoldRagdoll", gold);
+		SetEntProp(ent, Prop_Send, "m_bIceRagdoll", freeze);
+		SetEntProp(ent, Prop_Send, "m_bElectrocuted", shocked);
+		SetEntProp(ent, Prop_Send, "m_bBurning", burning);
+		SetEntProp(ent, Prop_Send, "m_bGib", gib);
+		SetEntProp(ent, Prop_Send, "m_bCloaked", cloaked);
+
+		DispatchSpawn(ent);
+		ActivateEntity(ent);
+
+		SetEntPropEnt(client, Prop_Send, "m_hRagdoll", ent, 0);
+
+		if (freeze > 0)
+			EmitSoundToAll(SND_FREEZE, ent);
+	}
+
+	RemoveEntity(ragdoll);
+	return Plugin_Continue;
+}
+
 public Action PNPC_PlayerKilled_Pre(int victim, int inflictor, int attacker, Event &hEvent)
 {
 	if (IsValidClient(attacker))
 	{
+		PNPC_OnRagdollSpawned(victim, attacker, inflictor);
+
 		if (f_WasBackstabbed[attacker][victim] >= GetGameTime())
 		{
 			hEvent.SetString("weapon", "backstab");
