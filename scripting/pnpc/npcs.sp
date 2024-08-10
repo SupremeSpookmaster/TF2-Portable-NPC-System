@@ -33,6 +33,8 @@
 #define SND_EXPLOSION_GENERIC_3	")weapons/explode3.wav"
 #define SND_EXPLOSION_FIREBALL	")misc/halloween/spell_fireball_impact.wav"
 #define SND_FREEZE				")weapons/icicle_freeze_victim_01.wav"
+#define SND_RAZORBACK			")player/spy_shield_break.wav"
+#define SND_STAB_BLOCKED		")player/pl_scout_dodge_can_crush.wav"
 
 int PNPC_SndChans[10] = {
 	SNDCHAN_AUTO,
@@ -390,6 +392,8 @@ void PNPC_MapStart()
 	PrecacheSound(SND_EXPLOSION_GENERIC_3);
 	PrecacheSound(SND_EXPLOSION_FIREBALL);
 	PrecacheSound(SND_FREEZE);
+	PrecacheSound(SND_RAZORBACK);
+	PrecacheSound(SND_STAB_BLOCKED);
 
 	for (int i = 0; i < sizeof(Gibs_Scout_Models); i++)
 		PrecacheModel(Gibs_Scout_Models[i]);
@@ -650,6 +654,9 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 						bool allowStab = true;
 
+						if (IsValidClient(target))
+							allowStab = !IsValidEntity(FindAttributeOnClient(target, 402));
+
 						Call_StartForward(g_OnBackstab);
 
 						Call_PushCell(client);
@@ -658,62 +665,105 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 						Call_Finish(allowStab);
 
-						if (allowStab)
+						if (!allowStab)
 						{
-							damage = stabDMG;
-							PlayCritSound(client);
-
-							if (StrContains(classname, "tf_weapon_knife") != -1)
+							PNPC_ImmuneEffect(hitPos, "Immune!", SND_STAB_BLOCKED, client, target);
+						}
+						else
+						{
+							int blocker = -1;
+							if ((blocker = FindAttributeOnClient(target, 52)) != -1)
 							{
-								int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
-								if (IsValidEntity(viewmodel))
+								damage = 0.0;
+								EmitSoundToClient(client, SND_RAZORBACK);
+								EmitSoundToAll(SND_RAZORBACK, target);
+
+								RequestFrame(PNPC_RazorbackStunPenalty, EntIndexToEntRef(weapon));
+								TF2_AddCondition(client, TFCond_RestrictToMelee, 2.33, target);
+
+								if (StrContains(classname, "tf_weapon_knife") != -1)
 								{
-									DataPack pack = new DataPack();
-									RequestFrame(DoMeleeAnimationFrameLater, pack);
-									WritePackCell(pack, EntIndexToEntRef(viewmodel));
-									WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+									int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
+									if (IsValidEntity(viewmodel))
+									{
+										DataPack pack = new DataPack();
+										RequestFrame(DoMeleeAnimationFrameLater, pack);
+										WritePackCell(pack, EntIndexToEntRef(viewmodel));
+										WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+									}
 								}
+
+								//TODO: Remove blocker, give it back after a delay
+							}
+							else
+							{
+								damage = stabDMG;
+								PlayCritSound(client);
+
+								if (StrContains(classname, "tf_weapon_knife") != -1)
+								{
+									int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
+									if (IsValidEntity(viewmodel))
+									{
+										DataPack pack = new DataPack();
+										RequestFrame(DoMeleeAnimationFrameLater, pack);
+										WritePackCell(pack, EntIndexToEntRef(viewmodel));
+										WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+									}
+								}
+
+								if (IsValidClient(target))
+								{
+									PlayCritVictimSound(target);
+
+									//Attribute 217: Your Eternal Reward effect.
+									//TODO: Doesn't work, don't know why
+									if (GetAttributeValue(weapon, 154, 0.0) > 0.0)
+									{
+										TF2_DisguisePlayer(client, TF2_GetClientTeam(target), TF2_GetPlayerClass(target), target);
+									}
+								}
+
+								//Attribute 217: Conniver's Kunai effect.
+								//I have taken the liberty of assuming how the overheal should work at varying max health values, as this is not listed anywhere.
+								//At minimum, a stab will heal 33% of the attacker's max health, and at max it will heal for double the attacker's max health.
+								if (GetAttributeValue(weapon, 217, 0.0) > 0.0)
+								{
+									int minHealing = RoundFloat(0.33 * float(TF2Util_GetEntityMaxHealth(client)));
+
+									int current;
+									if (IsValidClient(target))
+										current = GetEntProp(target, Prop_Send, "m_iHealth");
+									else
+										current = GetEntProp(target, Prop_Data, "m_iHealth");
+
+									if (current < minHealing)
+										current = minHealing;
+
+									if (current > RoundFloat(minHealing * 6.0))
+										current = RoundFloat(minHealing * 6.0);
+
+									PNPC_HealEntity(client, current, 3.0);
+								}
+
+								if (GetAttributeValue(weapon, 296, 0.0) > 0.0)
+									SetEntProp(client, Prop_Send, "m_iRevengeCrits", GetEntProp(client, Prop_Send, "m_iRevengeCrits") + 2);
+
+								f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
+								i_StabWeapon[client] = EntIndexToEntRef(weapon);
 							}
 
 							if (IsValidClient(target))
 							{
-								PlayCritVictimSound(target);
-
-								//Attribute 217: Your Eternal Reward effect.
-								//TODO: Doesn't work, don't know why
-								if (GetAttributeValue(weapon, 154, 0.0) > 0.0)
+								int jaratifier;
+								if ((jaratifier = FindAttributeOnClient(target, 341)) != -1)
 								{
-									TF2_DisguisePlayer(client, TF2_GetClientTeam(target), TF2_GetPlayerClass(target), target);
+									TF2_AddCondition(client, TFCond_Jarated, GetAttributeValue(jaratifier, 341, 0.0), target);
+									SpawnParticle(hitPos, PARTICLE_JAR_EXPLODE_JARATE, 2.0);
+									EmitSoundToClient(client, SND_JAR_EXPLODE);
+									EmitSoundToAll(SND_JAR_EXPLODE, target);
 								}
 							}
-
-							//Attribute 217: Conniver's Kunai effect.
-							//I have taken the liberty of assuming how the overheal should work at varying max health values, as this is not listed anywhere.
-							//At minimum, a stab will heal 33% of the attacker's max health, and at max it will heal for double the attacker's max health.
-							if (GetAttributeValue(weapon, 217, 0.0) > 0.0)
-							{
-								int minHealing = RoundFloat(0.33 * float(TF2Util_GetEntityMaxHealth(client)));
-
-								int current;
-								if (IsValidClient(target))
-									current = GetEntProp(target, Prop_Send, "m_iHealth");
-								else
-									current = GetEntProp(target, Prop_Data, "m_iHealth");
-
-								if (current < minHealing)
-									current = minHealing;
-
-								if (current > RoundFloat(minHealing * 6.0))
-									current = RoundFloat(minHealing * 6.0);
-
-								PNPC_HealEntity(client, current, 3.0);
-							}
-
-							if (GetAttributeValue(weapon, 296, 0.0) > 0.0)
-								SetEntProp(client, Prop_Send, "m_iRevengeCrits", GetEntProp(client, Prop_Send, "m_iRevengeCrits") + 2);
-
-							f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
-							i_StabWeapon[client] = EntIndexToEntRef(weapon);
 						}
 					}
 				}
@@ -741,6 +791,23 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	}
 
 	delete trace;
+}
+
+public void PNPC_ImmuneEffect(float pos[3], char text[255], char sound[255], int attacker, int victim)
+{
+	int bar = WorldText_Create(pos, NULL_VECTOR, text, 8.0);
+	if (IsValidEntity(bar))
+		WorldText_MimicHitNumbers(bar, _, _, 0.2);
+
+	EmitSoundToClient(attacker, sound);
+	EmitSoundToAll(sound, victim);
+}
+
+public void PNPC_RazorbackStunPenalty(int ref)
+{
+	int weapon = EntRefToEntIndex(ref);
+	if (IsValidEntity(weapon))
+		SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack") + 2.33);
 }
 
 //Thanks, Artvin:
@@ -5401,7 +5468,7 @@ public void PNPC_OnRagdollSpawned(int victim, int attacker, int inflictor)
 	bool shocked = false;
 	bool burning = false;
 	bool gib = false;
-
+	
 	Call_StartForward(g_OnPlayerRagdoll);
 
 	Call_PushCell(victim);

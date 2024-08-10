@@ -2410,6 +2410,47 @@ stock Handle CheckedDHookCreateFromConf(Handle game_config, const char[] name) {
 }
 
 /**
+ * Cycles through all of a client's wearables and weapons to find a given attribute.
+ * 
+ * @param client		The client to check.
+ * @param attribute		The attribute to check for.
+ * 
+ * @return	The entity index of the weapon/wearable which had the given attribute (-1 if not found).
+ */
+stock int FindAttributeOnClient(int client, int attribute)
+{
+	if (!IsValidMulti(client))
+		return -1;
+
+	//First: Check all weapon slots.
+	for (int i = 0; i < 5; i++)
+	{
+		int weapon = GetPlayerWeaponSlot(client, i);
+		if (IsValidEntity(weapon))
+		{
+			Address addy = TF2Attrib_GetByDefIndex(weapon, attribute);
+			if (addy != Address_Null)
+				return weapon;
+		}
+	}
+
+	//Now: Check all wearables.
+	int wearable = -1;
+	while ((wearable = FindEntityByClassname(wearable, "tf_wearable")) != -1)
+	{
+		int owner = GetEntPropEnt(wearable, Prop_Send, "m_hOwnerEntity");
+		if (owner == client)
+		{
+			Address addy = TF2Attrib_GetByDefIndex(wearable, attribute);
+			if (addy != Address_Null)
+				return wearable;
+		}
+	}
+
+	return -1;
+}
+
+/**
  * Checks if a client is invulnerable.
  *
  * @param client	The client to check.

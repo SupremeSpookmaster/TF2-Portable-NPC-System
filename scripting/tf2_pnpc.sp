@@ -2,7 +2,7 @@
 
 #define PLUGIN_AUTHOR         "Spookmaster"
 #define PLUGIN_DESCRIPTION    "Create and dynamically spawn your own custom NPCs!"
-#define PLUGIN_VERSION        "0.2.0"
+#define PLUGIN_VERSION        "0.5.0"
 #define PLUGIN_URL            "https://github.com/SupremeSpookmaster/TF2-Portable-NPC-System"
 
 #pragma semicolon 1
@@ -30,8 +30,6 @@ public Plugin myinfo =
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Make the following attributes involving backstabs work against players:
 //			- Attribute 154: Disguise as victim on stab
-//			- Attribute 341: Jarate backstabber
-//			- Attribute 402: Backstab immunity
 //			- Attribute 52: Block a single stab attempt (remove the first weapon/wearable we find that has this attribute, restore it after a delay, do not block the stab if no weapons/wearables with this attribute remain on the victim)
 //		- Some melee weapons have global sounds for some unholy reason, which makes the frying pan VERY ANNOYING. Fix it.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
