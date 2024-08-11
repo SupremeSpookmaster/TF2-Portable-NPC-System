@@ -746,7 +746,7 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 									PNPC_HealEntity(client, current, 3.0);
 								}
 
-								if (GetAttributeValue(weapon, 296, 0.0) > 0.0)
+								if (FindAttributeOnClient(client, 296) != -1)
 									SetEntProp(client, Prop_Send, "m_iRevengeCrits", GetEntProp(client, Prop_Send, "m_iRevengeCrits") + 2);
 
 								f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
