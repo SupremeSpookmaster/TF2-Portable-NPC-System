@@ -28,9 +28,6 @@ public Plugin myinfo =
 //PERSONAL NOTES:
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Make the following attributes involving backstabs work against players:
-//			- Attribute 52: Block a single stab attempt (remove the first weapon/wearable we find that has this attribute, restore it after a delay, do not block the stab if no weapons/wearables with this attribute remain on the victim)
-//		- Some melee weapons have global sounds for some unholy reason, which makes the frying pan VERY ANNOYING. Fix it.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
@@ -79,6 +76,7 @@ public Plugin myinfo =
 //			- Perhaps we should hide the *real* viewmodel, then have our custom VM copy its animation data until we decide to animate it?
 //			- Replace CF's viewmodel animation native with one that uses this system.
 //		- Add support for customizable NPC kill icons.
+//		- The razorback attribute should temporarily remove the weapon/wearable that had the attribute. Can copy what cf_generic_abilities does for its temporary weapons, but wearables will need extra code.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -100,6 +98,8 @@ public void OnPluginStart()
 	RegAdminCmd("pnpc_reloadsettings", PNPC_ReloadSettings, ADMFLAG_KICK, "Portable NPC System: Reloads the settings stored in settings.cfg.");
 
 	HookEvent("player_death", PlayerKilled_Pre, EventHookMode_Pre);
+
+	AddNormalSoundHook(view_as<NormalSHook>(PNPC_SoundHook));
 	
 	PNPC_MakeForwards();
 	Animator_PluginStart();
