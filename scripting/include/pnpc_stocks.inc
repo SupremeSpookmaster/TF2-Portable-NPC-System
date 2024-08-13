@@ -2446,6 +2446,17 @@ stock int FindAttributeOnClient(int client, int attribute)
 				return wearable;
 		}
 	}
+	wearable = -1;
+	while ((wearable = FindEntityByClassname(wearable, "tf_wearable_*")) != -1)
+	{
+		int owner = GetEntPropEnt(wearable, Prop_Send, "m_hOwnerEntity");
+		if (owner == client)
+		{
+			Address addy = TF2Attrib_GetByDefIndex(wearable, attribute);
+			if (addy != Address_Null)
+				return wearable;
+		}
+	}
 
 	return -1;
 }

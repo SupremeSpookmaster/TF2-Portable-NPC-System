@@ -717,10 +717,15 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 									PlayCritVictimSound(target);
 
 									//Attribute 217: Your Eternal Reward effect.
-									//TODO: Doesn't work, don't know why
 									if (GetAttributeValue(weapon, 154, 0.0) > 0.0)
 									{
-										TF2_DisguisePlayer(client, TF2_GetClientTeam(target), TF2_GetPlayerClass(target), target);
+										DataPack pack = new DataPack();
+										RequestFrame(PNPC_DisguiseAsVictim, pack);
+										WritePackCell(pack, GetClientUserId(client));
+										WritePackCell(pack, GetClientTeam(target));
+										WritePackCell(pack, TF2_GetPlayerClass(target));
+										WritePackCell(pack, target);
+										WritePackCell(pack, GetClientHealth(target));
 									}
 								}
 
@@ -791,6 +796,23 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	}
 
 	delete trace;
+}
+
+public void PNPC_DisguiseAsVictim(DataPack pack)
+{
+	ResetPack(pack);
+
+	int client = GetClientOfUserId(ReadPackCell(pack));
+	if (IsValidMulti(client))
+	{
+		TF2_AddCondition(client, TFCond_Disguised, -1.0);
+		SetEntProp(client, Prop_Send, "m_nDisguiseTeam", ReadPackCell(pack));
+		SetEntProp(client, Prop_Send, "m_nDisguiseClass", ReadPackCell(pack));
+		SetEntPropEnt(client, Prop_Send, "m_hDisguiseTarget", ReadPackCell(pack));
+		SetEntProp(client, Prop_Send, "m_iDisguiseHealth", ReadPackCell(pack));
+	}
+
+	delete pack;
 }
 
 public void PNPC_ImmuneEffect(float pos[3], char text[255], char sound[255], int attacker, int victim)
@@ -5483,6 +5505,30 @@ public void PNPC_OnRagdollSpawned(int victim, int attacker, int inflictor)
 	Call_PushCellRef(gib);
 
 	Call_Finish();
+
+	//Wearables do not fade out with the model's ragdoll when we force the ragdoll to fade, so we remove all of the victim's wearables here.
+	if (cloaked)
+	{
+		int entity;
+		while((entity = FindEntityByClassname(entity, "tf_wearable")) != -1)
+		{
+			int owner = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
+			if (owner == victim)
+			{
+				TF2_RemoveWearable(owner, entity);
+			}
+		}
+		
+		entity = -1;
+		while((entity = FindEntityByClassname(entity, "tf_wearable_*")) != -1)
+		{
+			int owner = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
+			if (owner == victim)
+			{
+				TF2_RemoveWearable(owner, entity);
+			}
+		}
+	}
 
 	//We only replace the ragdoll if we're applying a special effect, otherwise we just let TF2 run its own logic.
 	if (freeze || ash || gold || shocked || burning || gib || cloaked)

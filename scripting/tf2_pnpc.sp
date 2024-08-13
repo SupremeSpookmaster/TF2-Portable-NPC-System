@@ -29,7 +29,6 @@ public Plugin myinfo =
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
 //		- Make the following attributes involving backstabs work against players:
-//			- Attribute 154: Disguise as victim on stab
 //			- Attribute 52: Block a single stab attempt (remove the first weapon/wearable we find that has this attribute, restore it after a delay, do not block the stab if no weapons/wearables with this attribute remain on the victim)
 //		- Some melee weapons have global sounds for some unholy reason, which makes the frying pan VERY ANNOYING. Fix it.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
@@ -42,6 +41,7 @@ public Plugin myinfo =
 //		- Surprisingly, Gadgeteer's drones actually work as intended against NPCs. This HAS to be too good to be true, test it later.
 //		- Spookmaster Bones' Soul Discard skulls are dealing INSANE damage for some fucked up reason...
 //		- Demopan's Profit Blast does no damage. Probably a line-of-sight issue.
+//		- Disguises should make the wearer match the target's model scale.
 //		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
