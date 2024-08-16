@@ -28,6 +28,7 @@ public Plugin myinfo =
 //PERSONAL NOTES:
 //		- Add lag compensation.
 //		- Fix collision with friendly NPCs (likely related to lag comp).
+//		- NPCs who spawn too close to walls instantly disappear, figure out a fix.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
