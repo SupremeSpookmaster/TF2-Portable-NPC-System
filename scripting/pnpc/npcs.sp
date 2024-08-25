@@ -5631,7 +5631,7 @@ public Action PNPC_PlayerKilled_Pre(int victim, int inflictor, int attacker, Eve
 
 public Action PNPC_SoundHook(int clients[64], int &numClients, char strSound[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
-	if (StrContains(strSound, "weapons/pan"))
+	if (StrContains(strSound, "weapons/pan") != -1)
 	{
 		Format(strSound, sizeof(strSound), ")%s", strSound);
 		return Plugin_Changed;
