@@ -26,6 +26,7 @@ TODO: Write a guide in the wiki and link to it here.
 - **[TF2 Custom Attributes](https://forums.alliedmods.net/showthread.php?p=2703773)**
 - **[TF2Items](https://github.com/asherkin/TF2Items)**
 - **[TF2Attributes](https://github.com/FlaminSarge/tf2attributes)**
+- **RECOMMENDED: [Queue.inc](https://forums.alliedmods.net/showthread.php?t=319495)** - Not required to function, but *is* required to compile the plugin.
 
 ## *Special thanks to...*
 - **[Artvin](https://github.com/artvin01)** and **[Batfoxkid](https://github.com/Batfoxkid)**, the creators of ***[TF2 Zombie Riot](https://github.com/artvin01/TF2-Zombie-Riot)***, which was my one of my inspirations for creating the Portable NPC System. Most of the more confusing NPC logic that I was unable to figure out on my own was written by reverse-engineering Zombie Riot; Artvin in specific warned me of a number of bizarre bugs with NPCs in TF2, which I likely would not have noticed on my own. Without these two and their beautiful game mode, the Portable NPC System would never have come to exist in the first place; they deserve just as much credit as I do for this thing.
