@@ -277,7 +277,9 @@ float f_OverhealDecayRate[2049] = { 0.0, ... };
 float f_DecayBucket[2049] = { 0.0, ... };
 float f_MeleeBoundsMult[2049] = { 0.0, ... };
 float f_MeleeRangeMult[2049] = { 0.0, ... };
+float f_NextOOBCheck[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
+float f_LastSafePosition[2049][3];
 float f_LastDamagedAt[2049][2049];
 float f_WasBackstabbed[2049][2049];
 
@@ -325,6 +327,7 @@ GlobalForward g_OnPlayerRagdoll;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
+Handle g_hSetLocalOrigin;
 
 PathFollower g_PathFollowers[2049];
 
@@ -1025,6 +1028,14 @@ void PNPC_MakeForwards()
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
 	PrepSDKCall_SetReturnInfo(SDKType_String, SDKPass_Pointer);
 	if((SDKGetShootSound = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create Call for CTFWeaponBaseMelee::GetShootSound");
+
+	//SetLocalOrigin
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gd, SDKConf_Signature, "CBaseEntity::SetLocalOrigin");
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
+	g_hSetLocalOrigin = EndPrepSDKCall();
+	if(!g_hSetLocalOrigin)
+		LogError("[Gamedata] Could not find CBaseEntity::SetLocalOrigin");
 
 	delete gd;
 }
@@ -1775,6 +1786,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	f_NextSlowScan[entity] = 0.0;
 	f_MedigunHealthBucket[entity] = 0.0;
 	f_DecayBucket[entity] = 0.0;
+	f_LastSafePosition[entity] = NULL_VECTOR;
 	if (b_IsGib[entity])
 	{
 		PNPC_RemoveFromList(entity, true);
@@ -3038,6 +3050,7 @@ public void PNPC_InternalLogic(int ref)
 	}
 
 	PNPC_SetMovePose(npc);
+	PNPC_CheckOutOfBounds(npc, gt);
 
 	//Logic that does not need to be done every frame should be put in here for the sake of optimization:
 	if (gt >= f_NextSlowScan[ent])
@@ -3061,6 +3074,138 @@ public void PNPC_InternalLogic(int ref)
 	npc.GetPathFollower().Update(npc.GetBot());
 
 	RequestFrame(PNPC_InternalLogic, ref);
+}
+
+//Again, thank you Artvin/BatFox:
+public void PNPC_CheckOutOfBounds(PNPC npc, float gt)
+{
+	float pos[3];
+	GetEntPropVector(npc.Index, Prop_Data, "m_vecAbsOrigin", pos);
+
+	bool stuck = false;
+
+	if(f_NextOOBCheck[npc.Index] <= gt)
+	{
+		f_NextOOBCheck[npc.Index] = gt + 10.0;
+		if(TR_PointOutsideWorld(pos))
+		{
+			stuck = true;
+			CreateTimer(1.0, Timer_CheckStuckOutsideMap, EntIndexToEntRef(npc.Index), TIMER_FLAG_NO_MAPCHANGE);
+		}
+	}
+
+	float mins[3], maxs[3];
+	GetEntPropVector(npc.Index, Prop_Data, "m_vecMaxs", maxs);
+	GetEntPropVector(npc.Index, Prop_Data, "m_vecMins", mins);
+
+
+
+	if (!stuck)
+	{
+		f_LastSafePosition[npc.Index] = pos;
+	}
+	else if (!AreVectorsEqual(f_LastSafePosition[npc.Index], NULL_VECTOR))
+	{
+		TeleportEntity(npc.Index, f_LastSafePosition[npc.Index]);
+	}
+}
+
+public bool TraceRayDontHitPlayersOrEntityCombat(int entity,int mask,any data)
+{
+	if(entity == 0)
+	{
+		return true;
+	}
+
+	if(entity > 0 && entity <= MaxClients) 
+	{
+		return false;
+	}
+	if(b_IsProjectile[entity])
+	{
+		return false;
+	}
+	
+	if(!I_AM_DEAD[entity])
+	{
+		return false;
+	}
+	if(Brush_Is_Solid(entity))
+	{
+		return true;//They blockin me
+	}
+
+	//if anything else is team
+	
+	if(PNPC_IsValidTarget(data, view_as<PNPC>(entity).i_Team))
+		return false;
+	
+	if(b_IsARespawnRoomVisualiser[entity])
+	{
+		return true;//They blockin me and not on same team, otherwsie top filter
+	}
+	
+	/*if(entity == Entity_to_Respect)
+	{
+		return false;
+	}*/
+
+	return true;
+}
+
+stock void SDKCall_SetLocalOrigin(int index, float localOrigin[3])
+{
+	if(g_hSetLocalOrigin)
+	{
+		SDKCall(g_hSetLocalOrigin, index, localOrigin);
+	}
+}
+
+public Action Timer_CheckStuckOutsideMap(Handle cut_timer, int ref)
+{
+	int entity = EntRefToEntIndex(ref);
+	if (IsValidEntity(entity))
+	{
+		static float flMyPos_Bounds[3];
+		GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", flMyPos_Bounds);
+		flMyPos_Bounds[2] += 25.0;
+		if(TR_PointOutsideWorld(flMyPos_Bounds))
+		{
+			LogError("NPC somehow got out of the map... Cordinates : {%f, %f ,%f}", flMyPos_Bounds[0],flMyPos_Bounds[1],flMyPos_Bounds[2]);
+			RequestFrame(DestroyPNPC, EntIndexToEntRef(entity));
+		}
+	}
+	return Plugin_Stop;
+}
+
+stock int IsSpaceOccupiedOnlyPlayers(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+{
+	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayHitPlayersOnly, entity);
+//	bool bHit = TR_DidHit(hTrace);
+	ref = TR_GetEntityIndex(hTrace);
+	delete hTrace;
+	if(ref <= 0)
+		return 0;
+		
+	return ref;
+}
+
+public bool TraceRayHitPlayersOnly(int entity,int mask,any iExclude)
+{
+	if (IsValidMulti(entity))
+		return true;
+
+	return false;
+}
+
+public void DestroyPNPC(int ref)
+{
+	int ent = EntRefToEntIndex(ref);
+	if (PNPC_IsNPC(ent))
+	{
+		view_as<PNPC>(ent).i_Health = 1;
+		SDKHooks_TakeDamage(ent, 0, 0, 9999999.0, _, _, _, _, false);
+	}
 }
 
 public void PNPC_OverhealDecay(PNPC npc)

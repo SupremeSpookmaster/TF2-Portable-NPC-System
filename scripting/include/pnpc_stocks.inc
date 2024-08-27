@@ -2461,6 +2461,11 @@ stock int FindAttributeOnClient(int client, int attribute)
 	return -1;
 }
 
+stock bool AreVectorsEqual(const float vVec1[3], const float vVec2[3])
+{
+	return (vVec1[0] == vVec2[0] && vVec1[1] == vVec2[1] && vVec1[2] == vVec2[2]);
+} 
+
 /**
  * Checks if a client is invulnerable.
  *
