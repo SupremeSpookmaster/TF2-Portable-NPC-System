@@ -1387,6 +1387,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.i_HealthBarType.set", Native_PNPCSetHealthBarType);
 	CreateNative("PNPC.i_HealthBarDisplay.get", Native_PNPCGetHealthBarDisplay);
 	CreateNative("PNPC.i_HealthBarDisplay.set", Native_PNPCSetHealthBarDisplay);
+	CreateNative("PNPC.f_HealthBarHeight.get", Native_PNPCGetHealthBarHeight);
+	CreateNative("PNPC.f_HealthBarHeight.set", Native_PNPCSetHealthBarHeight);
 
 	//Global (not specific to the PNPC methodmap) Natives:
 	CreateNative("PNPC_Explosion", Native_PNPCExplosion);
@@ -5505,6 +5507,38 @@ public int Native_PNPCClearGibs(Handle plugin, int numParams)
 	delete g_GibAttachments[npc.Index];
 	return 0;
 }
+
+public int Native_PNPCSetHealthBarHeight(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	f_HealthBarHeight[npc.Index] = GetNativeCell(2);
+
+	if (npc.i_HealthBarType > 0)
+	{
+		int bar = npc.i_HealthBar;
+		if (IsValidEntity(bar))
+			RemoveEntity(bar);
+
+		float pos[3], ang[3];
+		npc.GetAbsOrigin(pos);
+		npc.GetAbsAngles(ang);
+
+		bar = WorldText_Create(pos, ang, "", 8.0);
+		if (IsValidEntity(bar))
+		{
+			i_HealthBar[npc.Index] = EntIndexToEntRef(bar);
+			i_HealthBarOwner[bar] = EntIndexToEntRef(npc.Index);
+			WorldText_AttachToEntity(bar, npc.Index, "root", _, _, f_HealthBarHeight[npc.Index]);
+			npc.UpdateHealthBar();
+			WorldText_SetOrientation(bar, ORIENTATION_ALWAYS_FACE_PLAYER);
+			SDKHook(bar, SDKHook_SetTransmit, HealthBarTransmit);
+		}
+	}
+
+	return 0;
+}
+
+public any Native_PNPCGetHealthBarHeight(Handle plugin, int numParams) { return f_HealthBarHeight[GetNativeCell(1)]; }
 
 public int Native_PNPCSetParticlesFromConfig(Handle plugin, int numParams)
 {

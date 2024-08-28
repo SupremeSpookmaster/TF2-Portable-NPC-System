@@ -602,6 +602,12 @@ methodmap PNPC < CBaseCombatCharacter
 		public native set(int value);
 	}
 
+	property float f_HealthBarHeight
+	{
+		public native get();
+		public native set(float value);
+	}
+
 	property bool b_Exists
 	{
 		public native get();
