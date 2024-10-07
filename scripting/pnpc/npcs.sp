@@ -293,6 +293,7 @@ bool b_PillAlreadyBounced[2049] = { false, ... };
 bool b_IsProjectile[2049] = { false, ... };
 bool b_IsGib[2049] = { false, ... };
 bool b_IsARespawnRoomVisualiser[2049] = { false, ... };
+bool b_ProjectileAlreadyExploded[2049] = { false, ... };
 
 char PNPC_Model[2049][255];
 char PNPC_BleedParticle[2049][255];
@@ -1785,6 +1786,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
 	b_IsARespawnRoomVisualiser[entity] = false;
+	b_ProjectileAlreadyExploded[entity] = false;
 	f_NextSlowScan[entity] = 0.0;
 	f_MedigunHealthBucket[entity] = 0.0;
 	f_DecayBucket[entity] = 0.0;
@@ -1798,7 +1800,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 
 MRESReturn PNPC_OnFlareExplodePre(int entity, Handle hParams) 
 {
-	CPrintToChatAll("Flare exploded!");
+	//CPrintToChatAll("Flare exploded!");
 
 	float damage = GetEntPropFloat(entity, Prop_Send, "m_flDamage");	//TODO: This is almost certainly incorrect, won't know until we get the flare explosion logic working in the first place.
 	if (PNPC_TriggerProjectileExplosion(entity, 110.0, damage, SND_EXPLOSION_FLARE, PARTICLE_EXPLOSION_FLARE_RED, PARTICLE_EXPLOSION_FLARE_BLUE, true, 10.0, 0.0, 146.0, 0.5, -1))
@@ -1855,6 +1857,7 @@ public MRESReturn PNPC_FireballExplode(int entity)
 public MRESReturn PNPC_RocketExplode(int entity)
 {
 	float damage = GetEntDataFloat(entity, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4);
+	SetEntDataFloat(entity, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.0, true);
 	if (PNPC_TriggerProjectileExplosion(entity, 146.0, damage, SFX_GenericExplosion[GetRandomInt(0, sizeof(SFX_GenericExplosion) - 1)], PARTICLE_EXPLOSION_GENERIC, PARTICLE_EXPLOSION_GENERIC, true, 0.0, 0.0, 146.0, 0.5, -1))
 		return MRES_Supercede;
 	
@@ -1870,43 +1873,54 @@ public bool PNPC_TriggerProjectileExplosion(int entity, float radius, float dama
 	int owner = -1;
 	if (PNPC_CheckAllowCustomExplosionLogic(entity, owner, launcher))
 	{
-		PNPC_CalculateExplosionBaseStats(launcher, damage, radius);
+		if (!b_ProjectileAlreadyExploded[entity])
+		{
+			PNPC_CalculateExplosionBaseStats(launcher, damage, radius);
 
-		float pos[3];
-		GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", pos);
+			float pos[3];
+			GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", pos);
 
-		int team = GetEntProp(entity, Prop_Send, "m_iTeamNum");
+			int team = GetEntProp(entity, Prop_Send, "m_iTeamNum");
 
-		if (!StrEqual(redParticle, "") && view_as<int>(TFTeam_Red) == team)
-			SpawnParticle(pos, redParticle, 2.0);
-		else if (!StrEqual(blueParticle, "") && view_as<int>(TFTeam_Blue) == team)
-			SpawnParticle(pos, blueParticle, 2.0);
+			if (!StrEqual(redParticle, "") && view_as<int>(TFTeam_Red) == team)
+				SpawnParticle(pos, redParticle, 2.0);
+			else if (!StrEqual(blueParticle, "") && view_as<int>(TFTeam_Blue) == team)
+				SpawnParticle(pos, blueParticle, 2.0);
 
-		if (!StrEqual(sound, ""))
-			EmitSoundToAll(sound, entity);
+			if (!StrEqual(sound, ""))
+				EmitSoundToAll(sound, entity);
 
-		int damagetype = DMG_BLAST;
+			int damagetype = DMG_BLAST;
 
-		if (damage > 100.0)
-			damagetype |= DMG_ALWAYSGIB;
-		if (GetEntProp(entity, Prop_Send, "m_bCritical") > 0)
-			damagetype |= DMG_ACID;
+			if (damage > 100.0)
+				damagetype |= DMG_ALWAYSGIB;
+			if (GetEntProp(entity, Prop_Send, "m_bCritical") > 0)
+				damagetype |= DMG_ACID;
 
-		currentIgniteTime = igniteTime;
-		currentFullDMG = damage;
-		currentDirectVictim = directTarget;
+			currentIgniteTime = igniteTime;
+			currentFullDMG = damage;
+			currentDirectVictim = directTarget;
 
-		if (igniteTime > 0.0)
-			PNPC_Explosion(pos, radius, damage, falloffStart, falloffEnd, falloffMax, entity, launcher, owner, damagetype, _, true, hitOwner, _, _, PNPC_IgniteOnHit, PLUGIN_NAME);
-		else
-			PNPC_Explosion(pos, radius, damage, falloffStart, falloffEnd, falloffMax, entity, launcher, owner, damagetype, _, true, hitOwner, _, _, PNPC_DirectHitCheck, PLUGIN_NAME);
+			if (igniteTime > 0.0)
+				PNPC_Explosion(pos, radius, damage, falloffStart, falloffEnd, falloffMax, entity, launcher, owner, damagetype, _, true, hitOwner, _, _, PNPC_IgniteOnHit, PLUGIN_NAME);
+			else
+				PNPC_Explosion(pos, radius, damage, falloffStart, falloffEnd, falloffMax, entity, launcher, owner, damagetype, _, true, hitOwner, _, _, PNPC_DirectHitCheck, PLUGIN_NAME);
 
-		RemoveEntity(entity);
+			RequestFrame(RemoveEntity_Safe, EntIndexToEntRef(entity));
+			b_ProjectileAlreadyExploded[entity] = true;
+		}
 
 		return true;
 	}
 
 	return false;
+}
+
+public void RemoveEntity_Safe(int ref)
+{
+	int ent = EntRefToEntIndex(ref);
+	if (IsValidEntity(ent))
+		RemoveEntity(ent);
 }
 
 public void PNPC_IgniteOnHit(int victim, int &attacker, int &inflictor, int &weapon, float &damage)
@@ -1962,7 +1976,7 @@ void PNPC_CalculateExplosionBaseStats(int launcher, float &damage, float &radius
 	if (IsValidEntity(launcher))
 	{
 		radius *= GetAttributeValue(launcher, 99, 1.0) * GetAttributeValue(launcher, 100, 1.0);
-		damage *= GetAttributeValue(launcher, 1, 1.0) * GetAttributeValue(launcher, 2, 1.0);
+		//damage *= GetAttributeValue(launcher, 1, 1.0) * GetAttributeValue(launcher, 2, 1.0);
 	}
 }
 
