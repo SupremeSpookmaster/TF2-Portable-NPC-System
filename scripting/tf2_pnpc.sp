@@ -87,8 +87,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	//HookEvent("teamplay_round_win", RoundEnd);
-	//HookEvent("teamplay_round_stalemate", RoundEnd);
+	HookEvent("teamplay_round_win", RoundEnd);
+	HookEvent("teamplay_round_stalemate", RoundEnd);
 	
 	RegAdminCmd("pnpc_reload", PNPC_ReloadNPCs, ADMFLAG_KICK, "Portable NPC System: Reloads the list of enabled PNPCs.");
 	RegAdminCmd("pnpc_spawn", PNPC_Spawn, ADMFLAG_KICK, "Portable NPC System: Spawns the specified PNPC at your crosshair.");
@@ -155,10 +155,10 @@ public int PNPC_KillAll()
 	return NumKilled;
 }
 
-/*public void RoundEnd(Event hEvent, const char[] sEvName, bool bDontBroadcast)
+public void RoundEnd(Event hEvent, const char[] sEvName, bool bDontBroadcast)
 {
 	PNPC_KillAll();
-}*/
+}
 
 public Action PNPC_ReloadNPCs(int client, int args)
 {	

@@ -91,7 +91,6 @@ public int Native_PNPCTemplate_Spawn(Handle plugin, int numParams)
 	template.g_ConfigMap.Get("npc.visuals.model", model, sizeof(model));
 	template.GetName(name, sizeof(name));
 	template.GetConfigName(confName, sizeof(confName));
-	CPrintToChatAll("Template's config name is %s", confName);
 
 	int health = GetIntFromConfigMap(template.g_ConfigMap, "npc.stats.health", 100);
 	float speed = GetFloatFromConfigMap(template.g_ConfigMap, "npc.stats.speed", 300.0);
