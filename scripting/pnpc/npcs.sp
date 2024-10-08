@@ -2107,8 +2107,10 @@ void PNPC_RemoveFromPaths(PNPC npc)
 public int Native_PNPCConstructor(Handle plugin, int numParams)
 {
 	RoundState state = GameRules_GetRoundState();
-	if (state == RoundState_GameOver || state == RoundState_TeamWin || state == RoundState_Restart || state == RoundState_Stalemate)
+	if (state == RoundState_GameOver || state == RoundState_TeamWin || state == RoundState_Restart/* || state == RoundState_Stalemate*/)
+	{
 		return -1;
+	}
 
 	char model[255], logicPlugin[255], configName[255], name[255];
 	float pos[3], ang[3];
