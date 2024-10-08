@@ -14,7 +14,6 @@
 #include <tf2utils>
 #include <dhooks>
 #include <collisionhook>
-#include <cbasenpc>
 
 #define EXPLOSION_PARTICLE_LARGE_1 "fireSmoke_collumn_mvmAcres"
 #define EXPLOSION_PARTICLE_LARGE_2 "hightower_explosion"

@@ -3,6 +3,8 @@
 #endif
 #define _pnpc_included_
 
+#include <cbasenpc>
+
 methodmap PNPC_Template __nullable__
 {
 	/**
