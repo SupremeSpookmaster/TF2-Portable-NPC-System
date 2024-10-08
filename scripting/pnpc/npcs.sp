@@ -447,6 +447,7 @@ void PNPC_MapEnd()
 	}
 
 	delete g_NPCsList;
+	PNPC_KillAll();
 }
 
 public float PNPC_PathCost(INextBot bot, CNavArea area, CNavArea from_area, CNavLadder ladder, int iElevator, float length)
