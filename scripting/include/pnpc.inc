@@ -1404,3 +1404,32 @@ native bool PNPC_IsNPC(int entity);
  * @return	True if the heal was successful, false if it was blocked by something.
  */
 native bool PNPC_HealEntity(int entity, int amount, float maxHeal = 1.0, int healer = 0);
+
+/**
+ * Retrieves an ArrayList of all CNavAreas within a certain radius of a given position.
+ * 
+ * @param pos		The position.
+ * @param radius	The radius in which to grab CNavAreas.
+ * 
+ * @return	An ArrayList containing all valid CNavAreas within the given radius of pos.
+ */
+native ArrayList PNPC_GetNearbyNavAreas(float pos[3], float radius);
+
+/**
+ * Retrieves a random CNavArea within a given radius of the specified position.
+ * 
+ * @param pos		The position.
+ * @param radius	The radius.
+ * 
+ * @return A random CNavArea near the given position.
+ */
+native CNavArea PNPC_GetRandomNearbyArea(float pos[3], float radius);
+
+/**
+ * Retrieves the CNavArea closest to the given position.
+ * 
+ * @param pos		The position.
+ * 
+ * @return 	The CNavArea closest to the given position.
+ */
+native CNavArea PNPC_GetClosestNavArea(float pos[3]);

@@ -1401,6 +1401,9 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_IsValidTarget", Native_PNPC_IsValidTarget);
 	CreateNative("PNPC_WorldSpaceCenter", Native_PNPC_WorldSpaceCenter);
 	CreateNative("PNPC_GetClosestTarget", Native_PNPC_GetClosestTarget);
+	CreateNative("PNPC_GetNearbyNavAreas", Native_PNPC_GetNearbyNavAreas);
+	CreateNative("PNPC_GetRandomNearbyArea", Native_PNPC_GetRandomNearbyArea);
+	CreateNative("PNPC_GetClosestNavArea", Native_PNPC_GetClosestNavArea);
 }
 
 public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
@@ -2217,12 +2220,9 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		float intersection[3];
 		if (!npc.IsPositionValid(pos, intersection))
 		{
-			if (TR_PointOutsideWorld(pos))
-				CPrintToChatAll("Pos is outside world; defaulting to nearest nav!");
-			else
-				CPrintToChatAll("Pos is obstructed; defaulting to nearest nav!");
-
-			//TODO: Finish debugging
+			CPrintToChatAll("Pos is obstructed; defaulting to nearest nav!");
+			//bookmark
+			PNPC_GetClosestNavArea(pos).GetCenter(pos);
 		}
 
 		TeleportEntity(ent, pos, ang);
@@ -4608,8 +4608,9 @@ public any Native_PNPCIsPositionValid(Handle plugin, int numParams)
 
 	float pos[3], mins[3], maxs[3], intersection[3];
 	GetNativeArray(2, pos, sizeof(pos));
-	if (TR_PointOutsideWorld(pos))
-		return false;
+	CPrintToChatAll("Desired pos is %.2f %.2f %.2f", pos[0], pos[1], pos[2]);
+	//if (TR_PointOutsideWorld(pos))
+	//	return false;
 
 	npc.GetBoundingBox(mins, maxs);
 
@@ -5713,6 +5714,92 @@ public int Native_PNPCSetAttachmentsFromConfig(Handle plugin, int numParams)
 	DeleteCfg(conf);
 
 	return 0;
+}
+
+public any Native_PNPC_GetNearbyNavAreas(Handle plugin, int numParams)
+{
+	float pos[3], radius;
+	GetNativeArray(1, pos, sizeof(pos));
+	radius = GetNativeCell(2);
+
+	ArrayList valid = CreateArray(255);
+
+	int iAreaCount = TheNavAreas.Length;
+	for (int i = 0; i < iAreaCount; i++)
+	{
+		CNavArea navi = TheNavAreas.Get(i);
+
+		if(navi == NULL_AREA) 
+			break; //No nav?
+
+		int NavAttribs = navi.GetAttributes();
+		if(NavAttribs & NAV_MESH_AVOID)
+		{
+			continue;
+		}
+
+		float navPos[3];
+		navi.GetCenter(navPos);
+
+		if (GetVectorDistance(pos, navPos) <= radius)
+			PushArrayCell(valid, navi);
+	}
+
+	return valid;
+}
+
+public any Native_PNPC_GetRandomNearbyArea(Handle plugin, int numParams)
+{
+	float pos[3], radius;
+	GetNativeArray(1, pos, sizeof(pos));
+	radius = GetNativeCell(2);
+
+	ArrayList areas = PNPC_GetNearbyNavAreas(pos, radius);
+	CNavArea navi;
+
+	if (GetArraySize(areas) > 0)
+	{
+		navi = GetArrayCell(areas, GetRandomInt(0, GetArraySize(areas) - 1));
+	}
+
+	delete areas;
+	return navi;
+}
+
+public any Native_PNPC_GetClosestNavArea(Handle plugin, int numParams)
+{
+	float pos[3];
+	GetNativeArray(1, pos, sizeof(pos));
+
+	CNavArea closest;
+	float closestDist = 999999999.0;
+
+	int iAreaCount = TheNavAreas.Length;
+	for (int i = 0; i < iAreaCount; i++)
+	{
+		CNavArea navi = TheNavAreas.Get(i);
+
+		if(navi == NULL_AREA) 
+			break; //No nav?
+
+		int NavAttribs = navi.GetAttributes();
+		if(NavAttribs & NAV_MESH_AVOID)
+		{
+			continue;
+		}
+
+		float navPos[3];
+		navi.GetCenter(navPos);
+
+		float dist = GetVectorDistance(pos, navPos);
+		if (dist < closestDist)
+		{
+			closest = navi;
+			closestDist = dist;
+		}
+	}
+
+	return closest;
 }
 
 public void PNPC_OnRagdollSpawned(int victim, int attacker, int inflictor)
