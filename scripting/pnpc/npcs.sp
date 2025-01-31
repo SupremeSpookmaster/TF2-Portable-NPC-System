@@ -1209,6 +1209,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.f_Scale.set", Native_PNPCSetScale);
 	CreateNative("PNPC.f_Scale.get", Native_PNPCGetScale);
 	CreateNative("PNPC.SetBoundingBox", Native_PNPCSetBoundingBox);
+	CreateNative("PNPC.GetBoundingBox", Native_PNPCGetBoundingBox);
+	CreateNative("PNPC.IsPositionValid", Native_PNPCIsPositionValid);
 
 	//Speed:
 	CreateNative("PNPC.f_Speed.set", Native_PNPCSetSpeed);
@@ -3121,8 +3123,6 @@ public void PNPC_CheckOutOfBounds(PNPC npc, float gt)
 	GetEntPropVector(npc.Index, Prop_Data, "m_vecMaxs", maxs);
 	GetEntPropVector(npc.Index, Prop_Data, "m_vecMins", mins);
 
-
-
 	if (!stuck)
 	{
 		f_LastSafePosition[npc.Index] = pos;
@@ -4577,6 +4577,37 @@ public int Native_PNPCSetBoundingBox(Handle plugin, int numParams)
 	return 0;
 }
 
+public int Native_PNPCGetBoundingBox(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+
+	float mins[3], maxs[3];
+	GetEntPropVector(npc.Index, Prop_Data, "m_vecMaxs", maxs);
+	GetEntPropVector(npc.Index, Prop_Data, "m_vecMins", mins);
+
+	SetNativeArray(2, mins, 3);
+	SetNativeArray(3, maxs, 3);
+
+	return 0;
+}
+
+public any  Native_PNPCIsPositionValid(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+
+	float pos[3], mins[3], maxs[3], intersection[3];
+	GetNativeArray(2, pos, sizeof(pos));
+	if (TR_PointOutsideWorld(pos))
+		return false;
+
+	npc.GetBoundingBox(mins, maxs);
+
+	TR_TraceHullFilter(pos, pos, mins, maxs, MASK_NPCSOLID, PNPC_StuckTrace, npc.Index);
+	TR_GetEndPosition(intersection);
+	SetNativeArray(3, intersection, 3);
+	return !TR_DidHit();
+}
+
 Handle PNPC_HitByBlast = null;
 
 public int Native_PNPCExplosion(Handle plugin, int numParams)
@@ -4729,6 +4760,12 @@ public bool PNPC_AOETrace(entity, contentsmask, target)
 		return false;
 		
 	return entity != target;
+}
+
+public bool PNPC_StuckTrace(int entity, int contentsmask, int user)
+{
+	PNPC npc = view_as<PNPC>(user);
+	return (entity == user || PNPC_IsValidTarget(entity, npc.i_Team))
 }
 
 public bool PNPC_LOSCheck(entity, contentsMask)

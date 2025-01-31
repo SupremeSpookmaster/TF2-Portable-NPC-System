@@ -519,6 +519,26 @@ methodmap PNPC < CBaseCombatCharacter
 	public native void SetBoundingBox(float mins[3], float maxs[3], bool autoscale = true);
 
 	/**
+	 * Retrieves the bounding box of the PNPC.
+	 * 
+	 * @param mins		Output buffer for mins.
+	 * @param maxs		Output buffer for maxs.
+	 * 
+	 * @return	The PNPC's bounding box dimensions, stored in the output buffers.
+	 */
+	public native void GetBoundingBox(float mins[3], float maxs[3]);
+	
+	/**
+	 * Checks to see if this PNPC can be at the given position without being stuck.
+	 * 
+	 * @param pos			The position to check.
+	 * @param intersection	Optional output buffer in which to store the hull trace's hit point, if the PNPC would get stuck. This DOES NOT get set if the given position is outside of the map.
+	 * 
+	 * @return		True if this PNPC can be in the given position without getting stuck, false otherwise.
+	 */
+	public native bool IsPositionValid(float pos[3], float intersection[3] = NULL_VECTOR);
+
+	/**
 	 * Checks to see if this PNPC has a given aspect.
 	 * 
 	 * @param aspect		Aspect name, IE "my_aspect".
