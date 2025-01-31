@@ -2214,6 +2214,17 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		base.flMaxYawRate = 225.0;
 		base.flDeathDropHeight = 999999.0;
 
+		float intersection[3];
+		if (!npc.IsPositionValid(pos, intersection))
+		{
+			if (TR_PointOutsideWorld(pos))
+				CPrintToChatAll("Pos is outside world; defaulting to nearest nav!");
+			else
+				CPrintToChatAll("Pos is obstructed; defaulting to nearest nav!");
+
+			//TODO: Finish debugging
+		}
+
 		TeleportEntity(ent, pos, ang);
 
 		RequestFrame(PNPC_InternalLogic, EntIndexToEntRef(ent));
@@ -4591,7 +4602,7 @@ public int Native_PNPCGetBoundingBox(Handle plugin, int numParams)
 	return 0;
 }
 
-public any  Native_PNPCIsPositionValid(Handle plugin, int numParams)
+public any Native_PNPCIsPositionValid(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
 
