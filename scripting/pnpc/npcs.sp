@@ -2220,8 +2220,8 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		float intersection[3];
 		if (!npc.IsPositionValid(pos, intersection))
 		{
-			CPrintToChatAll("Pos is obstructed; defaulting to nearest nav!");
-			//bookmark
+			//TODO: Back off from intersection to try and get a valid position, only use nav area if this fails
+			CPrintToChatAll("Pos is obstructed and all attempts to back off failed; defaulting to nearest nav!");
 			PNPC_GetClosestNavArea(pos).GetCenter(pos);
 		}
 
