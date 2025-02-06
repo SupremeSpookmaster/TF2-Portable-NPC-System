@@ -21,7 +21,7 @@ TODO: Write this.
 TODO: Write a guide in the wiki and link to it here.
 
 ## *Prerequisites*
-- **[SourceMod V1.12+](https://www.sourcemod.net/downloads.php?branch=dev)**
+- **[SourceMod V1.12+](https://www.sourcemod.net/downloads.php?branch=dev)** (NOTHING NEWER THAN 1.13.0.7194!)
 - **[CBaseNPC](https://github.com/TF2-DMB/CBaseNPC?tab=readme-ov-file)**
 - **[TF2 Custom Attributes](https://forums.alliedmods.net/showthread.php?p=2703773)**
 - **[TF2Items](https://github.com/asherkin/TF2Items)**
