@@ -1433,3 +1433,12 @@ native CNavArea PNPC_GetRandomNearbyArea(float pos[3], float radius);
  * @return 	The CNavArea closest to the given position.
  */
 native CNavArea PNPC_GetClosestNavArea(float pos[3]);
+
+/**
+ * Called when an entity touches the PNPC.
+ * 
+ * @param npc		The PNPC.
+ * @param entity	The entity which touched the PNPC.
+ * @param classname	The classname of the entity.
+ */
+forward void PNPC_OnTouch(PNPC npc, int entity, char[] classname);

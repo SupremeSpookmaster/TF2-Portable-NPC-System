@@ -325,6 +325,7 @@ GlobalForward g_OnMeleeLogicBegin;
 GlobalForward g_OnBackstab;
 GlobalForward g_OnMeleeLogicHit;
 GlobalForward g_OnPlayerRagdoll;
+GlobalForward g_OnPNPCTouch;
 
 Handle g_hLookupActivity;
 Handle SDK_Ragdoll;
@@ -972,6 +973,7 @@ void PNPC_MakeForwards()
 	g_OnMeleeLogicHit = new GlobalForward("PNPC_OnMeleeHit", ET_Single, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 	g_OnBackstab = new GlobalForward("PNPC_OnBackstab", ET_Single, Param_Cell, Param_Cell, Param_FloatByRef);
 	g_OnPlayerRagdoll = new GlobalForward("PNPC_OnPlayerRagdoll", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
+	g_OnPNPCTouch = new GlobalForward("PNPC_OnTouch", ET_Ignore, Param_Cell, Param_Cell, Param_String);
 
 	/*NextBotActionFactory AcFac = new NextBotActionFactory("PNPCMainAction");
 	AcFac.SetEventCallback(EventResponderType_OnActorEmoted, PluginBot_OnActorEmoted);*/
@@ -2246,77 +2248,85 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 
 public void PNPC_Touch(int entity, int other)
 {
-	if (!HasEntProp(other, Prop_Send, "m_iTeamNum"))
-		return;
-
-	if (GetEntProp(other, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"))
-		return;
-
 	PNPC npc = view_as<PNPC>(entity);
 
 	char classname[255];
 	GetEntityClassname(other, classname, sizeof(classname));
 
-	float pos[3];
+	Call_StartForward(g_OnPNPCTouch);
 
-	bool remove = false;
-	if (StrEqual(classname, "tf_projectile_cleaver"))
+	Call_PushCell(npc);
+	Call_PushCell(other);
+	Call_PushString(classname);
+
+	Call_Finish();
+
+	if (IsValidEntity(other))
 	{
-		bool live = view_as<bool>(GetEntProp(other, Prop_Send, "m_bTouched"));
-		if (!live)
+		if (GetEntProp(other, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"))
+			return;
+
+		float pos[3];
+
+		bool remove = false;
+		if (StrEqual(classname, "tf_projectile_cleaver"))
 		{
-			float dmg = 50.0;
-
-			int owner = GetEntPropEnt(other, Prop_Send, "m_hThrower");
-			int launcher = GetEntPropEnt(other, Prop_Send, "m_hOriginalLauncher");
-
-			if (IsValidEntity(launcher))
-				dmg *= GetAttributeValue(launcher, 1, 1.0) * GetAttributeValue(launcher, 2, 1.0);
-
-			GetEntPropVector(other, Prop_Send, "m_vecOrigin", pos);
-
-			SetEntProp(other, Prop_Send, "m_bTouched", 1);
-			SDKHooks_TakeDamage(entity, other, owner, dmg, GetEntProp(other, Prop_Send, "m_bCritical") > 0 ? DMG_CLUB|DMG_ACID : DMG_CLUB, launcher, _, pos, false);
-
-			if (IsValidClient(owner))
+			bool live = view_as<bool>(GetEntProp(other, Prop_Send, "m_bTouched"));
+			if (!live)
 			{
-				EmitSoundToClient(owner, SND_CLEAVER_HIT);
+				float dmg = 50.0;
+
+				int owner = GetEntPropEnt(other, Prop_Send, "m_hThrower");
+				int launcher = GetEntPropEnt(other, Prop_Send, "m_hOriginalLauncher");
+
+				if (IsValidEntity(launcher))
+					dmg *= GetAttributeValue(launcher, 1, 1.0) * GetAttributeValue(launcher, 2, 1.0);
+
+				GetEntPropVector(other, Prop_Send, "m_vecOrigin", pos);
+
+				SetEntProp(other, Prop_Send, "m_bTouched", 1);
+				SDKHooks_TakeDamage(entity, other, owner, dmg, GetEntProp(other, Prop_Send, "m_bCritical") > 0 ? DMG_CLUB|DMG_ACID : DMG_CLUB, launcher, _, pos, false);
+
+				if (IsValidClient(owner))
+				{
+					EmitSoundToClient(owner, SND_CLEAVER_HIT);
+				}
+
+				EmitSoundToAll(SND_CLEAVER_HIT, other);
+
+				remove = true;
 			}
-
-			EmitSoundToAll(SND_CLEAVER_HIT, other);
-
-			remove = true;
 		}
-	}
-	else if (StrEqual(classname, "tf_projectile_stun_ball"))
-	{
-		bool live = view_as<bool>(GetEntProp(other, Prop_Send, "m_bTouched"));
-		if (!live)
+		else if (StrEqual(classname, "tf_projectile_stun_ball"))
 		{
-			float dmg = 15.0;
-
-			int launcher = GetEntPropEnt(other, Prop_Send, "m_hOriginalLauncher");
-			int owner = GetEntPropEnt(other, Prop_Send, "m_hOwnerEntity");
-			GetEntPropVector(other, Prop_Send, "m_vecOrigin", pos);
-
-			if (IsValidEntity(launcher))
-				dmg *= GetAttributeValue(launcher, 1, 1.0) * GetAttributeValue(launcher, 2, 1.0);
-
-			SDKHooks_TakeDamage(entity, other, owner, dmg, GetEntProp(other, Prop_Send, "m_bCritical") > 0 ? DMG_CLUB|DMG_ACID : DMG_CLUB, launcher, _, pos, false);
-			npc.ApplyTemporarySpeedChange(0.5, 1, 6.0);
-			SetEntProp(other, Prop_Send, "m_bTouched", 1);
-
-			if (IsValidClient(owner))
+			bool live = view_as<bool>(GetEntProp(other, Prop_Send, "m_bTouched"));
+			if (!live)
 			{
-				EmitSoundToClient(owner, SND_SANDMAN_HIT);
+				float dmg = 15.0;
+
+				int launcher = GetEntPropEnt(other, Prop_Send, "m_hOriginalLauncher");
+				int owner = GetEntPropEnt(other, Prop_Send, "m_hOwnerEntity");
+				GetEntPropVector(other, Prop_Send, "m_vecOrigin", pos);
+
+				if (IsValidEntity(launcher))
+					dmg *= GetAttributeValue(launcher, 1, 1.0) * GetAttributeValue(launcher, 2, 1.0);
+
+				SDKHooks_TakeDamage(entity, other, owner, dmg, GetEntProp(other, Prop_Send, "m_bCritical") > 0 ? DMG_CLUB|DMG_ACID : DMG_CLUB, launcher, _, pos, false);
+				npc.ApplyTemporarySpeedChange(0.5, 1, 6.0);
+				SetEntProp(other, Prop_Send, "m_bTouched", 1);
+
+				if (IsValidClient(owner))
+				{
+					EmitSoundToClient(owner, SND_SANDMAN_HIT);
+				}
+
+				EmitSoundToAll(SND_SANDMAN_HIT, other);
 			}
-
-			EmitSoundToAll(SND_SANDMAN_HIT, other);
 		}
-	}
 
-	if (remove)
-		RemoveEntity(other);
+		if (remove)
+			RemoveEntity(other);
+	}
 }
 
 MRESReturn PNPC_OnJarExplodePre(Handle hParams) 
@@ -5186,11 +5196,11 @@ public Action PNPC_PassFilter(int ent1, int ent2, bool &result)
 			result = false;
 			return Plugin_Handled;
 		}
-		else
+		/*else
 		{
 			result = GetEntProp(ent1, Prop_Send, "m_iTeamNum") != GetEntProp(ent2, Prop_Send, "m_iTeamNum");
 			return Plugin_Changed;
-		}
+		}*/
 	}
 
 	return Plugin_Continue;
