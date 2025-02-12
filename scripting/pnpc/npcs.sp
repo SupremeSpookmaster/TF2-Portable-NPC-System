@@ -2239,6 +2239,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		SDKHook(ent, SDKHook_Touch, PNPC_Touch);
 
 		npc.PlayRandomSound("sound_spawn");
+		SetEntityCollisionGroup(npc.Index, 26);
 
 		return ent;
 	}
