@@ -2201,7 +2201,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 			}
 		}
 
-		CBaseNPC_Locomotion loco = npc.GetLocomotion();
+		CBaseNPC_Locomotion loco = base.GetLocomotion();
 		loco.SetCallback(LocomotionCallback_ShouldCollideWith, PNPC_ShouldCollide);
 		loco.SetCallback(LocomotionCallback_IsEntityTraversable, PNPC_IsTraversable);
 
@@ -2678,23 +2678,14 @@ public bool PNPC_ShouldCollide(CBaseNPC_Locomotion loco, int other)
 //TODO: Expand on this if necessary.
 public bool PNPC_CollisionCheck(int bot, int other)
 {
-	return !IsAlly(bot, other);
+	return Brush_Is_Solid(other) && !IsAlly(bot, other);
 }
 
 public bool PNPC_IsTraversable(CBaseNPC_Locomotion loco, int other, TraverseWhenType when)
 {
-	if (other < 1)
-		return false;
+	int bot = loco.GetBot().GetNextBotCombatCharacter();
 
-	//if (b_IsInUpdateGroundConstraint && b_IsProjectile[other])
-	//	return false;
-
-	//int bot = loco.GetBot().GetNextBotCombatCharacter();
-
-	if (Brush_Is_Solid(other))
-		return false;
-
-	return true;
+	return !(Brush_Is_Solid(other) && !IsAlly(bot, other));
 }
 
 public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePos[3])
@@ -3434,7 +3425,10 @@ public int Native_PNPCSetScale(Handle plugin, int numParams)
 {
 	int ent = GetNativeCell(1);
 	float scale = GetNativeCell(2);
-	SetEntPropFloat(ent, Prop_Send, "m_flModelScale", scale);
+	char scaleChar[16];
+	Format(scaleChar, sizeof(scaleChar), "%f", scale);
+	DispatchKeyValue(ent, "modelscale", scaleChar);
+	//SetEntPropFloat(ent, Prop_Send, "m_flModelScale", scale);
 
 	return 0; 
 }
@@ -4594,6 +4588,15 @@ public int Native_PNPCSetBoundingBox(Handle plugin, int numParams)
 
 	SetEntPropVector(npc.Index, Prop_Data, "m_vecMaxs", maxs);
 	SetEntPropVector(npc.Index, Prop_Data, "m_vecMins", mins);
+	
+	static float m_vecMaxsNothing[3];
+	static float m_vecMinsNothing[3];
+	m_vecMaxsNothing = view_as<float>( { 1.0, 1.0, 2.0 } );
+	m_vecMinsNothing = view_as<float>( { -1.0, -1.0, 0.0 } );	
+	SetEntPropVector(npc.Index, Prop_Send, "m_vecMaxsPreScaled", m_vecMaxsNothing);
+	SetEntPropVector(npc.Index, Prop_Data, "m_vecMaxsPreScaled", m_vecMaxsNothing);
+	SetEntPropVector(npc.Index, Prop_Send, "m_vecMinsPreScaled", m_vecMinsNothing);
+	SetEntPropVector(npc.Index, Prop_Data, "m_vecMinsPreScaled", m_vecMinsNothing);
 
 	return 0;
 }
@@ -5201,6 +5204,12 @@ public Action PNPC_PassFilter(int ent1, int ent2, bool &result)
 			result = GetEntProp(ent1, Prop_Send, "m_iTeamNum") != GetEntProp(ent2, Prop_Send, "m_iTeamNum");
 			return Plugin_Changed;
 		}*/
+	}
+
+	if (IsValidClient(ent1) || IsValidClient(ent2))
+	{
+		result = false;
+		return Plugin_Handled;
 	}
 
 	return Plugin_Continue;

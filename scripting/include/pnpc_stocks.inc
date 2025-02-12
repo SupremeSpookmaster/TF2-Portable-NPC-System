@@ -2308,15 +2308,12 @@ stock bool Brush_Is_Solid(int entity)
 			return false;
 		}
 	}
-	
-	return true;
+
+	return ((GetEntProp(entity, Prop_Send, "m_nSolidType") != 0) && ((GetEntProp(entity, Prop_Send, "m_usSolidFlags") & 4) == 0));
 }
 
 stock bool IsAlly(int me, int them)
 {
-	if (!HasEntProp(them, Prop_Send, "m_iTeamNum"))
-		return false;
-
 	return (GetEntProp(me, Prop_Send, "m_iTeamNum") == GetEntProp(them, Prop_Send, "m_iTeamNum"));
 }
 
