@@ -10,11 +10,11 @@
 				"signature"		"CTFProjectile_Flare::Explode_Air()"
 				"linux"
 				{
-					"offset"	"1128" // 0x459
+					"offset"	"1129" // 0x459
 				}
 				"windows"
 				{
-					"offset"	"559" // 0x231
+					"offset"	"560" // 0x231
 				}
 			}
 		}
@@ -261,43 +261,43 @@
 		{
 			"CBaseEntity::WorldSpaceCenter"		
 			{
-				"linux"		"156"
-				"windows"	"155"
+				"linux"		"157"
+				"windows"	"156"
 			}
 			"CTFBaseRocket::Explode"
 			{
-				"linux"		"240"
-				"windows"	"239"
+				"linux"		"241"
+				"windows"	"240"
 			}
 			"CBaseAnimating::BecomeRagdollOnClient"
 			{
-				"windows"	"205"
-				"linux"		"206"
+				"windows"	"206"
+				"linux"		"207"
 			}
 			"CBaseGrenade::Explode"
-			{
-				"linux"		"236"
-				"windows"	"235"
-			}
-			"CBaseGrenade::Detonate"
 			{
 				"linux"		"237"
 				"windows"	"236"
 			}
+			"CBaseGrenade::Detonate"
+			{
+				"linux"		"238"
+				"windows"	"237"
+			}
 			"CTFProjectile_SpellFireball::Explode"
 			{
-				"linux"		"250"
-				"windows"	"247"
+				"linux"		"251"
+				"windows"	"248"
 			}
 			"CTFGrenadePipebombProjectile::PipebombTouch" 
 			{
-				"windows" 	"260"
-				"linux" 	"261"
+				"windows" 	"261"
+				"linux" 	"262"
 			}
 			"CTFWeaponBaseMelee::GetShootSound"
 			{
-				"windows"	"337"
-				"linux"		"343"
+				"windows"	"338"
+				"linux"		"344"
 			}
 		}
 	}
