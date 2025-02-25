@@ -1442,3 +1442,17 @@ native CNavArea PNPC_GetClosestNavArea(float pos[3]);
  * @param classname	The classname of the entity.
  */
 forward void PNPC_OnTouch(PNPC npc, int entity, char[] classname);
+
+/**
+ * Begins lag compensation for this client. Call PNPC_EndLagCompensation when you are done.
+ * 
+ * @param client	The client to lag-compensate.
+ */
+native void PNPC_StartLagCompensation(int client);
+
+/**
+ * Ends lag compensation for this client. Will not work unless you have called PNPC_StartLagCompensation first.
+ * 
+ * @param client	The client whose lag compensation to end.
+ */
+native void PNPC_EndLagCompensation(int client);

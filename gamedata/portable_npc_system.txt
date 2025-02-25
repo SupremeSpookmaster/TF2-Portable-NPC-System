@@ -81,6 +81,35 @@
 				"linux"		"@_ZN11CBaseEntity14SetLocalOriginERK6Vector"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x08\xF3\x0F\x10\x0D\x2A\x2A\x2A\x2A\x56\x8B\x75\x08\x0F\x28\xC1\x0F\x57\x05\x2A\x2A\x2A\x2A\x57\x8B\xF9\xF3\x0F\x10\x16\x0F\x2F\xD0\x89\x7D\xF8\x0F\x86\x2A\x2A\x2A\x2A\x0F\x2F\xCA\x0F\x86\x2A\x2A\x2A\x2A\xF3\x0F\x10\x5E\x04\x0F\x2F\xD8\x0F\x86\x2A\x2A\x2A\x2A\x0F\x2F\xCB\x0F\x86\x2A\x2A\x2A\x2A\xF3\x0F\x10\x5E\x08\x0F\x2F\xD8\x0F\x86\x2A\x2A\x2A\x2A\x0F\x2F\xCB\x0F\x86\x2A\x2A\x2A\x2A\x0F\x2E\x97\x40\x03\x00\x00"
 			}
+			"CLagCompensationManager::StartLagCompensation"
+			{
+				//"Trying to start a new lag compensation"
+				"library"	"server"
+				"linux64"		"@_ZN23CLagCompensationManager20StartLagCompensationEP11CBasePlayerP8CUserCmd"
+				"windows64"	"\x40\x55\x57\x41\x55\x48\x81\xEC\xA0\x00\x00\x00"	
+				"linux"		"@_ZN23CLagCompensationManager20StartLagCompensationEP11CBasePlayerP8CUserCmd"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x28\x57\x8B\xF9\x89\x7D\xE4"
+			}
+			"CLagCompensationManager::FinishLagCompensation"
+			{
+				//"FinishLagCompensation"
+				"library"	"server"
+			//	"linux64"		"@_ZN23CLagCompensationManager21FinishLagCompensationEP11CBasePlayer" 
+			//	"windows64"		"\x4C\x8B\xDC\x49\x89\x4B\x08\x53\x48\x81\xEC\xC0\x00\x00\x00"
+				
+				"linux"		"@_ZN23CLagCompensationManager21FinishLagCompensationEP11CBasePlayer"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x44\x8B\x15\x2A\x2A\x2A\x2A"
+			}
+			"CLagCompensationManager::FrameUpdatePostEntityThink_SIGNATURE"
+			{
+				//"FrameUpdatePostEntityThink"
+				"library"	"server"
+				"linux64"		"@_ZN23CLagCompensationManager26FrameUpdatePostEntityThinkEv" //sorry i hate sigs
+				"windows64"	"\x4C\x8B\xDC\x49\x89\x4B\x08\x53\x48\x81\xEC\xB0\x00\x00\x00"
+				
+				"linux"		"@_ZN23CLagCompensationManager26FrameUpdatePostEntityThinkEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x38\xA1\x2A\x2A\x2A\x2A\x53\x8B\xD9"
+			}
 		}
 		"Functions"
 		{
@@ -255,6 +284,68 @@
 						"type"	"cbaseentity"
 					}
 				}
+			}
+			"CLagCompensationManager::StartLagCompensation"
+			{
+				"signature"	"CLagCompensationManager::StartLagCompensation"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"address"
+				"arguments"
+				{
+					"player"
+					{
+						"type"	"cbaseentity"
+					}
+					"cmd"
+					{
+						"type"	"objectptr"
+					}
+				}
+			}
+			"CTFPlayer::WantsLagCompensationOnEntity"
+			{
+				"offset"		"CTFPlayer::WantsLagCompensationOnEntity"
+				"hooktype"		"entity"
+				"return"		"bool"
+				"this"			"entity"
+				
+				"arguments"
+				{
+					"player"
+					{
+						"type"	"cbaseentity"
+					}
+					"usercmd"
+					{
+						"type"	"objectptr"
+					}
+					"transmitdata"
+					{
+						"type"	"objectptr"
+					}
+				}
+			}
+			"CLagCompensationManager::FrameUpdatePostEntityThink_SIGNATURE"
+			{
+				"signature"	"CLagCompensationManager::FrameUpdatePostEntityThink_SIGNATURE"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"address"
+			}	
+			"CLagCompensationManager::FinishLagCompensation"
+			{
+				"signature"	"CLagCompensationManager::FinishLagCompensation" // CLagCompensationManager::FinishLagCompensation
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"address"
+				"arguments"
+				{
+					"player"
+					{
+						"type"	"cbaseentity" // CBasePlayer *
+					}
+				}
 			}	
 		}
 		"Offsets"
@@ -298,6 +389,27 @@
 			{
 				"windows"	"337"
 				"linux"		"343"
+			}
+			"GetCurrentCommand"
+			{
+				"linux"		"3512"
+				"windows"	"3512"
+			}
+			"CLagCompensationManager::FrameUpdatePostEntityThink_OFFSET"
+			{
+				"library"	"server"
+				"linux"		"16"
+				"windows"		"15"
+				"linux64"		"16"
+				"windows64"		"15"
+			}
+			"CTFPlayer::WantsLagCompensationOnEntity"
+			{
+				"library"	"server"
+				"linux"		"335"
+				"windows"		"334"
+				"linux64"		"335"
+				"windows64"		"334"
 			}
 		}
 	}

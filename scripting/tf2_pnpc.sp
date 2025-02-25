@@ -96,7 +96,7 @@ public void OnPluginStart()
 
 	HookEvent("player_death", PlayerKilled_Pre, EventHookMode_Pre);
 
-	AddNormalSoundHook(view_as<NormalSHook>(PNPC_SoundHook));
+	//AddNormalSoundHook(view_as<NormalSHook>(PNPC_SoundHook));
 	
 	PNPC_MakeForwards();
 	Animator_PluginStart();

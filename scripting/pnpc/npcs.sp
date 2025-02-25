@@ -353,6 +353,12 @@ Handle SDKGetShootSound;
 Queue g_NPCsList;
 Queue g_GibsList;
 
+Handle SDKStartLagCompensation;
+Handle SDKFinishLagCompensation;
+Address CStartLagCompensationManager;
+Address CEndLagCompensationManager;
+Address SDKGetCurrentCommand;
+
 enum //hitgroup_t
 {
 	HITGROUP_GENERIC,
@@ -477,10 +483,13 @@ public float PNPC_PathCost(INextBot bot, CNavArea area, CNavArea from_area, CNav
 
 public int TF2Items_OnGiveNamedItem_Post(int client, String:classname[], int itemDefinitionIndex, int itemLevel, int itemQuality, int entityIndex)
 {
-	DataPack pack = new DataPack();
-	RequestFrame(PNPC_OnMeleeEquipped, pack);
-	WritePackCell(pack, GetClientUserId(client));
-	WritePackCell(pack, EntIndexToEntRef(entityIndex));
+	if (Settings_AllowMeleeHitreg())
+	{
+		DataPack pack = new DataPack();
+		RequestFrame(PNPC_OnMeleeEquipped, pack);
+		WritePackCell(pack, GetClientUserId(client));
+		WritePackCell(pack, EntIndexToEntRef(entityIndex));
+	}
 }
 
 public void PNPC_OnMeleeEquipped(DataPack pack)
@@ -912,7 +921,9 @@ public void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float 
 	vecSwingEndHull[1] = vecSwingStart[1] + swingAng[1] * (MELEE_RANGE * 2.1 * rangeMult);
 	vecSwingEndHull[2] = vecSwingStart[2] + swingAng[2] * (MELEE_RANGE * 2.1 * rangeMult);
 
+	PNPC_StartLagCompensation(client);
 	trace = TR_TraceRayFilterEx(vecSwingStart, vecSwingEnd, MASK_SOLID, RayType_EndPoint, BulletAndMeleeTrace, client);
+	PNPC_EndLagCompensation(client);
 	if (TR_GetFraction(trace) >= 1.0)
 	{
 		delete trace;
@@ -1040,6 +1051,29 @@ void PNPC_MakeForwards()
 	g_hSetLocalOrigin = EndPrepSDKCall();
 	if(!g_hSetLocalOrigin)
 		LogError("[Gamedata] Could not find CBaseEntity::SetLocalOrigin");
+
+
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(gd, SDKConf_Signature, "CLagCompensationManager::StartLagCompensation");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Pointer);
+	SDKStartLagCompensation = EndPrepSDKCall();
+	if(!SDKStartLagCompensation)
+		LogError("[Gamedata] Could not find CLagCompensationManager::StartLagCompensation");
+	
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(gd, SDKConf_Signature, "CLagCompensationManager::FinishLagCompensation");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
+	SDKFinishLagCompensation = EndPrepSDKCall();
+	if(!SDKFinishLagCompensation)
+		LogError("[Gamedata] Could not find CLagCompensationManager::FinishLagCompensation");
+
+	DHook_CreateDetour(gd, "CLagCompensationManager::StartLagCompensation", _, DHook_StartLagCompensation);
+	DHook_CreateDetour(gd, "CLagCompensationManager::FinishLagCompensation", _, DHook_EndLagCompensation);
+
+	SDKGetCurrentCommand = view_as<Address>(gd.GetOffset("GetCurrentCommand"));
+	if(SDKGetCurrentCommand == view_as<Address>(-1))
+		LogError("[Gamedata] Could not find GetCurrentCommand");
 
 	delete gd;
 }
@@ -1406,6 +1440,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_GetNearbyNavAreas", Native_PNPC_GetNearbyNavAreas);
 	CreateNative("PNPC_GetRandomNearbyArea", Native_PNPC_GetRandomNearbyArea);
 	CreateNative("PNPC_GetClosestNavArea", Native_PNPC_GetClosestNavArea);
+	CreateNative("PNPC_StartLagCompensation", Native_PNPC_StartLagCompensation);
+	CreateNative("PNPC_EndLagCompensation", Native_PNPC_EndLagCompensation);
 }
 
 public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
@@ -2222,8 +2258,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		float intersection[3];
 		if (!npc.IsPositionValid(pos, intersection))
 		{
-			//TODO: Back off from intersection to try and get a valid position, only use nav area if this fails
-			CPrintToChatAll("Pos is obstructed and all attempts to back off failed; defaulting to nearest nav!");
+			//TODO: Eventually improve this logic so that the spawn point just backs off from the intersection.
 			PNPC_GetClosestNavArea(pos).GetCenter(pos);
 		}
 
@@ -4622,7 +4657,7 @@ public any Native_PNPCIsPositionValid(Handle plugin, int numParams)
 
 	float pos[3], mins[3], maxs[3], intersection[3];
 	GetNativeArray(2, pos, sizeof(pos));
-	CPrintToChatAll("Desired pos is %.2f %.2f %.2f", pos[0], pos[1], pos[2]);
+
 	//if (TR_PointOutsideWorld(pos))
 	//	return false;
 
@@ -4684,6 +4719,9 @@ public int Native_PNPCExplosion(Handle plugin, int numParams)
 			
 			float vicLoc[3];
 			PNPC_WorldSpaceCenter(victim, vicLoc);
+
+			if (GetVectorDistance(pos, vicLoc) > radius)
+				continue;
 			
 			bool passed = true;
 
@@ -5984,7 +6022,7 @@ public Action PNPC_PlayerKilled_Pre(int victim, int inflictor, int attacker, Eve
 	return Plugin_Continue;
 }
 
-public Action PNPC_SoundHook(int clients[64], int &numClients, char strSound[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
+/*public Action PNPC_SoundHook(int clients[64], int &numClients, char strSound[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
 	if (StrContains(strSound, "weapons/pan") != -1)
 	{
@@ -5993,4 +6031,48 @@ public Action PNPC_SoundHook(int clients[64], int &numClients, char strSound[PLA
 	}
 
 	return Plugin_Continue;
+}*/
+
+public Native_PNPC_StartLagCompensation(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	SDKCall_StartLagCompensation(client);
+}
+
+public Native_PNPC_EndLagCompensation(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	SDKCall_FinishLagCompensation(client);
+}
+
+void SDKCall_FinishLagCompensation(int client)
+{
+	if(SDKStartLagCompensation && SDKFinishLagCompensation && SDKGetCurrentCommand != view_as<Address>(-1))
+	{
+		Address value = CEndLagCompensationManager;
+		if(value)
+			SDKCall(SDKFinishLagCompensation, value, client);
+	}
+}
+
+void SDKCall_StartLagCompensation(int client)
+{
+	if(SDKStartLagCompensation && SDKFinishLagCompensation && SDKGetCurrentCommand != view_as<Address>(-1))
+	{
+		Address value = CStartLagCompensationManager;
+		if(value)
+			SDKCall(SDKStartLagCompensation, value, client, (GetEntityAddress(client) + view_as<Address>(3512)));
+	}
+}
+
+static MRESReturn DHook_StartLagCompensation(Address address)
+{
+	CStartLagCompensationManager = address;
+	return MRES_Ignored;
+}
+
+static MRESReturn DHook_EndLagCompensation(Address address)
+{
+	CEndLagCompensationManager = address;
+	return MRES_Ignored;
 }
