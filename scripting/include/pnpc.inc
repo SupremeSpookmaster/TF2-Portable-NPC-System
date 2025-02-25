@@ -1456,3 +1456,14 @@ native void PNPC_StartLagCompensation(int client);
  * @param client	The client whose lag compensation to end.
  */
 native void PNPC_EndLagCompensation(int client);
+
+/**
+ * Retrieves the multipliers used for the client's melee range and bounds attributes, stored in the output buffers.
+ * 
+ * @param client		The client whose melee to get attributes from.
+ * @param range			Output buffer in which to store the range multiplier.
+ * @param bounds		Output buffer in which to store the bounds multiplier.
+ * 
+ * @return	The range and bounds multipliers of the given client's melee weapon, stored in the output buffers.
+ */
+native void PNPC_GetCustomMeleeAttributes(int client, float &range, float &bounds);

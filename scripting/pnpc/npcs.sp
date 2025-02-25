@@ -592,7 +592,9 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 	Handle trace;
 	float swingAng[3];
+	PNPC_StartLagCompensation(client);
 	PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult);
+	PNPC_EndLagCompensation(client);
 
 	int target = TR_GetEntityIndex(trace);
 
@@ -921,9 +923,7 @@ public void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float 
 	vecSwingEndHull[1] = vecSwingStart[1] + swingAng[1] * (MELEE_RANGE * 2.1 * rangeMult);
 	vecSwingEndHull[2] = vecSwingStart[2] + swingAng[2] * (MELEE_RANGE * 2.1 * rangeMult);
 
-	PNPC_StartLagCompensation(client);
 	trace = TR_TraceRayFilterEx(vecSwingStart, vecSwingEnd, MASK_SOLID, RayType_EndPoint, BulletAndMeleeTrace, client);
-	PNPC_EndLagCompensation(client);
 	if (TR_GetFraction(trace) >= 1.0)
 	{
 		delete trace;
@@ -1442,6 +1442,7 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_GetClosestNavArea", Native_PNPC_GetClosestNavArea);
 	CreateNative("PNPC_StartLagCompensation", Native_PNPC_StartLagCompensation);
 	CreateNative("PNPC_EndLagCompensation", Native_PNPC_EndLagCompensation);
+	CreateNative("PNPC_GetCustomMeleeAttributes", Native_PNPC_GetCustomMeleeAttributes);
 }
 
 public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
@@ -6075,4 +6076,13 @@ static MRESReturn DHook_EndLagCompensation(Address address)
 {
 	CEndLagCompensationManager = address;
 	return MRES_Ignored;
+}
+
+public Native_PNPC_GetCustomMeleeAttributes(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	SetNativeCellRef(2, f_MeleeRangeMult[client]);
+	SetNativeCellRef(3, f_MeleeBoundsMult[client]);
+
+	return 0;
 }
