@@ -26,9 +26,6 @@ public Plugin myinfo =
 #include "pnpc/animator.sp"
 
 //PERSONAL NOTES:
-//		- Add lag compensation.
-//		- Fix collision with friendly NPCs (likely related to lag comp).
-//		- Projectile explosions MIGHT be blocked by players now, test it.
 //		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
 //		- Doktor Medick's medigun effects do not work on NPCs.
 //		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
