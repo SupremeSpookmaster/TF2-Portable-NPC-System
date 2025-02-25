@@ -294,6 +294,7 @@ bool b_IsProjectile[2049] = { false, ... };
 bool b_IsGib[2049] = { false, ... };
 bool b_IsARespawnRoomVisualiser[2049] = { false, ... };
 bool b_ProjectileAlreadyExploded[2049] = { false, ... };
+bool b_IsABuilding[2049] = { false, ... };
 
 char PNPC_Model[2049][255];
 char PNPC_BleedParticle[2049][255];
@@ -964,7 +965,7 @@ void PNPC_MakeForwards()
 	g_OnPNPCCreated = new GlobalForward("PNPC_OnPNPCCreated", ET_Ignore, Param_Cell);
 	g_OnPNPCDestroyed = new GlobalForward("PNPC_OnPNPCDestroyed", ET_Ignore, Param_Cell);
 	g_OnPNPCHeadshot = new GlobalForward("PNPC_OnPNPCHeadshot", ET_Event, Param_Any, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef);
-	g_OnPNPCDamaged = new GlobalForward("PNPC_OnPNPCTakeDamage", ET_Event, Param_Any, Param_FloatByRef, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef);
+	g_OnPNPCDamaged = new GlobalForward("PNPC_OnPNPCTakeDamage", ET_Event, Param_Any, Param_FloatByRef, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array);
 	g_OnPNPCKilled = new GlobalForward("PNPC_OnPNPCKilled", ET_Event, Param_Any, Param_Float, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnPNPCExtinguished = new GlobalForward("PNPC_OnPNPCExtinguished", ET_Single, Param_Any);
 	g_OnPNPCIgnited = new GlobalForward("PNPC_OnPNPCIgnited", ET_Event, Param_Any, Param_FloatByRef, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_FloatByRef);
@@ -1429,6 +1430,10 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.i_HealthBarDisplay.set", Native_PNPCSetHealthBarDisplay);
 	CreateNative("PNPC.f_HealthBarHeight.get", Native_PNPCGetHealthBarHeight);
 	CreateNative("PNPC.f_HealthBarHeight.set", Native_PNPCSetHealthBarHeight);
+
+	//Miscellaneous:
+	CreateNative("PNPC.b_IsABuilding.get", Native_PNPCGetIsABuilding);
+	CreateNative("PNPC.b_IsABuilding.set", Native_PNPCSetIsABuilding);
 
 	//Global (not specific to the PNPC methodmap) Natives:
 	CreateNative("PNPC_Explosion", Native_PNPCExplosion);
@@ -3084,6 +3089,8 @@ public Action PNPC_OnDamage(int victim, int &attacker, int &inflictor, float &da
 	Call_PushCell(attacker);
 	Call_PushCellRef(damagetype);
 	Call_PushCellRef(damagecustom);
+	Call_PushArrayEx(damageForce, sizeof(damageForce), SM_PARAM_COPYBACK);
+	Call_PushArrayEx(damagePosition, sizeof(damagePosition), SM_PARAM_COPYBACK);
 
 	Call_Finish(result);
 
@@ -3722,7 +3729,7 @@ public any Native_PNPCGetBaseNPC(Handle plugin, int numParams)
 	return TheNPCs.FindNPCByEntIndex(GetNativeCell(1));
 }
 
-public any Native_PNPCGetExists(Handle plugin, int numParams) { return IExist[GetNativeCell(1)]; }
+public any Native_PNPCGetExists(Handle plugin, int numParams) { if (!IsValidEntity(GetNativeCell(1))) { return false; } return IExist[GetNativeCell(1)]; }
 public int Native_PNPCSetExists(Handle plugin, int numParams) 
 {
 	IExist[GetNativeCell(1)] = GetNativeCell(2);
@@ -5162,6 +5169,9 @@ public int Native_PNPCSetGasApplicant(Handle plugin, int numParams)
 
 	return 0;
 }
+
+public any Native_PNPCGetIsABuilding(Handle plugin, int numParams) { return b_IsABuilding[GetNativeCell(1)]; }
+public int Native_PNPCSetIsABuilding(Handle plugin, int numParams) { b_IsABuilding[GetNativeCell(1)] = GetNativeCell(2); return 0; }
 
 public any Native_PNPCApplyGas(Handle plugin, int numParams)
 {

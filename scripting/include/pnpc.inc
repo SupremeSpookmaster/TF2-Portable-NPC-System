@@ -668,6 +668,12 @@ methodmap PNPC < CBaseCombatCharacter
 		public native get();
 	}
 
+	property bool b_IsABuilding
+	{
+		public native get();
+		public native set(bool value);
+	}
+
 	property Function g_Logic
 	{
 		public native set(Function value);
@@ -1025,10 +1031,12 @@ forward Action PNPC_OnPNPCHeadshot(PNPC npc, int weapon, int inflictor, int atta
  * @param attacker		The entity which attacked the PNPC.
  * @param damagetype	Damage bits.
  * @param damagecustom	Custom damage bits.
+ * @param damageForce	Force of the damage.
+ * @param damagePosition	Position of the damage.
  * 
  * @return	Plugin_Changed if you changed any values, Plugin_Handled or Plugin_Stop to prevent the damage, or Plugin_Continue to proceed as normal.
  */
-forward Action PNPC_OnPNPCTakeDamage(PNPC npc, float &damage, int weapon, int inflictor, int attacker, int &damagetype, int &damagecustom);
+forward Action PNPC_OnPNPCTakeDamage(PNPC npc, float &damage, int weapon, int inflictor, int attacker, int &damagetype, int &damagecustom, float damageForce[3], float damagePosition[3]);
 
 /**
  * Called when a PNPC is killed.
