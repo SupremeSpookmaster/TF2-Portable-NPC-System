@@ -3124,6 +3124,9 @@ public void PNPC_InternalLogic(int ref)
 		npc.f_NextThinkTime = gt + npc.f_ThinkRate;
 	}
 	
+	if (npc.GetBaseNPC() == INVALID_NPC)
+		return;
+
 	if (gt >= npc.f_EndTime && npc.f_EndTime > 0.0)
 	{
 		RemoveEntity(ent);
@@ -3860,6 +3863,8 @@ public any Native_PNPCGetPathFollower(Handle plugin, int numParams)
 public int Native_PNPCStartPathing(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	if (npc.GetBaseNPC() == INVALID_NPC)
+		return 0;
 	npc.GetPathFollower().SetMinLookAheadDistance(100.0);
 	npc.GetLocomotion().Run();
 
@@ -3869,6 +3874,8 @@ public int Native_PNPCStartPathing(Handle plugin, int numParams)
 public int Native_PNPCStopPathing(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	if (npc.GetBaseNPC() == INVALID_NPC)
+		return 0;
 	npc.GetPathFollower().Invalidate();
 	npc.GetLocomotion().Stop();
 
@@ -3934,6 +3941,9 @@ public any Native_PNPCGetBot(Handle plugin, int numParams)
 
 public any Native_PNPCGetGroundSpeed(Handle plugin, int numParams)
 {
+	if (view_as<PNPC>(GetNativeCell(1)).GetBaseNPC() == INVALID_NPC)
+		return 0.0;
+
 	return view_as<PNPC>(GetNativeCell(1)).GetLocomotion().GetGroundSpeed();
 }
 
@@ -3952,6 +3962,8 @@ public int Native_PNPCGetPoseMoveY(Handle plugin, int numParams)
 public int Native_PNPCGetGroundMotionVector(Handle plugin, int numParams)
 {
 	float vec[3];
+	if (view_as<PNPC>(GetNativeCell(1)).GetBaseNPC() == INVALID_NPC)
+		return 0;
 	CBaseNPC_Locomotion loco = view_as<PNPC>(GetNativeCell(1)).GetLocomotion();
 	loco.GetGroundMotionVector(vec);
 	SetNativeArray(2, vec, 3);
@@ -5233,6 +5245,8 @@ public any Native_PNPCRemoveGas(Handle plugin, int numParams)
 
 public Action PNPC_PassFilter(int ent1, int ent2, bool &result)
 {
+	if (!IsValidEntity(ent1) || !IsValidEntity(ent2))
+		return Plugin_Continue;
 	if (!PNPC_IsNPC(ent1) && !PNPC_IsNPC(ent2))
 		return Plugin_Continue;
 
