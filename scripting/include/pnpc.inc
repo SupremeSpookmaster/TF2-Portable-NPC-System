@@ -546,6 +546,13 @@ methodmap PNPC < CBaseCombatCharacter
 	public native bool IsPositionValid(float pos[3], float intersection[3] = NULL_VECTOR);
 
 	/**
+	 * Checks to see if this PNPC is on the ground.
+	 * 
+	 * @return True if on the ground, false otherwise.
+	 */
+	public native bool IsOnGround();
+
+	/**
 	 * Checks to see if this PNPC has a given aspect.
 	 * 
 	 * @param aspect		Aspect name, IE "my_aspect".

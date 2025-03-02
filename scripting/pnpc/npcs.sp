@@ -1285,6 +1285,7 @@ void PNPC_MakeNatives()
 	//Locomotion:
 	CreateNative("PNPC.GetLocomotion", Native_PNPCGetLocomotion);
 	CreateNative("PNPC.GetGroundMotionVector", Native_PNPCGetGroundMotionVector);
+	CreateNative("PNPC.IsOnGround", Native_PNPCIsOnGround);
 
 	//CBaseNPC:
 	CreateNative("PNPC.GetBaseNPC", Native_PNPCGetBaseNPC);
@@ -3970,6 +3971,14 @@ public int Native_PNPCGetGroundMotionVector(Handle plugin, int numParams)
 	SetNativeArray(2, vec, 3);
 
 	return 0;
+}
+
+public any Native_PNPCIsOnGround(Handle plugin, int numParams)
+{
+	if (view_as<PNPC>(GetNativeCell(1)).GetBaseNPC() == INVALID_NPC)
+		return false;
+	CBaseNPC_Locomotion loco = view_as<PNPC>(GetNativeCell(1)).GetLocomotion();
+	return loco.IsOnGround();
 }
 
 public int Native_PNPCRagdoll(Handle plugin, int numParams)
