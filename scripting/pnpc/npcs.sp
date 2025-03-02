@@ -1254,6 +1254,7 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.f_Speed.get", Native_PNPCGetSpeed);
 	CreateNative("PNPC.f_MaxSpeed.set", Native_PNPCSetMaxSpeed);
 	CreateNative("PNPC.f_MaxSpeed.get", Native_PNPCGetMaxSpeed);
+	CreateNative("PNPC.SetVelocity", Native_PNPCSetVelocity);
 
 	//Think Rate and Next Think Time:
 	CreateNative("PNPC.f_ThinkRate.set", Native_PNPCSetThinkRate);
@@ -6109,4 +6110,32 @@ public Native_PNPC_GetCustomMeleeAttributes(Handle plugin, int numParams)
 	SetNativeCellRef(3, f_MeleeBoundsMult[client]);
 
 	return 0;
+}
+
+float f_TargetVel[2049][3];
+
+public Native_PNPCSetVelocity(Handle plugin, int numParams)
+{
+	int ent = GetNativeCell(1);
+	float vel[3];
+	GetNativeArray(2, vel, sizeof(vel));
+	SDKUnhook(ent, SDKHook_Think, JumpThink);
+	f_TargetVel[ent] = vel;
+	SDKHook(ent, SDKHook_Think, JumpThink);
+}
+
+public void PNPC_ActuallySetVelocity(PNPC npc, float vel[3])
+{
+	if (npc.GetBaseNPC() == INVALID_NPC)
+		return;
+
+	npc.GetLocomotion().Jump();
+	npc.GetLocomotion().SetVelocity(vel);
+}
+
+public void JumpThink(int ent)
+{	
+	PNPC npc = view_as<PNPC>(ent);
+	PNPC_ActuallySetVelocity(npc, f_TargetVel[ent]);
+	SDKUnhook(ent, SDKHook_Think, JumpThink);
 }

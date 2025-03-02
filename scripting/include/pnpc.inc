@@ -275,6 +275,13 @@ methodmap PNPC < CBaseCombatCharacter
 	public native void SetPlaybackRate(float rate);
 
 	/**
+	 * Sets the PNPC's velocity.
+	 * 
+	 * @param vel	The velocity to set.
+	 */
+	public native void SetVelocity(float vel[3]);
+
+	/**
 	 * Adds a gesture to the PNPC.
 	 * 
 	 * @param gesture		The gesture to add. EX: "ACT_MP_ATTACK_STAND_MELEE".
