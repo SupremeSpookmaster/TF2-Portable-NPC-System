@@ -547,18 +547,19 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[]weaponname,
 	else
 	{
 		DataPack pack = new DataPack();
-		CreateDataTimer(0.25, PNPC_DelayedCustomMelee, pack, TIMER_FLAG_NO_MAPCHANGE);
+		RequestFrame(PNPC_DelayedCustomMelee, pack);
 		WritePackCell(pack, GetClientUserId(client));
 		WritePackCell(pack, EntIndexToEntRef(weapon));
 		WritePackFloat(pack, rangeMult);
 		WritePackFloat(pack, boundsMult);
 		WritePackCell(pack, result);
+		WritePackFloat(pack, GetGameTime() + 0.175);
 	}
 
 	return Plugin_Continue;
 }
 
-public Action PNPC_DelayedCustomMelee(Handle delayed, DataPack pack)
+public void PNPC_DelayedCustomMelee(DataPack pack)
 {
 	ResetPack(pack);
 
@@ -567,13 +568,22 @@ public Action PNPC_DelayedCustomMelee(Handle delayed, DataPack pack)
 	float rangeMult = ReadPackFloat(pack);
 	float boundsMult = ReadPackFloat(pack);
 	bool crit = ReadPackCell(pack);
+	float doTime = ReadPackFloat(pack);
 
 	if (!IsValidMulti(client) || !IsValidEntity(weapon))
-		return Plugin_Continue;
+	{
+		delete pack;
+		return;
+	}
 
-	PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, crit, false);
+	if (GetGameTime() >= doTime)
+	{
+		PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, crit, false);
+		delete pack;
+		return;
+	}
 
-	return Plugin_Continue;
+	RequestFrame(PNPC_DelayedCustomMelee, pack);
 }
 
 #define MELEE_RANGE 64.0
