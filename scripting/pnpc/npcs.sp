@@ -953,6 +953,9 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 	if (I_AM_DEAD[entity])
 		return false;
 
+	if (IsPayloadCart(entity))
+		return false;
+
 	if(b_IsARespawnRoomVisualiser[entity])
 	{
 		return false;
