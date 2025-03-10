@@ -2233,6 +2233,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		npc.f_Speed = speed;
 		npc.f_MaxSpeed = speed;
 		npc.f_ThinkRate = thinkRate;
+		npc.f_NextThinkTime = GetGameTime() + npc.f_ThinkRate;
 		npc.SetBleedParticle(VFX_DEFAULT_BLEED);
 		npc.SetBoundingBox(DEFAULT_MINS, DEFAULT_MAXS);
 		npc.SetConfigName(configName);
@@ -2749,7 +2750,7 @@ public bool PNPC_IsTraversable(CBaseNPC_Locomotion loco, int other, TraverseWhen
 {
 	int bot = loco.GetBot().GetNextBotCombatCharacter();
 
-	return !(Brush_Is_Solid(other) && !IsAlly(bot, other));
+	return !((Brush_Is_Solid(other) && !IsAlly(bot, other)) || IsPayloadCart(other));
 }
 
 public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePos[3])
@@ -3009,7 +3010,7 @@ public void PNPC_AttemptBleed(int victim, int attacker, int inflictor, int weapo
 
 public Action PNPC_OnDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (IsAlly(victim, attacker))
+	if (IsAlly(victim, attacker) || IsPayloadCart(attacker) || IsPayloadCart(inflictor))
 	{
 		damage = 0.0;
 		return Plugin_Changed;
