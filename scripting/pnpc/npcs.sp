@@ -438,6 +438,12 @@ void PNPC_MapStart()
 		PrecacheSound(g_KnifeHitFlesh[i]);
 
 	g_NPCsList = new Queue();
+
+	for (int i = 0; i <= MaxClients; i++)
+	{
+		for (int j = 0; j <= MaxClients; j++)
+			f_WasBackstabbed[i][j] = 0.0;
+	}
 }
 
 void PNPC_MapEnd()
@@ -605,7 +611,6 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	float swingAng[3];
 	PNPC_StartLagCompensation(client);
 	PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult);
-	PNPC_EndLagCompensation(client);
 
 	int target = TR_GetEntityIndex(trace);
 
@@ -824,6 +829,8 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	}
 
 	delete trace;
+
+	PNPC_EndLagCompensation(client);
 }
 
 public void PNPC_DisguiseAsVictim(DataPack pack)
@@ -3747,7 +3754,7 @@ public any Native_PNPCGetBaseNPC(Handle plugin, int numParams)
 	return TheNPCs.FindNPCByEntIndex(GetNativeCell(1));
 }
 
-public any Native_PNPCGetExists(Handle plugin, int numParams) { if (!IsValidEntity(GetNativeCell(1))) { return false; } return IExist[GetNativeCell(1)]; }
+public any Native_PNPCGetExists(Handle plugin, int numParams) { if (!IsValidEntity(GetNativeCell(1)) || GetNativeCell(1) < 0 || GetNativeCell(1) > 2048) { return false; } return IExist[GetNativeCell(1)]; }
 public int Native_PNPCSetExists(Handle plugin, int numParams) 
 {
 	IExist[GetNativeCell(1)] = GetNativeCell(2);
