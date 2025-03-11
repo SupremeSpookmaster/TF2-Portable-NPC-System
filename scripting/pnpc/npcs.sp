@@ -970,14 +970,11 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 
 	if (IsValidEntity(iExclude))
 	{
-		if (HasEntProp(iExclude, Prop_Send, "m_iTeamNum") && HasEntProp(entity, Prop_Send, "m_iTeamNum"))
-		{
-			if (GetEntProp(iExclude, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"))
-				return false;
-		}
+		if (GetEntProp(iExclude, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"))
+			return false;
 	}
 
-	return true;
+	return Brush_Is_Solid(entity);
 }
 
 void PNPC_MakeForwards()
