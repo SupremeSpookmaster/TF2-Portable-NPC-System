@@ -2200,6 +2200,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 	float lifespan = GetNativeCell(13);
 	GetNativeString(14, configName, sizeof(configName));
 	GetNativeString(15, name, sizeof(name));
+	bool skipStuck = GetNativeCell(16);
 
 	int ent = CreateEntityByName(NPC_NAME);
 	if (IsValidEntity(ent))
@@ -2283,11 +2284,12 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		base.flMaxYawRate = 225.0;
 		base.flDeathDropHeight = 999999.0;
 
-		float intersection[3];
-		if (!npc.IsPositionValid(pos, intersection))
+		if (!skipStuck)
 		{
-			//TODO: Eventually improve this logic so that the spawn point just backs off from the intersection.
-			PNPC_GetClosestNavArea(pos).GetCenter(pos);
+			DataPack pack = new DataPack();
+			WritePackCell(pack, EntIndexToEntRef(npc.Index));
+			WritePackFloatArray(pack, pos, sizeof(pos));
+			RequestFrame(PNPC_CheckStuckNextFrame, pack);
 		}
 
 		TeleportEntity(ent, pos, ang);
@@ -2308,6 +2310,28 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 	}
 
 	return -1;
+}
+
+public void PNPC_CheckStuckNextFrame(DataPack pack)
+{
+	ResetPack(pack);
+	int ent = EntRefToEntIndex(ReadPackCell(pack));
+	float pos[3];
+	ReadPackFloatArray(pack, pos, sizeof(pos));
+	delete pack;
+
+	if (!IsValidEntity(ent))
+		return;
+
+	PNPC npc = view_as<PNPC>(ent);
+	float intersection[3];
+	if (!npc.IsPositionValid(pos, intersection))
+	{
+		//TODO: Eventually improve this logic so that the spawn point just backs off from the intersection.
+		PNPC_GetClosestNavArea(pos).GetCenter(pos);
+	}
+
+	TeleportEntity(ent, pos);
 }
 
 public void PNPC_Touch(int entity, int other)
@@ -4708,6 +4732,9 @@ public any Native_PNPCIsPositionValid(Handle plugin, int numParams)
 	float pos[3], mins[3], maxs[3], intersection[3];
 	GetNativeArray(2, pos, sizeof(pos));
 
+	if (IsPointOnGround(pos))
+		pos[2] += 10.0;
+
 	//if (TR_PointOutsideWorld(pos))
 	//	return false;
 
@@ -4879,7 +4906,7 @@ public bool PNPC_AOETrace(entity, contentsmask, target)
 public bool PNPC_StuckTrace(int entity, int contentsmask, int user)
 {
 	PNPC npc = view_as<PNPC>(user);
-	return (entity == user || PNPC_IsValidTarget(entity, npc.i_Team))
+	return !(entity == user || PNPC_IsValidTarget(entity, npc.i_Team)) && Brush_Is_Solid(entity);
 }
 
 public bool PNPC_LOSCheck(entity, contentsMask)

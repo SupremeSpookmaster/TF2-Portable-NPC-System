@@ -442,6 +442,11 @@ public bool Trace_OnlyHitWorld(entity, contentsMask)
 	return entity == 0;
 }
 
+public bool Trace_OnlyHitSolids(entity, contentsMask)
+{
+	return Brush_Is_Solid(entity);
+}
+
 public bool TraceEntityFilterPlayer_GAT(entity, contentsMask)
 {
 	return entity > MaxClients;
@@ -2364,6 +2369,19 @@ public bool TraceEntityEnumerator_EnumerateTriggers(int entity, int client)
 	
 	return true;
 }
+
+stock bool IsPointOnGround(float pos[3])
+{
+	float ang[3], endPos[3];
+	ang[0] = 90.0;
+
+	TR_TraceRayFilter(pos, ang, MASK_SHOT, RayType_Infinite, Trace_OnlyHitSolids);
+	TR_GetEndPosition(endPos);
+
+	return GetVectorDistance(pos, endPos) <= 10.0;
+}
+
+
 
 stock bool IsABuilding(int entity)
 {

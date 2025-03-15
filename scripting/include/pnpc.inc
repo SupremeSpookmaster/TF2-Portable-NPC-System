@@ -105,8 +105,9 @@ methodmap PNPC < CBaseCombatCharacter
 	 * @param lifespan		Time until the NPC is automatically destroyed. <= 0.0: do not delete.
 	 * @param config		The name of the config associated with this PNPC, relative to sourcemod/configs/npcs. DOES NOT include the .cfg.
 	 * @param name			The name of this PNPC, as displayed in-game.
+	 * @param skipStuck 	If true: skip the initial stuck check run when attempting to spawn this NPC.
 	 */
-	public native PNPC(char[] model, TFTeam team, int health = 200, int maxHealth = 200, int skin = -1, float scale = 1.0, float speed = 300.0, Function logic = INVALID_FUNCTION, char plugin[255] = "", float thinkRate = 0.0, float pos[3] = NULL_VECTOR, float ang[3] = NULL_VECTOR, float lifespan = 0.0, char config[255] = "", char name[255] = "");
+	public native PNPC(char[] model, TFTeam team, int health = 200, int maxHealth = 200, int skin = -1, float scale = 1.0, float speed = 300.0, Function logic = INVALID_FUNCTION, char plugin[255] = "", float thinkRate = 0.0, float pos[3] = NULL_VECTOR, float ang[3] = NULL_VECTOR, float lifespan = 0.0, char config[255] = "", char name[255] = "", bool skipStuckCheck = false);
 
 	/**
 	 * Retrieves the PNPC's model, stored in the output buffer.
