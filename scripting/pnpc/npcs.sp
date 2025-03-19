@@ -976,7 +976,7 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 			return false;
 	}
 
-	return Brush_Is_Solid(entity);
+	return Brush_Is_Solid(entity) || PNPC_IsNPC(entity);
 }
 
 void PNPC_MakeForwards()
@@ -2838,7 +2838,7 @@ public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage,
 	}
 }
 
-public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3])
+public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
 	PNPC npc = view_as<PNPC>(victim);
 
@@ -2854,50 +2854,13 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 		event.SetBool("crit", (damagetype & DMG_ACID) == DMG_ACID);
 
 		if(IsValidClient(attacker))
-		{
 			event.SetInt("attacker_player", GetClientUserId(attacker));
-			event.SetInt("weaponid", 0);
-		}
+		else
+			event.SetInt("attacker_player", 0);
+
+		event.SetInt("weaponid", 0);
 
 		event.Fire();
-	}
-
-	PNPC_AttemptIgnite(victim, attacker, inflictor, weapon, damage);
-	PNPC_AttemptBleed(victim, attacker, inflictor, weapon);
-
-	if (IsValidEntity(attacker) && attacker > 0 && !IsABuilding(attacker) && npc.b_Milked)
-	{
-		PNPC_HealEntity(attacker, RoundToFloor(damage * 0.6), 1.0, npc.i_Milker);
-	}
-
-	if (damage > 0.0)
-	{
-		npc.PlayRandomSound("sound_impact");
-
-		if (GetGameTime() >= f_NextFlinch[victim])
-		{
-			if (!StrEqual(PNPC_FlinchSequence[victim], ""))
-				npc.AddGesture(PNPC_FlinchSequence[victim]);
-
-			npc.PlayRandomSound("sound_hurt");
-
-			f_NextFlinch[victim] = GetGameTime() + 0.2;
-		}
-
-		if (!StrEqual(PNPC_BleedParticle[victim], ""))
-		{
-			float dPos[3];
-			dPos = damagePosition;
-
-			if (Vector_Is_Null(dPos))
-			{
-				dPos = GetWorldSpaceCenter(victim);
-				for (int i = 0; i < 3; i++)
-					dPos[i] += GetRandomFloat(-20.0 * npc.f_Scale, 20.0 * npc.f_Scale);
-			}
-
-			SpawnParticle(dPos, PNPC_BleedParticle[victim], 0.66);	//TODO: Make this a TE entity. Also do the same to crit text.
-		}
 	}
 
 	f_LastDamagedAt[victim][attacker] = GetGameTime();
@@ -2908,6 +2871,44 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 	}
 	else
 	{
+		PNPC_AttemptIgnite(victim, attacker, inflictor, weapon, damage);
+		PNPC_AttemptBleed(victim, attacker, inflictor, weapon);
+
+		if (IsValidEntity(attacker) && attacker > 0 && !IsABuilding(attacker) && npc.b_Milked)
+		{
+			PNPC_HealEntity(attacker, RoundToFloor(damage * 0.6), 1.0, npc.i_Milker);
+		}
+
+		if (damage > 0.0)
+		{
+			npc.PlayRandomSound("sound_impact");
+
+			if (GetGameTime() >= f_NextFlinch[victim])
+			{
+				if (!StrEqual(PNPC_FlinchSequence[victim], ""))
+					npc.AddGesture(PNPC_FlinchSequence[victim]);
+
+				npc.PlayRandomSound("sound_hurt");
+
+				f_NextFlinch[victim] = GetGameTime() + 0.2;
+			}
+
+			if (!StrEqual(PNPC_BleedParticle[victim], ""))
+			{
+				float dPos[3];
+				dPos = damagePosition;
+
+				if (Vector_Is_Null(dPos))
+				{
+					dPos = GetWorldSpaceCenter(victim);
+					for (int i = 0; i < 3; i++)
+						dPos[i] += GetRandomFloat(-20.0 * npc.f_Scale, 20.0 * npc.f_Scale);
+				}
+
+				SpawnParticle(dPos, PNPC_BleedParticle[victim], 0.66);	//TODO: Make this a TE entity. Also do the same to crit text.
+			}
+		}
+
 		view_as<PNPC>(victim).UpdateHealthBar();
 	}
 }
@@ -3040,7 +3041,7 @@ public void PNPC_AttemptBleed(int victim, int attacker, int inflictor, int weapo
 
 public Action PNPC_OnDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (IsAlly(victim, attacker) || IsPayloadCart(attacker) || IsPayloadCart(inflictor))
+	if (IsAlly(victim, attacker)/* || IsPayloadCart(attacker) || IsPayloadCart(inflictor)*/)
 	{
 		damage = 0.0;
 		return Plugin_Changed;
@@ -4786,6 +4787,8 @@ public any Native_PNPCIsPositionValid(Handle plugin, int numParams)
 		}
 	}
 
+	mins[2] += npc.f_StepSize;
+
 	TR_TraceHullFilter(pos, pos, mins, maxs, MASK_NPCSOLID, PNPC_StuckTrace, npc.Index);
 	TR_GetEndPosition(intersection);
 	SetNativeArray(3, intersection, 3);
@@ -4951,7 +4954,7 @@ public bool PNPC_AOETrace(entity, contentsmask, target)
 
 public bool PNPC_StuckTrace(int entity, int contentsmask, int user)
 {
-	if (IsValidClient(entity) || PNPC_IsNPC(entity) || entity == user)
+	if (IsValidClient(entity) || PNPC_IsNPC(entity) || entity == user || IsABuilding(entity))
 		return false;
 
 	return Brush_Is_Solid(entity);
@@ -5368,18 +5371,13 @@ public Action PNPC_PassFilter(int ent1, int ent2, bool &result)
 			result = false;
 			return Plugin_Handled;
 		}
-		/*else
-		{
-			result = GetEntProp(ent1, Prop_Send, "m_iTeamNum") != GetEntProp(ent2, Prop_Send, "m_iTeamNum");
-			return Plugin_Changed;
-		}*/
 	}
 
-	if (IsValidClient(ent1) || IsValidClient(ent2))
+	/*if (IsValidClient(ent1) || IsValidClient(ent2))
 	{
 		result = false;
 		return Plugin_Handled;
-	}
+	}*/
 
 	return Plugin_Continue;
 }

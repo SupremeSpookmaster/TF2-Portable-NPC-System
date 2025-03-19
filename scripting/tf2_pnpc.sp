@@ -245,7 +245,7 @@ public Action PNPC_Destroy(int client, int args)
 			CPrintToChat(client, "{orange}[Portable NPC System] {default}You are not aiming at a valid PNPC.");
 			EmitSoundToClient(client, SND_ADMINCOMMAND_ERROR);
 		}
-	}	
+	}
 	
 	return Plugin_Continue;
 }
