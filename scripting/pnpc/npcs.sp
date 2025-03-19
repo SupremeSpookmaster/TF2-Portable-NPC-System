@@ -282,6 +282,8 @@ float f_PunchForce[2049][3];
 float f_LastSafePosition[2049][3];
 float f_LastDamagedAt[2049][2049];
 float f_WasBackstabbed[2049][2049];
+float f_LastValidPosition[2049][3];
+float f_LastValidAt[2049] = { 0.0, ... };
 
 bool b_IsInUpdateGroundConstraint = false;
 bool IExist[2049] = { false, ... };
@@ -1860,6 +1862,8 @@ public void PNPC_OnEntityDestroyed(int entity)
 	f_MedigunHealthBucket[entity] = 0.0;
 	f_DecayBucket[entity] = 0.0;
 	f_LastSafePosition[entity] = NULL_VECTOR;
+	f_LastValidPosition[entity] = NULL_VECTOR;
+	f_LastValidAt[entity] = 0.0;
 	if (b_IsGib[entity])
 	{
 		PNPC_RemoveFromList(entity, true);
@@ -2244,6 +2248,9 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 			npc.f_EndTime = GetGameTime() + lifespan;
 		else
 			npc.f_EndTime = 0.0;
+
+		f_LastValidAt[ent] = GetGameTime() + 0.1;
+		f_LastValidPosition[ent] = NULL_VECTOR;
 
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
@@ -2772,8 +2779,8 @@ public bool PNPC_CollisionCheck(int bot, int other)
 public bool PNPC_IsTraversable(CBaseNPC_Locomotion loco, int other, TraverseWhenType when)
 {
 	int bot = loco.GetBot().GetNextBotCombatCharacter();
-
-	return !((Brush_Is_Solid(other) && !IsAlly(bot, other)) || IsPayloadCart(other));
+	
+	return !((Brush_Is_Solid(other) && (!IsAlly(bot, other)) || IsPayloadCart(other)));
 }
 
 public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePos[3])
@@ -3191,6 +3198,7 @@ public void PNPC_InternalLogic(int ref)
 		PNPC_GasLogic(npc, gt);
 		PNPC_CheckTriggerHurt(npc);
 		PNPC_OverhealDecay(npc);
+		PNPC_CheckStuck(npc, gt);
 		npc.UpdateHealthBar();
 
 		if (IsValidEntity(npc.i_PathTarget))
@@ -3204,6 +3212,33 @@ public void PNPC_InternalLogic(int ref)
 	npc.GetPathFollower().Update(npc.GetBot());
 
 	RequestFrame(PNPC_InternalLogic, ref);
+}
+
+public void PNPC_CheckStuck(PNPC npc, float gt)
+{
+	float pos[3];
+	npc.GetAbsOrigin(pos);
+	if (!npc.IsPositionValid(pos))
+	{
+		if (gt - f_LastValidAt[npc.Index] >= 0.5)	//Only teleport if we've been stuck for at least 0.5 seconds
+		{
+			if (IsNullVector(f_LastValidPosition[npc.Index]))
+			{
+				float navPos[3];
+				CNavArea navi = PNPC_GetClosestNavArea(pos);
+				navi.GetCenter(navPos);
+				TeleportEntity(npc.Index, navPos);
+			}
+			else
+				TeleportEntity(npc.Index, f_LastValidPosition[npc.Index]);
+		}
+
+		return;
+	}
+	
+	f_LastValidAt[npc.Index] = gt;
+	for (int i = 0; i < 3; i++)
+		f_LastValidPosition[npc.Index][i] = pos[i];
 }
 
 //Again, thank you Artvin/BatFox:
@@ -4732,13 +4767,24 @@ public any Native_PNPCIsPositionValid(Handle plugin, int numParams)
 	float pos[3], mins[3], maxs[3], intersection[3];
 	GetNativeArray(2, pos, sizeof(pos));
 
-	if (IsPointOnGround(pos))
-		pos[2] += 10.0;
-
 	//if (TR_PointOutsideWorld(pos))
 	//	return false;
 
 	npc.GetBoundingBox(mins, maxs);
+
+	if (IsPointOnGround(pos))
+	{
+		pos[2] += 2.0;
+		maxs[2] *= 0.5;
+	}
+	else
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			mins[j] -= 1.0;
+			maxs[j] += 1.0;
+		}
+	}
 
 	TR_TraceHullFilter(pos, pos, mins, maxs, MASK_NPCSOLID, PNPC_StuckTrace, npc.Index);
 	TR_GetEndPosition(intersection);
@@ -4905,8 +4951,10 @@ public bool PNPC_AOETrace(entity, contentsmask, target)
 
 public bool PNPC_StuckTrace(int entity, int contentsmask, int user)
 {
-	PNPC npc = view_as<PNPC>(user);
-	return !(entity == user || PNPC_IsValidTarget(entity, npc.i_Team)) && Brush_Is_Solid(entity);
+	if (IsValidClient(entity) || PNPC_IsNPC(entity) || entity == user)
+		return false;
+
+	return Brush_Is_Solid(entity);
 }
 
 public bool PNPC_LOSCheck(entity, contentsMask)
