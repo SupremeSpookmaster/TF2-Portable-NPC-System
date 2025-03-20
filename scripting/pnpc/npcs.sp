@@ -3689,7 +3689,7 @@ public int Native_PNPCSetHealth(Handle plugin, int numParams)
 	return 0; 
 }
 
-public int Native_PNPCGetMaxHealth(Handle plugin, int numParams) { return GetEntProp(GetNativeCell(1), Prop_Data, "m_iMaxHealth"); }
+public int Native_PNPCGetMaxHealth(Handle plugin, int numParams){ return GetEntProp(GetNativeCell(1), Prop_Data, "m_iMaxHealth"); }
 public int Native_PNPCSetMaxHealth(Handle plugin, int numParams) 
 {
 	int ent = GetNativeCell(1);
@@ -3721,6 +3721,9 @@ public int Native_PNPCSetYawRate(Handle plugin, int numParams)
 public any Native_PNPCGetStepSize(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	if (npc.GetBaseNPC() == INVALID_NPC)
+		return 0.0;
+
 	return npc.GetBaseNPC().flStepSize;
 }
 
