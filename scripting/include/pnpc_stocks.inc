@@ -2321,7 +2321,7 @@ stock bool CollisionGroupIsSolid(int entity)
 {
 	int group = GetEntProp(entity, Prop_Send, "m_CollisionGroup");
 	return (group != 1 && group != 2 && group != 3 && group != 10 && group != 12 && group != 13 && 
-	group != 14 && group != 16 && group != 17 && group != 18 && group != 25 && group != 21 && group != 26);
+	group != 14 && group != 16 && group != 17 && group != 18 && group != 25 && group != 26);
 }
 
 stock bool IsAlly(int me, int them)

@@ -1139,6 +1139,9 @@ MRESReturn PNPC_CanMedigunHealTarget(int medigun, Handle hReturn, Handle hParams
 
 public bool PNPC_AlreadyBeingHealedByMedigun(int target, int medigun)
 {
+	if (g_AttachedMediguns[target] == null)
+		return false;
+		
 	if (GetArraySize(g_AttachedMediguns[target]) < 1)
 		return false;
 
