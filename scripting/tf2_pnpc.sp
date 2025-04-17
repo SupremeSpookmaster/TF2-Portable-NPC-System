@@ -26,16 +26,6 @@ public Plugin myinfo =
 #include "pnpc/animator.sp"
 
 //PERSONAL NOTES:
-//		//////// THE FOLLOWING ARE BUGS SPECIFIC TO CHAOS FORTRESS, AND MUST BE FIXED BEFORE THE OPEN BETA:
-//		- Doktor Medick's medigun effects do not work on NPCs.
-//		- Doktor Medick's Cocainum does not work on NPCs (the initial blast damage works on enemies, everything else is nonfunctional).
-//		- CBS does not change his melee when hitting NPCs.
-//		- The m_iHealth property is fucking stupid, it uses Prop_Data for entities and Prop_Send for clients. Need to fix this in EVERY plugin used for CF...
-//		- Anything involving damage/healing dealt to NPCs will not work. This includes:
-//			- All ult charge and special resource mechanics.
-//		- Surprisingly, Gadgeteer's drones actually work as intended against NPCs. This HAS to be too good to be true, test it later.
-//		- Disguises should make the wearer match the target's model scale.
-//		//////// THE FOLLOWING DO NOT NEED TO BE DONE PRE-CF BETA, AND SHOULD BE SKIPPED FOR NOW FOR THE SAKE OF TIME:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
 //			- Chaser (movement): chases the nearest player. Can be customized to specify the target's team as well as whether or not it will predict their movement.
 //			- Zoner (movement): runs away from players if they are too close, but will chase them if they are too far. Can be customized to specify the team to flee from/chase, as well as whether it turns away or strafes backwards when fleeing.
