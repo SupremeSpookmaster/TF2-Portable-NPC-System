@@ -284,6 +284,7 @@ float f_LastDamagedAt[2049][2049];
 float f_WasBackstabbed[2049][2049];
 float f_LastValidPosition[2049][3];
 float f_LastValidAt[2049] = { 0.0, ... };
+float f_MovePoseMult[2049] = { 0.0, ... };
 
 bool b_IsInUpdateGroundConstraint = false;
 bool IExist[2049] = { false, ... };
@@ -1327,6 +1328,8 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.RemoveGesture", Native_PNPCRemoveGesture);
 	CreateNative("PNPC.i_PoseMoveX.get", Native_PNPCGetPoseMoveX);
 	CreateNative("PNPC.i_PoseMoveY.get", Native_PNPCGetPoseMoveY);
+	CreateNative("PNPC.f_MovePoseMultiplier.get", Native_PNPCGetMovePoseMultiplier);
+	CreateNative("PNPC.f_MovePoseMultiplier.set", Native_PNPCSetMovePoseMultiplier);
 
 	//Pathing and Movement:
 	CreateNative("PNPC.GetPathFollower", Native_PNPCGetPathFollower);
@@ -2242,6 +2245,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		npc.f_Speed = speed;
 		npc.f_MaxSpeed = speed;
 		npc.f_ThinkRate = thinkRate;
+		npc.f_MovePoseMultiplier = 1.0;
 		npc.f_NextThinkTime = GetGameTime() + npc.f_ThinkRate;
 		npc.SetBleedParticle(VFX_DEFAULT_BLEED);
 		npc.SetBoundingBox(DEFAULT_MINS, DEFAULT_MAXS);
@@ -3489,6 +3493,8 @@ public void PNPC_SetMovePose(PNPC npc)
 		if (mult > 1.0)
 			mult = 1.0;
 
+		mult *= npc.f_MovePoseMultiplier;
+
 		if (npc.i_PoseMoveX >= 0)
 			npc.SetPoseParameter(npc.i_PoseMoveX, GetVectorDotProduct(motion, front) * mult);
 		if (npc.i_PoseMoveY >= 0)
@@ -4056,6 +4062,9 @@ public int Native_PNPCGetPoseMoveY(Handle plugin, int numParams)
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
 	return npc.LookupPoseParameter("move_y");
 }
+
+public any Native_PNPCGetMovePoseMultiplier(Handle plugin, int numParams) { return f_MovePoseMult[GetNativeCell(1)]; }
+public int Native_PNPCGetMovePoseMultiplier(Handle plugin, int numParams) { f_MovePoseMult[GetNativeCell(1)] = GetNativeCell(2); return 0; }
 
 public int Native_PNPCGetGroundMotionVector(Handle plugin, int numParams)
 {

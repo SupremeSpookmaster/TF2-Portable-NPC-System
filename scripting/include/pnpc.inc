@@ -617,285 +617,350 @@ methodmap PNPC < CBaseCombatCharacter
 	 */
 	public native void UpdateHealthBar();
 
+	//The NPC's entity index.
 	property int Index
 	{
 		public native get();
 	}
 
+	//The NPC's current health bar index.
 	property int i_HealthBar
 	{
 		public native get();
 	}
 
+	//The type of health bar to be displayed for this NPC.
+	//TODO: Fill in
 	property int i_HealthBarType
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The method which should be used to display this NPC's health bar.
+	//TODO: Fill in
 	property int i_HealthBarDisplay
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The height from the NPC's root, in hammer units, at which its health bar should be rendered.
+	//This scales with the PNPC.f_Scale property.
 	property float f_HealthBarHeight
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//DO NOT touch this.
 	property bool b_Exists
 	{
 		public native get();
 		public native set(bool value);
 	}
 
+	//If true: this NPC will always be gibbed when it dies.
 	property bool b_GibsForced
 	{
 		public native get();
 		public native set(bool value);
 	}
 
+	//Whether or not the NPC is currently ignited.
 	property bool b_Burning
 	{
 		public native get();
 	}
 
+	//Whether or not the NPC's afterburn particle should be green.
 	property bool b_AfterburnIsHaunted
 	{
 		public native get();
 		public native set(bool value);
 	}
 
+	//Whether or not the NPC is coated in Mad Milk.
 	property bool b_Milked
 	{
 		public native get();
 	}
 
+	//Whether or not the NPC is coated in Jarate.
 	property bool b_Jarated
 	{
 		public native get();
 	}
 
+	//Whether or not the NPC is coated in Gas Passer gas.
 	property bool b_Gassed
 	{
 		public native get();
 	}
 
+	//Whether or not the NPC is considered a building.
+	//This does NOT include actual buildings. Instead, this is used for things like, for example, an NPC designed by the dev to be an engineer building replacement.
 	property bool b_IsABuilding
 	{
 		public native get();
 		public native set(bool value);
 	}
 
+	//The function used for this NPC's think logic.
 	property Function g_Logic
 	{
 		public native set(Function value);
 	}
 	
+	//The plugin containing this NPC's think logic.
 	property Handle g_LogicPlugin
 	{
 		public native get();
 		public native set(Handle value);
 	}
 
+	//The NPC's current team association.
 	property TFTeam i_Team
 	{
 		public native get();
 		public native set(TFTeam value);
 	}
 
+	//A list of all models attached to the NPC, which are counted as cosmetics.
 	property ArrayList g_AttachedCosmetics
 	{
 		public native get();
 		public native set(ArrayList value);
 	}
 
+	//A list of all models currently attached to the NPC, which are counted as weapons.
 	property ArrayList g_AttachedWeapons
 	{
 		public native get();
 		public native set(ArrayList value);
 	}
 
+	//A list of all particles currently attached to the NPC.
 	property ArrayList g_AttachedParticles
 	{
 		public native get();
 		public native set(ArrayList value);
 	}
 
+	//The NPC's skin. Note that this is changed automatically based on the NPC's current team.
+	//Furthermore, models equipped to the NPC by the Portable NPC System's natives will auto-adjust to match this skin.
 	property int i_Skin
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The NPC's current health.
 	property int i_Health
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The NPC's max health.
 	property int i_MaxHealth
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The NPC's current "move_x" pose parameter.
 	property int i_PoseMoveX
 	{
 		public native get();
 	}
 
+	//The NPC's current "move_y" pose parameter.
 	property int i_PoseMoveY
 	{
 		public native get();
 	}
 
+	//The client who lit this NPC on fire, if it is currently ignited.
 	property int i_AfterburnAttacker
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The client who applied Mad Milk to this NPC, if it is currently milked.
 	property int i_Milker
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The client who applied Jarate to this NPC, if it is currently Jarate'd.
 	property int i_JarateApplicant
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The client who applied Gas Passer gas to this NPC, if it is currently gassed.
 	property int i_GasApplicant
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The entity the NPC is currently pathing to. Can be set to -1 to make it stop pathing.
 	property int i_PathTarget
 	{
 		public native get();
 		public native set(int value);
 	}
 
+	//The NPC's model scale.
+	//Models equipped to the NPC, as well as the NPC's bounding box dimensions, are automatically scaled to this size, unless specified otherwise.
 	property float f_Scale
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The NPC's current movement speed.
 	property float f_Speed
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The NPC's maximum movement speed.
 	property float f_MaxSpeed
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//A multiplier applied to the "move_x" and "move_y" pose parameters while this NPC is moving.
+	//Useful for if you want a slow-moving NPC to appear to walk slowly, instead of looking like it is running.
+	property float f_MovePoseMultiplier
+	{
+		public native get();
+		public native set(float value);
+	}
+
+	//The interval in which this NPC's think logic is called.
+	//If <= 0.0: think logic is called every frame. This can get very expensive!
 	property float f_ThinkRate
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The game time at which this NPC's think logic will be called next.
 	property float f_NextThinkTime
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The game time at which this NPC will automatically die.
+	//If <= 0.0: the NPC will not expire.
 	property float f_EndTime
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The game time at which this NPC's afterburn will expire.
 	property float f_AfterburnEndTime
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The base damage taken by this NPC per afterburn tick.
 	property float f_AfterburnDMG
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The game time at which this NPC's Mad Milk expires.
 	property float f_MilkEndTime
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The game time at which this NPC's Jarate will expire.
 	property float f_JarateEndTime
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The game time at which this NPC's Gas Passer gas will expire.
 	property float f_GasEndTime
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The rate at which this NPC is able to turn left and right.
 	property float f_YawRate
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The size of this NPC's steps. This is scaled automatically by the PNPC.f_Scale property.
 	property float f_StepSize
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The NPC's gravity.
 	property float f_Gravity
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The NPC's acceleration.
 	property float f_Acceleration
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The NPC's jump height.
 	property float f_JumpHeight
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The NPC's sideways friction.
 	property float f_FrictionSideways
 	{
 		public native get();
 		public native set(float value);
 	}
 	
+	//The NPC's forward friction.
 	property float f_FrictionForwards
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The height at which this NPC will die if it falls.
 	property float f_DeathDropHeight
 	{
 		public native get();
 		public native set(float value);
 	}
 
+	//The rate at which any overheal applied to this NPC will decay.
 	property float f_OverhealDecayRate
 	{
 		public native get();
