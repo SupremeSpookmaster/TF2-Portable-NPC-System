@@ -257,6 +257,8 @@ int i_HealthBarType[2049] = { -1, ... };
 int i_HealthBarDisplay[2049] = { -1, ... };
 int i_HealthBarOwner[2049] = { -1, ... };
 int i_StabWeapon[MAXPLAYERS + 1] = { -1, ... };
+int i_PNPCHP[2049] = { 0, ... };
+int i_PNPCMaxHP[2049] = { 0, ... };
 
 float PNPC_Speed[2049] = { 0.0, ... };
 float PNPC_ThinkRate[2049] = { 0.0, ... };
@@ -2874,6 +2876,7 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 	}
 
 	f_LastDamagedAt[victim][attacker] = GetGameTime();
+	view_as<PNPC>(victim).i_Health -= RoundToFloor(damage);
 
 	if (view_as<PNPC>(victim).i_Health < 1)
 	{
@@ -3410,11 +3413,11 @@ public void PNPC_CheckTriggerHurt(PNPC npc)
 	if (IsPointHazard(pos))
 	{
 		npc.i_Health = 0;
-		//SetEntProp(npc.Index, Prop_Data, "m_takedamage", 1, 1);	//TODO: Uncomment if PL cart still kills
+		//SetEntProp(npc.Index, Prop_Data, "m_takedamage", 1, 1);
 		b_EnvDamage = true;
 		SDKHooks_TakeDamage(npc.Index, 0, 0, 9999999.0, _, _, _, _, false);
 		b_EnvDamage = false;
-		CPrintToChatAll("Killed by trigger_hurt!");
+		//CPrintToChatAll("Killed by trigger_hurt!");
 	}
 }
 
@@ -3690,7 +3693,7 @@ public int Native_PNPCSetDamageVFX(Handle plugin, int numParams)
 	return 0;
 }
 
-public int Native_PNPCGetHealth(Handle plugin, int numParams) { return GetEntProp(GetNativeCell(1), Prop_Data, "m_iHealth"); }
+public int Native_PNPCGetHealth(Handle plugin, int numParams) { return i_PNPCHP[GetNativeCell(1)]; }
 public int Native_PNPCSetHealth(Handle plugin, int numParams) 
 {
 	int ent = GetNativeCell(1);
@@ -3702,18 +3705,18 @@ public int Native_PNPCSetHealth(Handle plugin, int numParams)
 	else if (npc.i_MaxHealth < npc.i_Health && hp <= npc.i_MaxHealth)
 		RemoveParticle_TE(npc.Index, npc.i_Team == TFTeam_Red ? VFX_OVERHEAL_RED : VFX_OVERHEAL_BLUE);
 
-	SetEntProp(ent, Prop_Data, "m_iHealth", hp);
+	i_PNPCHP[ent] = hp;
 	npc.UpdateHealthBar();
 
 	return 0; 
 }
 
-public int Native_PNPCGetMaxHealth(Handle plugin, int numParams){ return GetEntProp(GetNativeCell(1), Prop_Data, "m_iMaxHealth"); }
+public int Native_PNPCGetMaxHealth(Handle plugin, int numParams){ return i_PNPCMaxHP[GetNativeCell(1)]; }
 public int Native_PNPCSetMaxHealth(Handle plugin, int numParams) 
 {
 	int ent = GetNativeCell(1);
 	int hp = GetNativeCell(2);
-	SetEntProp(ent, Prop_Data, "m_iMaxHealth", hp);
+	i_PNPCMaxHP[ent] = hp;
 
 	return 0; 
 }
@@ -4064,7 +4067,7 @@ public int Native_PNPCGetPoseMoveY(Handle plugin, int numParams)
 }
 
 public any Native_PNPCGetMovePoseMultiplier(Handle plugin, int numParams) { return f_MovePoseMult[GetNativeCell(1)]; }
-public int Native_PNPCGetMovePoseMultiplier(Handle plugin, int numParams) { f_MovePoseMult[GetNativeCell(1)] = GetNativeCell(2); return 0; }
+public int Native_PNPCSetMovePoseMultiplier(Handle plugin, int numParams) { f_MovePoseMult[GetNativeCell(1)] = GetNativeCell(2); return 0; }
 
 public int Native_PNPCGetGroundMotionVector(Handle plugin, int numParams)
 {
