@@ -92,12 +92,12 @@ public int Native_PNPCTemplate_Spawn(Handle plugin, int numParams)
 	template.GetName(name, sizeof(name));
 	template.GetConfigName(confName, sizeof(confName));
 
-	int health = GetIntFromConfigMap(template.g_ConfigMap, "npc.stats.health", 100);
-	float speed = GetFloatFromConfigMap(template.g_ConfigMap, "npc.stats.speed", 300.0);
-	int skin = GetIntFromConfigMap(template.g_ConfigMap, "npc.visuals.skin", -1);
-	float scale = GetFloatFromConfigMap(template.g_ConfigMap, "npc.visuals.scale", 1.0);
-	float thinkRate = GetFloatFromConfigMap(template.g_ConfigMap, "npc.stats.think_rate", 1.0);
-	float lifespan = GetFloatFromConfigMap(template.g_ConfigMap, "npc.stats.lifespan", 0.0);
+	int health = GetIntFromCFGMap(template.g_ConfigMap, "npc.stats.health", 100);
+	float speed = GetFloatFromCFGMap(template.g_ConfigMap, "npc.stats.speed", 300.0);
+	int skin = GetIntFromCFGMap(template.g_ConfigMap, "npc.visuals.skin", -1);
+	float scale = GetFloatFromCFGMap(template.g_ConfigMap, "npc.visuals.scale", 1.0);
+	float thinkRate = GetFloatFromCFGMap(template.g_ConfigMap, "npc.stats.think_rate", 1.0);
+	float lifespan = GetFloatFromCFGMap(template.g_ConfigMap, "npc.stats.lifespan", 0.0);
 
 	int spawned = PNPC(model, team, health, health, skin, scale, speed, _, _, thinkRate, pos, ang, lifespan, confName, name).Index;
 	if (IsValidEntity(spawned))

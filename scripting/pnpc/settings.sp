@@ -23,19 +23,19 @@ public void Settings_Load()
 		return;
 	}
 
-	i_MaxNPCs = GetIntFromConfigMap(conf, "settings.max_npcs", -1);
-	i_MaxNPCsMethod = GetIntFromConfigMap(conf, "settings.npc_limit_method", 0);
-	i_MaxGibs = GetIntFromConfigMap(conf, "settings.npc_max_gibs", -1);
-	i_MaxAttachments = GetIntFromConfigMap(conf, "settings.npc_attachments_max", -1);
-	i_MaxParticles = GetIntFromConfigMap(conf, "settings.npc_particles_max", -1);
-	i_HealthBars = GetIntFromConfigMap(conf, "settings.npc_health_bars", 0);
-	i_HealthBarsDisplay = GetIntFromConfigMap(conf, "settings.npc_health_bars_display", 0);
-	i_DefaultHealthBar = GetIntFromConfigMap(conf, "settings.default_health_bars", 0);
-	i_DefaultHealthBarDisplay = GetIntFromConfigMap(conf, "settings.default_health_bars_display", 0);
-	b_KillFeed = GetBoolFromConfigMap(conf, "settings.npc_killfeed", true);
+	i_MaxNPCs = GetIntFromCFGMap(conf, "settings.max_npcs", -1);
+	i_MaxNPCsMethod = GetIntFromCFGMap(conf, "settings.npc_limit_method", 0);
+	i_MaxGibs = GetIntFromCFGMap(conf, "settings.npc_max_gibs", -1);
+	i_MaxAttachments = GetIntFromCFGMap(conf, "settings.npc_attachments_max", -1);
+	i_MaxParticles = GetIntFromCFGMap(conf, "settings.npc_particles_max", -1);
+	i_HealthBars = GetIntFromCFGMap(conf, "settings.npc_health_bars", 0);
+	i_HealthBarsDisplay = GetIntFromCFGMap(conf, "settings.npc_health_bars_display", 0);
+	i_DefaultHealthBar = GetIntFromCFGMap(conf, "settings.default_health_bars", 0);
+	i_DefaultHealthBarDisplay = GetIntFromCFGMap(conf, "settings.default_health_bars_display", 0);
+	b_KillFeed = GetBoolFromCFGMap(conf, "settings.npc_killfeed", true);
 	conf.Get("settings.npc_default_name", s_DefaultName, sizeof(s_DefaultName));
-	b_MeleeHitreg = GetBoolFromConfigMap(conf, "settings.custom_melee_hitreg", true);
-	b_CustomExplosions = GetBoolFromConfigMap(conf, "settings.custom_explosion_logic", true);
+	b_MeleeHitreg = GetBoolFromCFGMap(conf, "settings.custom_melee_hitreg", true);
+	b_CustomExplosions = GetBoolFromCFGMap(conf, "settings.custom_explosion_logic", true);
 
 	DeleteCfg(conf);
 }

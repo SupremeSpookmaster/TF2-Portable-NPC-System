@@ -1705,7 +1705,7 @@ public int Native_PNPC_GetArgI(Handle plugin, int numParams)
 	}
 
 	Format(path, sizeof(path), "%s.%s", path, key);
-	int returnVal = GetIntFromConfigMap(conf, path, defaultVal);
+	int returnVal = GetIntFromCFGMap(conf, path, defaultVal);
 
 	DeleteCfg(conf);
 
@@ -1739,7 +1739,7 @@ public any Native_PNPC_GetArgF(Handle plugin, int numParams)
 	}
 
 	Format(path, sizeof(path), "%s.%s", path, key);
-	float returnVal = GetFloatFromConfigMap(conf, path, defaultVal);
+	float returnVal = GetFloatFromCFGMap(conf, path, defaultVal);
 	
 	DeleteCfg(conf);
 
@@ -3213,7 +3213,11 @@ public void PNPC_InternalLogic(int ref)
 		f_NextSlowScan[ent] = gt + 0.1;
 	}
 
-	npc.GetPathFollower().Update(npc.GetBot());
+	PathFollower path = npc.GetPathFollower();
+	if (path.IsValid())
+	{
+		path.Update(npc.GetBot());
+	}
 
 	RequestFrame(PNPC_InternalLogic, ref);
 }
@@ -5579,15 +5583,15 @@ public any Native_PNPC_PlayRandomSound(Handle plugin, int numParams)
 
 		if (soundSection != null)
 		{
-			success = GetRandomFloat(0.0, 1.0) <= GetFloatFromConfigMap(soundSection, "chance", 1.0);
+			success = GetRandomFloat(0.0, 1.0) <= GetFloatFromCFGMap(soundSection, "chance", 1.0);
 			if (success)
 			{
-				level = GetIntFromConfigMap(soundSection, "level", 100);
-				volume = GetFloatFromConfigMap(soundSection, "volume", 1.0);
-				channel = GetIntFromConfigMap(soundSection, "channel", 7);
-				global = GetBoolFromConfigMap(soundSection, "global", false);
-				minPitch = GetIntFromConfigMap(soundSection, "pitch_min", 100);
-				maxPitch = GetIntFromConfigMap(soundSection, "pitch_max", 100);
+				level = GetIntFromCFGMap(soundSection, "level", 100);
+				volume = GetFloatFromCFGMap(soundSection, "volume", 1.0);
+				channel = GetIntFromCFGMap(soundSection, "channel", 7);
+				global = GetBoolFromCFGMap(soundSection, "global", false);
+				minPitch = GetIntFromCFGMap(soundSection, "pitch_min", 100);
+				maxPitch = GetIntFromCFGMap(soundSection, "pitch_max", 100);
 			}
 		}
 		else
@@ -5624,7 +5628,7 @@ public int Native_PNPCSetGibsFromConfig(Handle plugin, int numParams)
 	if (conf == null)
 		return 0;
 
-	int autofill = GetIntFromConfigMap(conf, "npc.visuals.autofill_gibs", 0);
+	int autofill = GetIntFromCFGMap(conf, "npc.visuals.autofill_gibs", 0);
 	if (autofill > 0 && autofill < 10)
 	{
 		npc.ClearGibs();
@@ -5730,17 +5734,19 @@ public int Native_PNPCSetHealthBarFromConfig(Handle plugin, int numParams)
 	}
 
 	int I_Sure_Hope_Nobody_Randomly_Chooses_This = -294710;
-	int val = GetIntFromConfigMap(conf, "npc.visuals.health_bar", I_Sure_Hope_Nobody_Randomly_Chooses_This);
+	int val = GetIntFromCFGMap(conf, "npc.visuals.health_bar", I_Sure_Hope_Nobody_Randomly_Chooses_This);
 	if (val == I_Sure_Hope_Nobody_Randomly_Chooses_This)
 		val = Settings_GetDefaultHealthBarType();
 	npc.i_HealthBarType = val;
 
-	val = GetIntFromConfigMap(conf, "npc.visuals.health_bar_display", I_Sure_Hope_Nobody_Randomly_Chooses_This);
+	val = GetIntFromCFGMap(conf, "npc.visuals.health_bar_display", I_Sure_Hope_Nobody_Randomly_Chooses_This);
 	if (val == I_Sure_Hope_Nobody_Randomly_Chooses_This)
 		val = Settings_GetDefaultHealthBarDisplay();
 	npc.i_HealthBarDisplay = val;
 
-	f_HealthBarHeight[npc.Index] = GetFloatFromConfigMap(conf, "npc.visuals.health_bar_height", 100.0);
+	f_HealthBarHeight[npc.Index] = GetFloatFromCFGMap(conf, "npc.visuals.health_bar_height", 100.0);
+
+	DeleteCfg(conf);
 
 	return 0;
 }
@@ -5845,9 +5851,9 @@ public int Native_PNPCSetParticlesFromConfig(Handle plugin, int numParams)
 					strcopy(particle, sizeof(particle), placeholder);
 			}
 
-			float xOff = GetFloatFromConfigMap(instance, "x_offset", 0.0);
-			float yOff = GetFloatFromConfigMap(instance, "y_offset", 0.0);
-			float zOff = GetFloatFromConfigMap(instance, "z_offset", 0.0);
+			float xOff = GetFloatFromCFGMap(instance, "x_offset", 0.0);
+			float yOff = GetFloatFromCFGMap(instance, "y_offset", 0.0);
+			float zOff = GetFloatFromCFGMap(instance, "z_offset", 0.0);
 
 			npc.AttachParticle(particle, attachment, _, xOff, yOff, zOff);
 
@@ -5890,10 +5896,10 @@ public int Native_PNPCSetAttachmentsFromConfig(Handle plugin, int numParams)
 			instance.Get("model", model, sizeof(model));
 			instance.Get("attachment", attachment, sizeof(attachment));
 			instance.Get("sequence", sequence, sizeof(sequence));
-			int skin = GetIntFromConfigMap(instance, "skin", -1);
-			float scale = GetFloatFromConfigMap(instance, "scale", 1.0);
-			bool bonemerge = GetBoolFromConfigMap(instance, "bonemerge", true);
-			bool weapon = GetBoolFromConfigMap(instance, "weapon", false);
+			int skin = GetIntFromCFGMap(instance, "skin", -1);
+			float scale = GetFloatFromCFGMap(instance, "scale", 1.0);
+			bool bonemerge = GetBoolFromCFGMap(instance, "bonemerge", true);
+			bool weapon = GetBoolFromCFGMap(instance, "weapon", false);
 
 			npc.AttachModel(model, attachment, sequence, skin, scale, bonemerge, weapon);
 
