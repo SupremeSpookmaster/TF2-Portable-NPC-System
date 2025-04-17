@@ -3210,7 +3210,7 @@ public void PNPC_InternalLogic(int ref)
 		PNPC_MilkLogic(npc, gt);
 		PNPC_JarateLogic(npc, gt);
 		PNPC_GasLogic(npc, gt);
-		PNPC_CheckTriggerHurt(npc);
+		//PNPC_CheckTriggerHurt(npc);
 		PNPC_OverhealDecay(npc);
 		PNPC_CheckStuck(npc, gt);
 		npc.UpdateHealthBar();
@@ -5137,12 +5137,20 @@ public any Native_PNPCHealEntity(Handle plugin, int numParams)
 	int healer = GetNativeCell(4);
 
 	int maxHP = TF2Util_GetEntityMaxHealth(target);
+	if (view_as<PNPC>(target).b_Exists)
+		maxHP = view_as<PNPC>(target).i_MaxHealth;
+
 	int totalMax = RoundFloat(float(maxHP) * maxHeal);
 	int current;
 	if (IsValidClient(target))
 		current = GetEntProp(target, Prop_Send, "m_iHealth");
 	else
-		current = GetEntProp(target, Prop_Data, "m_iHealth");
+	{
+		if (view_as<PNPC>(target).b_Exists)
+			current = view_as<PNPC>(target).i_Health;
+		else
+			current = GetEntProp(target, Prop_Data, "m_iHealth");
+	}
 	
 	bool success = true;
 
