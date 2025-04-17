@@ -298,6 +298,8 @@ bool b_IsARespawnRoomVisualiser[2049] = { false, ... };
 bool b_ProjectileAlreadyExploded[2049] = { false, ... };
 bool b_IsABuilding[2049] = { false, ... };
 
+bool b_EnvDamage = false;
+
 char PNPC_Model[2049][255];
 char PNPC_BleedParticle[2049][255];
 char PNPC_FlinchSequence[2049][255];
@@ -2257,6 +2259,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
+		SetEntProp(ent, Prop_Data, "m_takedamage", 1, 1);	//TODO: Remove if payload cart still kills
 		npc.i_MaxHealth = maxHealth;
 		npc.i_Health = health;
 
@@ -2845,7 +2848,7 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 {
 	PNPC npc = view_as<PNPC>(victim);
 
-	if (IsAlly(victim, attacker))
+	if (IsAlly(victim, attacker) || (attacker == 0 && !b_EnvDamage))
 		return;
 
 	Event event = CreateEvent("npc_hurt");
@@ -3044,7 +3047,7 @@ public void PNPC_AttemptBleed(int victim, int attacker, int inflictor, int weapo
 
 public Action PNPC_OnDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (IsAlly(victim, attacker)/* || IsPayloadCart(attacker) || IsPayloadCart(inflictor)*/)
+	if (IsAlly(victim, attacker) || (attacker == 0 && !b_EnvDamage))
 	{
 		damage = 0.0;
 		return Plugin_Changed;
@@ -3403,8 +3406,11 @@ public void PNPC_CheckTriggerHurt(PNPC npc)
 	if (IsPointHazard(pos))
 	{
 		npc.i_Health = 0;
-		SetEntProp(npc.Index, Prop_Data, "m_takedamage", 1, 1);
+		//SetEntProp(npc.Index, Prop_Data, "m_takedamage", 1, 1);	//TODO: Uncomment if PL cart still kills
+		b_EnvDamage = true;
 		SDKHooks_TakeDamage(npc.Index, 0, 0, 9999999.0, _, _, _, _, false);
+		b_EnvDamage = false;
+		CPrintToChatAll("Killed by trigger_hurt!");
 	}
 }
 
