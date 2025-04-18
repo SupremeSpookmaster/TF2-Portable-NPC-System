@@ -21,6 +21,7 @@
 #define PARTICLE_EXPLOSION_FIREBALL_BLUE	"spell_fireball_tendril_parent_blue"
 #define PARTICLE_EXPLOSION_FLARE_RED		"ExplosionCore_MidAir_Flare"
 #define PARTICLE_EXPLOSION_FLARE_BLUE		"ExplosionCore_MidAir_Flare"
+#define PARTICLE_CART_KNOCKBACK				"taunt_flip_land_dust"
 
 #define SND_SANDMAN_HIT			")player/pl_impact_stun.wav"
 #define SND_CLEAVER_HIT			")weapons/cleaver_hit_03.wav"
@@ -35,6 +36,7 @@
 #define SND_FREEZE				")weapons/icicle_freeze_victim_01.wav"
 #define SND_RAZORBACK			")player/spy_shield_break.wav"
 #define SND_STAB_BLOCKED		")player/pl_scout_dodge_can_crush.wav"
+#define SND_CART_KNOCKBACK		")weapons/bumper_car_hit_ball.wav"
 
 int PNPC_SndChans[10] = {
 	SNDCHAN_AUTO,
@@ -287,6 +289,7 @@ float f_WasBackstabbed[2049][2049];
 float f_LastValidPosition[2049][3];
 float f_LastValidAt[2049] = { 0.0, ... };
 float f_MovePoseMult[2049] = { 0.0, ... };
+float f_NextCartPush[2049] = { 0.0, ... };
 
 bool b_IsInUpdateGroundConstraint = false;
 bool IExist[2049] = { false, ... };
@@ -413,6 +416,7 @@ void PNPC_MapStart()
 	PrecacheSound(SND_FREEZE);
 	PrecacheSound(SND_RAZORBACK);
 	PrecacheSound(SND_STAB_BLOCKED);
+	PrecacheSound(SND_CART_KNOCKBACK);
 
 	for (int i = 0; i < sizeof(Gibs_Scout_Models); i++)
 		PrecacheModel(Gibs_Scout_Models[i]);
@@ -2262,10 +2266,11 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 
 		f_LastValidAt[ent] = GetGameTime() + 0.1;
 		f_LastValidPosition[ent] = NULL_VECTOR;
+		f_NextCartPush[ent] = 0.0;
 
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
-		SetEntProp(ent, Prop_Data, "m_takedamage", 1, 1);	//TODO: Remove if payload cart still kills
+		SetEntProp(ent, Prop_Data, "m_takedamage", 1, 1);
 		npc.i_MaxHealth = maxHealth;
 		npc.i_Health = health;
 
@@ -2850,12 +2855,49 @@ public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage,
 	}
 }
 
+bool IsNormalCombatEntity(int entity)
+{
+	return (IsValidClient(entity) || PNPC_IsNPC(entity) || IsABuilding(entity));
+}
+
+public void PNPC_CheckCartHit(int victim, int attacker, float &damage)
+{
+	if (IsNormalCombatEntity(attacker) || b_EnvDamage || GetDistFromPayloadCart(victim) >= 250.0)
+		return;
+
+	float gt = GetGameTime();
+	if (gt < f_NextCartPush[victim])
+	{
+		damage = 0.0;
+		return;
+	}
+
+	damage = 50.0;
+	f_NextCartPush[victim] = gt + 0.5;
+
+	float myPos[3], cartPos[3], ang[3], vel[3], midPos[3];
+	PNPC_WorldSpaceCenter(victim, myPos);
+	PNPC_WorldSpaceCenter(attacker, cartPos);
+	SubtractVectors(myPos, cartPos, midPos);
+	NormalizeVector(midPos, midPos);
+	GetVectorAngles(midPos, ang);
+
+	ang[0] = -60.0;
+	GetVelocityInDirection(ang, 400.0, vel);
+	view_as<PNPC>(victim).SetVelocity(vel);
+
+	SpawnParticle(myPos, PARTICLE_CART_KNOCKBACK, 0.5);
+	EmitSoundToAll(SND_CART_KNOCKBACK, victim, _, _, _, _, GetRandomInt(80, 120));
+}
+
 public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
 	PNPC npc = view_as<PNPC>(victim);
 
-	if (IsAlly(victim, attacker) || (attacker == 0 && !b_EnvDamage))
+	if (IsAlly(victim, attacker))
 		return;
+
+	PNPC_CheckCartHit(victim, attacker, damage);
 
 	Event event = CreateEvent("npc_hurt");
 	if(event != null) 
@@ -3052,9 +3094,35 @@ public void PNPC_AttemptBleed(int victim, int attacker, int inflictor, int weapo
 	}
 }
 
+public float GetDistFromPayloadCart(int victim)
+{
+	if (!IsPayloadMap())
+		return 999999999.0;
+
+	int cart = -1;
+	for (int i = 1; i < 2049; i++)
+	{
+		if (!IsPayloadCart(i))
+			continue;
+		
+		cart = i;
+		break;
+	}
+
+	if (!IsValidEntity(cart))
+		return 999999999.0;
+
+	float myPos[3], cartPos[3];
+	PNPC_WorldSpaceCenter(victim, myPos);
+	PNPC_WorldSpaceCenter(cart, cartPos);
+	
+	float dist = GetVectorDistance(myPos, cartPos);
+	return dist;
+}
+
 public Action PNPC_OnDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (IsAlly(victim, attacker) || (attacker == 0 && !b_EnvDamage))
+	if (IsAlly(victim, attacker))
 	{
 		damage = 0.0;
 		return Plugin_Changed;
@@ -3210,7 +3278,7 @@ public void PNPC_InternalLogic(int ref)
 		PNPC_MilkLogic(npc, gt);
 		PNPC_JarateLogic(npc, gt);
 		PNPC_GasLogic(npc, gt);
-		//PNPC_CheckTriggerHurt(npc);
+		PNPC_CheckTriggerHurt(npc);
 		PNPC_OverhealDecay(npc);
 		PNPC_CheckStuck(npc, gt);
 		npc.UpdateHealthBar();
@@ -3413,11 +3481,9 @@ public void PNPC_CheckTriggerHurt(PNPC npc)
 	if (IsPointHazard(pos))
 	{
 		npc.i_Health = 0;
-		//SetEntProp(npc.Index, Prop_Data, "m_takedamage", 1, 1);
 		b_EnvDamage = true;
 		SDKHooks_TakeDamage(npc.Index, 0, 0, 9999999.0, _, _, _, _, false);
 		b_EnvDamage = false;
-		//CPrintToChatAll("Killed by trigger_hurt!");
 	}
 }
 

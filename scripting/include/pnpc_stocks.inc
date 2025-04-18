@@ -58,6 +58,16 @@ enum ParticleAttachment_t {
 #define PARTICLE_DISPATCH_FROM_ENTITY		(1<<0)
 #define PARTICLE_DISPATCH_RESET_PARTICLES	(1<<1)
 
+stock bool IsTriggerHurt(int entity)
+{
+	if (!IsValidEntity(entity))
+		return false;
+
+	char classname[255];
+	GetEntityClassname(entity, classname, 255);
+	return StrEqual(classname, "trigger_hurt");
+}
+
 stock bool IsCharSoundscript(char character)
 {
 	if (IsCharAlpha(character) || IsCharNumeric(character) || character == '_' || character == '/' || character == '\\' || character == '.')
@@ -1690,11 +1700,18 @@ stock float[] ConstrainDistance(float startPos[3], float endPos[3], float distan
 	return endPos;
 }
 
-stock bool IsPayloadCart(int ent)
+stock bool IsPayloadMap()
 {
 	int observer_of_the_train = FindEntityByClassname(-1, "team_train_watcher");
-	if (!IsValidEntity(observer_of_the_train))
+	return IsValidEntity(observer_of_the_train);
+}
+
+stock bool IsPayloadCart(int ent)
+{
+	if (!IsValidEntity(ent) || !IsPayloadMap())
 		return false;
+
+	int observer_of_the_train = FindEntityByClassname(-1, "team_train_watcher");
 		
 	char the_train[255], the_ent[255];
 	GetEntPropString(observer_of_the_train, Prop_Data, "m_iszTrain", the_train, sizeof(the_train));
