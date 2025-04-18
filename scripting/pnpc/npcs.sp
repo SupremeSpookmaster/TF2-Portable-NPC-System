@@ -21,7 +21,7 @@
 #define PARTICLE_EXPLOSION_FIREBALL_BLUE	"spell_fireball_tendril_parent_blue"
 #define PARTICLE_EXPLOSION_FLARE_RED		"ExplosionCore_MidAir_Flare"
 #define PARTICLE_EXPLOSION_FLARE_BLUE		"ExplosionCore_MidAir_Flare"
-#define PARTICLE_CART_KNOCKBACK				"taunt_flip_land_dust"
+#define PARTICLE_CART_KNOCKBACK				"ExplosionCore_MidAir"
 
 #define SND_SANDMAN_HIT			")player/pl_impact_stun.wav"
 #define SND_CLEAVER_HIT			")weapons/cleaver_hit_03.wav"
