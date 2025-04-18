@@ -1533,16 +1533,16 @@ public int Native_PNPC_UpdateHealthBar(Handle plugin, int numParams)
 	{
 		case 1:
 		{
-			Format(message, sizeof(message), "HP: %i/%i", npc.i_Health, npc.i_MaxHealth);
+			Format(message, sizeof(message), "%i/%i", npc.i_Health, npc.i_MaxHealth);
 		}
 		case 2:
 		{
-			Format(message, sizeof(message), "HP: %iPUTAPERCENTAGEHERE", RoundFloat(100.0 * ratio));
+			Format(message, sizeof(message), "%iPUTAPERCENTAGEHERE", RoundFloat(100.0 * ratio));
 			ReplaceString(message, sizeof(message), "PUTAPERCENTAGEHERE", "%");
 		}
 		default:
 		{
-			Format(message, sizeof(message), "HP: [");
+			Format(message, sizeof(message), "[");
 
 			int segmentSize = RoundToFloor(float(npc.i_MaxHealth) / 10.0);
 			for (int i = 0; i < npc.i_MaxHealth; i += segmentSize)
