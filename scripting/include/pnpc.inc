@@ -715,6 +715,7 @@ methodmap PNPC < CBaseCombatCharacter
 	}
 
 	//If this is true, this NPC's think logic is not called when b_Disabled is also true.
+	//Setting this to false is useful for having custom effects for your NPC while it is disabled, such as having a robot play out a stun animation while disabled.
 	property bool b_StopThinkingWhenDisabled
 	{
 		public native get();
