@@ -303,6 +303,9 @@ bool b_IsGib[2049] = { false, ... };
 bool b_IsARespawnRoomVisualiser[2049] = { false, ... };
 bool b_ProjectileAlreadyExploded[2049] = { false, ... };
 bool b_IsABuilding[2049] = { false, ... };
+bool b_CanBeDisabled[2049] = { true, ... };
+bool b_StopThinkingWhenDisabled[2049] = { true, ... };
+bool b_Disabled[2049] = { false, ... };
 
 bool b_EnvDamage = false;
 
@@ -979,7 +982,7 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 		return false;
 	}
 
-	if (IsValidEntity(iExclude))
+	if (IsValidEntity(iExclude) && !IsABuilding(entity))
 	{
 		if (GetEntProp(iExclude, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"))
 			return false;
@@ -1264,6 +1267,12 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC.g_Logic.set", Native_PNPCSetLogic);
 	CreateNative("PNPC.g_LogicPlugin.get", Native_PNPCGetLogicPlugin);
 	CreateNative("PNPC.g_LogicPlugin.set", Native_PNPCSetLogicPlugin);
+	CreateNative("PNPC.b_Disabled.get", Native_PNPCGetDisabled);
+	CreateNative("PNPC.b_Disabled.set", Native_PNPCSetDisabled);
+	CreateNative("PNPC.b_CanBeDisabled.get", Native_PNPCGetCanBeDisabled);
+	CreateNative("PNPC.b_CanBeDisabled.set", Native_PNPCSetCanBeDisabled);
+	CreateNative("PNPC.b_StopThinkingWhenDisabled.get", Native_PNPCGetStopThinkingWhenDisabled);
+	CreateNative("PNPC.b_StopThinkingWhenDisabled.set", Native_PNPCSetStopThinkingWhenDisabled);
 
 	//Team:
 	CreateNative("PNPC.i_Team.set", Native_PNPCSetTeam);
@@ -2252,6 +2261,9 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		npc.f_MaxSpeed = speed;
 		npc.f_ThinkRate = thinkRate;
 		npc.f_MovePoseMultiplier = 1.0;
+		npc.b_CanBeDisabled = true;
+		npc.b_Disabled = false;
+		npc.b_StopThinkingWhenDisabled = true;
 		npc.f_NextThinkTime = GetGameTime() + npc.f_ThinkRate;
 		npc.SetBleedParticle(VFX_DEFAULT_BLEED);
 		npc.SetBoundingBox(DEFAULT_MINS, DEFAULT_MAXS);
@@ -3250,7 +3262,7 @@ public void PNPC_InternalLogic(int ref)
 		return;
 
 	float gt = GetGameTime();
-	if (PNPC_Logic[ent] != INVALID_FUNCTION && npc.g_LogicPlugin != null && gt >= npc.f_NextThinkTime)
+	if (PNPC_Logic[ent] != INVALID_FUNCTION && npc.g_LogicPlugin != null && gt >= npc.f_NextThinkTime && (!npc.b_Disabled || !npc.b_StopThinkingWhenDisabled))
 	{
 		Call_StartFunction(npc.g_LogicPlugin, PNPC_Logic[ent]);
 		Call_PushCell(npc.Index);
@@ -6345,3 +6357,27 @@ public void JumpThink(int ent)
 	PNPC_ActuallySetVelocity(npc, f_TargetVel[ent]);
 	SDKUnhook(ent, SDKHook_Think, JumpThink);
 }
+
+public Native_PNPCSetDisabled(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	if (npc.b_CanBeDisabled)
+		b_Disabled[npc.index] = GetNativeCell(2);
+
+	return 0;
+}
+public any Native_PNPCGetDisabled(Handle plugin, int numParams) { return b_Disabled[GetNativeCell(1)]; }
+
+public Native_PNPCSetCanBeDisabled(Handle plugin, int numParams)
+{
+	PNPC npc = view_as<PNPC>(GetNativeCell(1));
+	b_CanBeDisabled[npc.index] = GetNativeCell(2);
+	if (!b_CanBeDisabled[npc.index])
+		b_Disabled[npc.index] = false;
+
+	return 0;
+}
+public any Native_PNPCGetCanBeDisabled(Handle plugin, int numParams) { return b_CanBeDisabled[GetNativeCell(1)]; }
+
+public Native_PNPCSetStopThinkingWhenDisabled(Handle plugin, int numParams) { b_StopThinkingWhenDisabled[GetNativeCell(1)] = GetNativeCell(2); return 0;}
+public any Native_PNPCGetStopThinkingWhenDisabled(Handle plugin, int numParams) { return b_StopThinkingWhenDisabled[GetNativeCell(1)]; }

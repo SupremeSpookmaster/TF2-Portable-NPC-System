@@ -706,6 +706,29 @@ methodmap PNPC < CBaseCombatCharacter
 		public native set(bool value);
 	}
 
+	//If this is true, the NPC is considered "disabled", like a sentry with a sapper on it.
+	//If b_StopThinkingWhenDisabled is also true, this NPC's think logic is not called.
+	property bool b_Disabled
+	{
+		public native get();
+		public native set(bool value);
+	}
+
+	//If this is true, this NPC's think logic is not called when b_Disabled is also true.
+	property bool b_StopThinkingWhenDisabled
+	{
+		public native get();
+		public native set(bool value);
+	}
+
+	//This must be set to true in order to set b_Disabled.
+	//If this is false: b_Disabled is forced to be false.
+	property bool b_CanBeDisabled
+	{
+		public native get();
+		public native set(bool value);
+	}
+
 	//The function used for this NPC's think logic.
 	property Function g_Logic
 	{
