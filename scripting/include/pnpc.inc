@@ -722,8 +722,7 @@ methodmap PNPC < CBaseCombatCharacter
 		public native set(bool value);
 	}
 
-	//This must be set to true in order to set b_Disabled.
-	//If this is false: b_Disabled is forced to be false.
+	//If this is set to false: b_Disabled is forced to be false, effectively giving this NPC immunity to being disabled.
 	property bool b_CanBeDisabled
 	{
 		public native get();
