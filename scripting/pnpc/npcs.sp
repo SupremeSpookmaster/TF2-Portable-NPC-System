@@ -3276,7 +3276,11 @@ public void PNPC_InternalLogic(int ref)
 
 	if (gt >= npc.f_EndTime && npc.f_EndTime > 0.0)
 	{
-		RemoveEntity(ent);
+		if (npc.b_GibsForced)
+			npc.Gib();
+		else
+			npc.Ragdoll();
+
 		return;
 	}
 
@@ -6362,10 +6366,18 @@ public Native_PNPCSetDisabled(Handle plugin, int numParams)
 {
 	PNPC npc = view_as<PNPC>(GetNativeCell(1));
 	if (npc.b_CanBeDisabled)
+	{
 		b_Disabled[npc.index] = GetNativeCell(2);
+		if (npc.b_StopThinkingWhenDisabled)
+		{
+			if (npc.b_Disabled)
+				npc.StopPathing();
+		}
+	}
 
 	return 0;
 }
+
 public any Native_PNPCGetDisabled(Handle plugin, int numParams) { return b_Disabled[GetNativeCell(1)]; }
 
 public Native_PNPCSetCanBeDisabled(Handle plugin, int numParams)
