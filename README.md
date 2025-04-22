@@ -35,7 +35,7 @@ TODO: Write a guide in the wiki and link to it here.
 ## *Known Bugs/Limitations*
 Ranked in order of most to least impactful:
 - NPCs require a nav mesh in order to move. Not all maps *have* a nav mesh. You can fix this by generating navs for each of your server's maps. However, keep in mind that meshes generated in this way are far from perfect; many maps will have areas where the nav simply fails to generate. NPCs have a very difficult time entering these areas, and upon doing so, are unable to move at all. The only solution to this is to tailor the nav meshes of every map your server runs, which is incredibly tedious.
-- NPCs do not activate triggers, which can result in a whole bunch of small problems, such as the NPC getting stuck in spawn, or being unable to use teleport triggers.
+- NPCs do not activate triggers, which can result in a whole bunch of small problems, such as the NPC getting stuck behind doors, or being unable to use teleport triggers.
 - Huntsman arrows are not able to headshot NPCs. I have absolutely no idea why, I would happily accept a pull request if anybody might know how to fix this.
 - Some projectiles phase through NPCs assigned to TFTeam_Spectator, and all projectiles phase through NPCs assigned to TFTeam_Unassigned. I tried fixing this via CollisionHook, but that did not work.
 - Sandman balls, flying guillotines, and all jars (jarate, milk, gas) have a rare chance to sometimes bounce off of NPCs harmlessly. Again, I would happily accept a pull request from anyone who knows how to fix this.
