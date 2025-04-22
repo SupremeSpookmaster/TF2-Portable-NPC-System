@@ -657,7 +657,7 @@ methodmap PNPC < CBaseCombatCharacter
 	 * Initiates a hitscan attack.
 	 * 
 	 * @param damage		Damage to deal on hit.
-	 * @param guarantee		If true: skip the ray/hull trace and just deal guaranteed damage to this PNPC's i_Target. Note that this will force maxHits to 1 and targPos to NULL_VECTOR.
+	 * @param guarantee		If true: skip the ray/hull trace and just deal guaranteed damage to this PNPC's i_Target. Note that this will force maxHits to 1 and targPos to NULL_VECTOR. Only works if i_Target is a valid entity.
 	 * @param width			The width of the attack's hull trace. If <= 0.0: use a ray trace instead.
 	 * @param startPos		The starting position of the attack. Can be set to NULL_VECTOR to automatically use this PNPC's WorldSpaceCenter.
 	 * @param targPos		The end position of the attack. Can be set to NULL_VECTOR to automatically use the WorldSpaceCenter of this PNPC's i_Target. Note that this is ignored if "guarantee" is set to true.
@@ -673,6 +673,27 @@ methodmap PNPC < CBaseCombatCharacter
 	 * @param plugin		Name of the plugin containing the onHit function.
 	 */
 	public native void Attack_Hitscan(float damage, bool guarantee = false, float width = 0.0, float startPos[3] = NULL_VECTOR, float targPos[3] = NULL_VECTOR, char[] gesture = "ACT_MP_ATTACK_STAND_PRIMARY", char[] flash = "muzzle_pistol", char[] tracer = "bullet_pistol_tracer01_red", int damageType = DMG_BULLET, int maxHits = 1, char[] kill_icon = "tf_weapon_pistol", Function onHit = INVALID_FUNCTION, char[] hitPlugin = "");
+
+	/**
+	 * Fires a projectile.
+	 * If no collision function is provided, this projectile behaves like a normal rocket.
+	 * 
+	 * @param speed			The speed at which the projectile moves, in HU/s.
+	 * @param damage		The damage dealt by the projectile. This is only used if no collision function is provided.
+	 * @param startPos		The projectile's starting position. If set to NULL_VECTOR, a position is automatically calculated a very short distance in front of the NPC, at approximately chest-height.
+	 * @param angles		The projectile's starting angles. If set to NULL_VECTOR, this is automatically calculated based on the required angles to point from "startPos" to the WorldSpaceCenter of this PNPC's i_Target. Only works if i_Target is a valid entity.
+	 * @param gesture		Gesture to play.
+	 * @param flash			Muzzle flash particle to use. This is spawned on the "muzzle" attachment of all models attached to this PNPC via PNPC.AttachModel, with the "weapon" parameter set to true.
+	 * @param model			The projectile's model.
+	 * @param particle		Particle to attach to the projectile.
+	 * @param onCollide		Function to call when the projectile collides with something.
+	 * 						Must take an int for the projectile's index and the index of the entity the projectile collided with, as well as a vector for the position of the impact.
+	 * 						EX: public void MyCollideFunction(int projectile, int entity, float pos[3])
+	 * @param collidePlugin	The name of the plugin containing the onCollide function.
+	 * 
+	 * @return	The index of the projectile which was created, or -1 if the projectile failed to spawn.
+	 */
+	public native int Attack_Projectile(float speed, float damage = 100.0, float startPos[3] = NULL_VECTOR, float angles[3] = NULL_VECTOR, char[] gesture = "ACT_MP_ATTACK_STAND_PRIMARY", char[] flash = "muzzle_pipelauncher", char[] model = "models/weapons/w_models/w_rocket.mdl", char[] particle = "rockettrail", Function onCollide = INVALID_FUNCTION, char[] collidePlugin = "");
 
 	//The NPC's entity index.
 	property int Index
