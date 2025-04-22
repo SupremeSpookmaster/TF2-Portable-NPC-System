@@ -617,10 +617,83 @@ methodmap PNPC < CBaseCombatCharacter
 	 */
 	public native void UpdateHealthBar();
 
+	/**
+	 * Outlines this PNPC, or changes its current outline if it already has one.
+	 * 
+	 * @param r			RGB "r" value.
+	 * @param g			RGB "g" value.
+	 * @param b			RGB "b" value.
+	 * @param a			Outline transparency. 255 = fully opaque, 0 = invisible.
+	 * @param filter	Optional SetTransmit filter. Must take an int for the client, and return an Action (Plugin_Continue to allow the client to see the outline, Plugin_Handled to block it).
+	 * @param plugin	Name of the plugin which contains the SetTransmit filter.
+	 */
+	public native void SetOutline(int r, int g, int b, int a, Function filter = INVALID_FUNCTION, char[] plugin = "");
+
+	/**
+	 * Clears this PNPC's outline, if it has one.
+	 */
+	public native void ClearOutline();
+
+	/**
+	 * Initiates a melee attack.
+	 * 
+	 * @param damage		Damage to deal on hit.
+	 * @param delay			Delay after swinging at which the attack will hit.
+	 * @param gesture		Gesture to play.
+	 * @param damageType	Damage type.
+	 * @param maxHits		Maximum number of targets this attack can hit.
+	 * @param range			Hitbox length.
+	 * @param width			Hitbox width.
+	 * @param scaleBounds	If true: range and width are automatically multiplied by this NPC's f_Scale property.
+	 * @param kill_icon		Kill feed icon to use if this attack is lethal.
+	 * @param onHit			Optional function to call when this attack hits a target.
+	 * 						Must take a PNPC for the attacker, an int for the victim's entity index, an int by reference for the damage type, a float by reference for the damage, and return a bool (true to allow the hit, false to prevent it).
+	 * 						EX: public bool MyHitFunction(PNPC attacker, int victim, int &damageType, float &damage)
+	 * @param plugin		Name of the plugin containing the onHit function.
+	 */
+	public native void Attack_Melee(float damage, float delay = 0.25, char[] gesture = "ACT_MP_ATTACK_STAND_MELEE", int damageType = DMG_CLUB, int maxHits = 1, float range = 54.0, float width = 40.0, bool scaleBounds = false, char[] kill_icon = "tf_weapon_fists", Function onHit = INVALID_FUNCTION, char[] hitPlugin = "");
+
+	/**
+	 * Initiates a hitscan attack.
+	 * 
+	 * @param damage		Damage to deal on hit.
+	 * @param guarantee		If true: skip the ray/hull trace and just deal guaranteed damage to this PNPC's i_Target. Note that this will force maxHits to 1 and targPos to NULL_VECTOR.
+	 * @param width			The width of the attack's hull trace. If <= 0.0: use a ray trace instead.
+	 * @param startPos		The starting position of the attack. Can be set to NULL_VECTOR to automatically use this PNPC's WorldSpaceCenter.
+	 * @param targPos		The end position of the attack. Can be set to NULL_VECTOR to automatically use the WorldSpaceCenter of this PNPC's i_Target. Note that this is ignored if "guarantee" is set to true.
+	 * @param gesture		Gesture to play.
+	 * @param flash			Muzzle flash particle to use. If startPos is set to NULL_VECTOR, this is spawned on the "muzzle" attachment of all models attached to this PNPC via PNPC.AttachModel with the "weapon" parameter set to true. Otherwise, it spawns at startPos.
+	 * @param tracer		Bullet tracer particle to use. If startPos is set to NULL_VECTOR, this starts at the same attachment used by the "flash" parameter, and ends at the end position of the attack. Otherwise, it starts at startPos.
+	 * @param damageType	Damage type.
+	 * @param maxHits		Max number of targets hit by this attack. Note that this is ignored if "guarantee" is set to true.
+	 * @param kill_icon		Weapon icon to use in the kill feed if this attack is lethal.
+	 * @param onHit			Optional function to call when this attack hits a target.
+	 * 						Must take a PNPC for the attacker, an int for the victim's entity index, an int by reference for the damage type, a float by reference for the damage, and return a bool (true to allow the hit, false to prevent it).
+	 * 						EX: public bool MyHitFunction(PNPC attacker, int victim, int &damageType, float &damage)
+	 * @param plugin		Name of the plugin containing the onHit function.
+	 */
+	public native void Attack_Hitscan(float damage, bool guarantee = false, float width = 0.0, float startPos[3] = NULL_VECTOR, float targPos[3] = NULL_VECTOR, char[] gesture = "ACT_MP_ATTACK_STAND_PRIMARY", char[] flash = "muzzle_pistol", char[] tracer = "bullet_pistol_tracer01_red", int damageType = DMG_BULLET, int maxHits = 1, char[] kill_icon = "tf_weapon_pistol", Function onHit = INVALID_FUNCTION, char[] hitPlugin = "");
+
 	//The NPC's entity index.
 	property int Index
 	{
 		public native get();
+	}
+
+	//The client who owns this NPC.
+	//All damage dealt by the NPC is credited to this client.
+	property int i_Owner
+	{
+		public native get();
+		public native set(int value);
+	}
+
+	//The entity this NPC is currently targeting, not to be confused with PNPC.i_PathTarget.
+	//Used by the PNPC.Attack_X natives.
+	property int i_Target
+	{
+		public native get();
+		public native set(int value);
 	}
 
 	//The NPC's current health bar index.
