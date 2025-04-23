@@ -1253,40 +1253,38 @@ forward Action PNPC_OnPNPCKilled(PNPC npc, float damage, int weapon, int inflict
  * Called when a PNPC is extinguished via the PNPC.Extinguish native.
  * 
  * @param npc			The PNPC.
+ * @param result		If true: allow the extinguish to happen. If false: prevent it.
  * 
  * @return	False to prevent the extinguish, otherwise return true. Note that this value is ignored if the "forced" parameter of PNPC.Extinguish was set to true.
  */
-forward bool PNPC_OnPNPCExtinguished(PNPC npc);
+forward void PNPC_OnPNPCExtinguished(PNPC npc, bool &result);
 
 /**
  * Called when a PNPC's Mad Milk is removed via the PNPC.RemoveMilk native.
  * 
  * @param npc			The PNPC.
  * @param applicant		The entity which initially applied the Mad Milk.
- * 
- * @return	False to prevent the removal, otherwise return true. Note that this value is ignored if the "forced" parameter of PNPC.RemoveMilk was set to true.
+ * @param result		If true: allow the milk to be removed. If false: prevent it. Note that this value is ignored if the "forced" parameter of PNPC.RemoveMilk was set to true.
  */
-forward bool PNPC_OnPNPCMilkRemoved(PNPC npc, int applicant);
+forward void PNPC_OnPNPCMilkRemoved(PNPC npc, int applicant, bool &result);
 
 /**
  * Called when a PNPC's Jarate is removed via the PNPC.RemoveJarate native.
  * 
  * @param npc			The PNPC.
  * @param applicant		The entity which initially applied the Jarate.
- * 
- * @return	False to prevent the removal, otherwise return true. Note that this value is ignored if the "forced" parameter of PNPC.RemoveJarate was set to true.
+ * @param result		If true: allow the removal. If false: prevent it. Note that this value is ignored if the "forced" parameter of PNPC.RemoveJarate was set to true.
  */
-forward bool PNPC_OnPNPCJarateRemoved(PNPC npc, int applicant);
+forward void PNPC_OnPNPCJarateRemoved(PNPC npc, int applicant, bool &result);
 
 /**
  * Called when a PNPC's Gas Passer gas is removed via the PNPC.RemoveGas native.
  * 
  * @param npc			The PNPC.
  * @param applicant		The entity which initially applied the gas.
- * 
- * @return	False to prevent the removal, otherwise return true. Note that this value is ignored if the "forced" parameter of PNPC.RemoveGas was set to true.
+ * @param result		If true: allow the removal. If false: prevent it. Note that this value is ignored if the "forced" parameter of PNPC.RemoveGas was set to true.
  */
-forward bool PNPC_OnPNPCGasRemoved(PNPC npc, int applicant);
+forward void PNPC_OnPNPCGasRemoved(PNPC npc, int applicant, bool &result);
 
 /**
  * Called when a PNPC is ignited.
@@ -1354,10 +1352,9 @@ forward Action PNPC_OnPNPCBleed(PNPC npc, float &bleedTime, float &bleedDMG, int
  * @param jar		The jar.
  * @param owner		The entity which owns the jar.
  * @param launcher	The weapon which launched the jar.
- * 
- * @return			Return true to run the Portable NPC System's custom jar logic, otherwise return false to prevent it.
+ * @param result	If true: run the Portable NPC System's custom jar logic. Otherwise, prevent it.
  */
-forward bool PNPC_OnPNPCJarCollide(int jar, int owner, int launcher);
+forward void PNPC_OnPNPCJarCollide(int jar, int owner, int launcher, bool &result);
 
 /**
  * Called when any default explosive projectile (rocket, grenade, etc) explodes.
@@ -1365,10 +1362,9 @@ forward bool PNPC_OnPNPCJarCollide(int jar, int owner, int launcher);
  * @param entity	The projectile.
  * @param owner		The entity which owns the projectile.
  * @param launcher	The weapon which launched the projectile.
- * 
- * @return			Return true to run the Portable NPC System's custom explosion simulation, otherwise return false to prevent it.
+ * @param result	If true: run the Portable NPC System's custom explosion simulation, otherwise set to false to prevent it.
  */
-forward bool PNPC_OnPNPCProjectileExplode(int rocket, int owner, int launcher);
+forward void PNPC_OnPNPCProjectileExplode(int rocket, int owner, int launcher, bool &result);
 
 /**
  * Called when an entity is healed via PNPC_HealEntity.
@@ -1416,10 +1412,9 @@ forward void PNPC_OnPNPCDestroyed(int entity);
  * @param npc		The PNPC.
  * @param client	The player holding the medigun.
  * @param medigun	The medigun.
- * 
- * @return	Return false to prevent the medigun from attaching, otherwise return true.
+ * @param result	If true: allow the medigun to attach. If false: block it.
  */
-forward bool PNPC_OnCheckMedigunCanAttach(PNPC npc, int client, int medigun);
+forward void PNPC_OnCheckMedigunCanAttach(PNPC npc, int client, int medigun, bool &result);
 
 /**
  * Called when the Portable NPC System's custom melee logic is about to initiate a melee attack.
@@ -1441,10 +1436,9 @@ forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult
  * @param crit			Whether or not the attack should crit.
  * @param canStab		Whether or not the attack should be able to backstab.
  * @param forceStab		Set to true to force this attack to be a backstab. Note that this only works if canStab is true. This does not bypass backstab immunity, such as the razorback or backstab immunity attributes.
- * 
- * @return	True to allow the melee hit to go through, false to prevent it.
+ * @param result		If true: allow the melee hit to go through. If false: prevent it.
  */
-forward bool PNPC_OnMeleeHit(int attacker, int weapon, int target, float &damage, bool &crit, bool &canStab, bool &forceStab);
+forward void PNPC_OnMeleeHit(int attacker, int weapon, int target, float &damage, bool &crit, bool &canStab, bool &forceStab, bool &result);
 
 /**
  * Called when a player or NPC is backstabbed. Only runs if the Portable NPC System's custom melee hitreg is enabled.
@@ -1452,10 +1446,9 @@ forward bool PNPC_OnMeleeHit(int attacker, int weapon, int target, float &damage
  * @param attacker		The attacker.
  * @param victim		The entity which was backstabbed.
  * @param damage		The damage the backstab should deal. Can be changed.
- * 
- * @return				True to allow the backstab, false to block it.
+ * @param result		If true: allow the backstab. If false: block it.
  */
-forward bool PNPC_OnBackstab(int attacker, int victim, float &damage);
+forward void PNPC_OnBackstab(int attacker, int victim, float &damage, bool &result);
 
 /**
  * Called when a player's ragdoll is created.

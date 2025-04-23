@@ -681,8 +681,9 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 			Call_PushCellRef(crit);
 			Call_PushCellRef(canStab);
 			Call_PushCellRef(forceStab);
+			Call_PushCellRef(allowMeleeToHit);
 
-			Call_Finish(allowMeleeToHit);
+			Call_Finish();
 
 			if (allowMeleeToHit)
 			{
@@ -709,8 +710,9 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 						Call_PushCell(client);
 						Call_PushCell(target);
 						Call_PushFloatRef(stabDMG);
+						Call_PushCellRef(allowStab);
 
-						Call_Finish(allowStab);
+						Call_Finish();
 
 						if (!allowStab)
 						{
@@ -998,23 +1000,23 @@ void PNPC_MakeForwards()
 	g_OnPNPCHeadshot = new GlobalForward("PNPC_OnPNPCHeadshot", ET_Event, Param_Any, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef);
 	g_OnPNPCDamaged = new GlobalForward("PNPC_OnPNPCTakeDamage", ET_Event, Param_Any, Param_FloatByRef, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array);
 	g_OnPNPCKilled = new GlobalForward("PNPC_OnPNPCKilled", ET_Event, Param_Any, Param_Float, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
-	g_OnPNPCExtinguished = new GlobalForward("PNPC_OnPNPCExtinguished", ET_Single, Param_Any);
+	g_OnPNPCExtinguished = new GlobalForward("PNPC_OnPNPCExtinguished", ET_Ignore, Param_Any, Param_CellByRef);
 	g_OnPNPCIgnited = new GlobalForward("PNPC_OnPNPCIgnited", ET_Event, Param_Any, Param_FloatByRef, Param_FloatByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_FloatByRef);
 	g_OnPNPCBleed = new GlobalForward("PNPC_OnPNPCBleed", ET_Event, Param_Any, Param_FloatByRef, Param_FloatByRef, Param_CellByRef);
-	g_OnPNPCMilkRemoved = new GlobalForward("PNPC_OnPNPCMilkRemoved", ET_Single, Param_Cell, Param_Cell);
-	g_OnPNPCJarateRemoved = new GlobalForward("PNPC_OnPNPCJarateRemoved", ET_Single, Param_Cell, Param_Cell);
-	g_OnPNPCGasRemoved = new GlobalForward("PNPC_OnPNPCGasRemoved", ET_Single, Param_Cell, Param_Cell);
+	g_OnPNPCMilkRemoved = new GlobalForward("PNPC_OnPNPCMilkRemoved", ET_Ignore, Param_Cell, Param_Cell, Param_CellByRef);
+	g_OnPNPCJarateRemoved = new GlobalForward("PNPC_OnPNPCJarateRemoved", ET_Ignore, Param_Cell, Param_Cell, Param_CellByRef);
+	g_OnPNPCGasRemoved = new GlobalForward("PNPC_OnPNPCGasRemoved", ET_Ignore, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnPNPCMilked = new GlobalForward("PNPC_OnPNPCMilked", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
 	g_OnPNPCJarated = new GlobalForward("PNPC_OnPNPCJarated", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
 	g_OnPNPCGassed = new GlobalForward("PNPC_OnPNPCGassed", ET_Event, Param_Cell, Param_FloatByRef, Param_CellByRef);
-	g_OnJarCollide = new GlobalForward("PNPC_OnPNPCJarCollide", ET_Single, Param_Cell, Param_Cell, Param_Cell);
-	g_OnProjectileExplode = new GlobalForward("PNPC_OnPNPCProjectileExplode", ET_Single, Param_Cell, Param_Cell, Param_Cell);
+	g_OnJarCollide = new GlobalForward("PNPC_OnPNPCJarCollide", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
+	g_OnProjectileExplode = new GlobalForward("PNPC_OnPNPCProjectileExplode", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
-	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Single, Param_Any, Param_Cell, Param_Cell);
+	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Ignore, Param_Any, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnHealthBarUpdated = new GlobalForward("PNPC_OnHealthBarDisplayed", ET_Event, Param_Any, Param_String, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef);
-	g_OnMeleeLogicHit = new GlobalForward("PNPC_OnMeleeHit", ET_Single, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
-	g_OnBackstab = new GlobalForward("PNPC_OnBackstab", ET_Single, Param_Cell, Param_Cell, Param_FloatByRef);
+	g_OnMeleeLogicHit = new GlobalForward("PNPC_OnMeleeHit", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
+	g_OnBackstab = new GlobalForward("PNPC_OnBackstab", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef);
 	g_OnPlayerRagdoll = new GlobalForward("PNPC_OnPlayerRagdoll", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 	g_OnPNPCTouch = new GlobalForward("PNPC_OnTouch", ET_Ignore, Param_Cell, Param_Cell, Param_String);
 
@@ -1124,8 +1126,9 @@ MRESReturn PNPC_CanMedigunHealTarget(int medigun, Handle hReturn, Handle hParams
 		Call_PushCell(view_as<PNPC>(target));
 		Call_PushCell(client);
 		Call_PushCell(target);
+		Call_PushCellRef(result);
 
-		Call_Finish(result);
+		Call_Finish();
 		
 		DHookSetReturn(hReturn, result);
 
@@ -2060,8 +2063,9 @@ bool PNPC_CheckAllowCustomExplosionLogic(int entity, int &owner = -1, int &launc
 	Call_PushCell(entity);
 	Call_PushCell(owner);
 	Call_PushCell(launcher);
+	Call_PushCellRef(success);
 
-	Call_Finish(success);
+	Call_Finish();
 
 	if (!Settings_AllowExplosions())
 		success = false;
@@ -2482,8 +2486,9 @@ public bool PNPC_JarTouch(int entity)
 	Call_PushCell(entity);
 	Call_PushCell(owner);
 	Call_PushCell(launcher);
+	Call_PushCellRef(allow);
 
-	Call_Finish(allow);
+	Call_Finish();
 
 	if (allow)
 	{
@@ -4684,7 +4689,8 @@ public any Native_PNPCExtinguish(Handle plugin, int numParams)
 
 	Call_StartForward(g_OnPNPCExtinguished);
 	Call_PushCell(npc);
-	Call_Finish(result);
+	Call_PushCellRef(result);
+	Call_Finish();
 
 	if (result || forced)
 	{
@@ -5196,8 +5202,9 @@ public any Native_PNPCRemoveMilk(Handle plugin, int numParams)
 
 	Call_PushCell(npc);
 	Call_PushCell(npc.i_Milker);
+	Call_PushCellRef(success);
 
-	Call_Finish(success);
+	Call_Finish();
 
 	if (!success)
 		success = forced;
@@ -5350,8 +5357,9 @@ public any Native_PNPCRemoveJarate(Handle plugin, int numParams)
 
 	Call_PushCell(npc);
 	Call_PushCell(npc.i_JarateApplicant);
+	Call_PushCellRef(success);
 
-	Call_Finish(success);
+	Call_Finish();
 
 	if (!success)
 		success = forced;
@@ -5454,8 +5462,9 @@ public any Native_PNPCRemoveGas(Handle plugin, int numParams)
 
 	Call_PushCell(npc);
 	Call_PushCell(npc.i_GasApplicant);
+	Call_PushCellRef(success);
 
-	Call_Finish(success);
+	Call_Finish();
 
 	if (!success)
 		success = forced;
