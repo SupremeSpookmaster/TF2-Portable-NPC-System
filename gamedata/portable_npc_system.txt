@@ -55,11 +55,9 @@
 			{
 				// contains non-unique string "weapon_blocks_healing" with references to CTFPlayerShared offset in the next few blocks
 				"library"	"server"
-				"linux64"		"@_ZN14CWeaponMedigun19AllowedToHealTargetEP11CBaseEntity"
-				"windows64"	"\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x30\x48\x8B\xDA"
 				
 				"linux"		"@_ZN14CWeaponMedigun19AllowedToHealTargetEP11CBaseEntity"
-				"windows"	"\x55\x8B\xEC\x53\x8B\xD9\x56\x57\x8B\x93\x10\x02\x00\x00\x85\xD2\x0F\x84\x2A\x2A\x2A\x2A\xB9\xFF\x1F\x00\x00\x83\xFA\xFF\x74\x2A\x0F\xB7\xCA\xA1\x2A\x2A\x2A\x2A\xC1\xE1\x04\x8D\x78\x04\x03\xF9\x0F\x84\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x57\x04\x0F\x85\x2A\x2A\x2A\x2A\x8B\x3F\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x8B\x07\x8B\xCF\x8B\x80\x48\x01\x00\x00\xFF\xD0\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\x8B\x75\x08\x85\xF6\x74\x2A"
+				"windows"	"\x55\x8B\xEC\x53\x8B\xD9\x56\x57\x8B\x93\x10\x02\x00\x00\x85\xD2\x0F\x84\x2A\x2A\x2A\x2A\xB9\xFF\x1F\x00\x00\x83\xFA\xFF\x74\x2A\x0F\xB7\xCA\xA1\x2A\x2A\x2A\x2A\xC1\xE1\x04\x8D\x78\x04\x03\xF9\x0F\x84\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x57\x04\x0F\x85\x2A\x2A\x2A\x2A\x8B\x3F\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x8B\x07\x8B\xCF\x8B\x80\x4C\x01\x00\x00\xFF\xD0\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\x8B\x75\x08\x85\xF6\x74\x2A"
 			}
 			"CTFWeaponBaseMelee::GetShootSound"
 			{
@@ -351,39 +349,39 @@
 		"Offsets"
 		{
 			"CBaseEntity::WorldSpaceCenter"		
-			{
-				"linux"		"156"
-				"windows"	"155"
+			{		
+				"windows"	"156"		
+				"linux"		"157"
 			}
 			"CTFBaseRocket::Explode"
 			{
-				"linux"		"240"
-				"windows"	"239"
+				"linux"		"241"
+				"windows"	"240"
 			}
 			"CBaseAnimating::BecomeRagdollOnClient"
 			{
-				"windows"	"205"
-				"linux"		"206"
+				"windows"	"206"
+				"linux"		"207"
 			}
 			"CBaseGrenade::Explode"
-			{
-				"linux"		"236"
-				"windows"	"235"
-			}
-			"CBaseGrenade::Detonate"
 			{
 				"linux"		"237"
 				"windows"	"236"
 			}
+			"CBaseGrenade::Detonate"
+			{
+				"linux"		"238"
+				"windows"	"237"
+			}
 			"CTFProjectile_SpellFireball::Explode"
 			{
-				"linux"		"250"
-				"windows"	"247"
+				"linux"		"251"
+				"windows"	"248"
 			}
 			"CTFGrenadePipebombProjectile::PipebombTouch" 
 			{
-				"windows" 	"260"
-				"linux" 	"261"
+				"windows" 	"261"
+				"linux" 	"262"
 			}
 			"CTFWeaponBaseMelee::GetShootSound"
 			{
@@ -398,18 +396,14 @@
 			"CLagCompensationManager::FrameUpdatePostEntityThink_OFFSET"
 			{
 				"library"	"server"
-				"linux"		"16"
-				"windows"		"15"
-				"linux64"		"16"
-				"windows64"		"15"
+				"linux"			"16"
+				"windows"		"16"
 			}
 			"CTFPlayer::WantsLagCompensationOnEntity"
 			{
-				"library"	"server"
-				"linux"		"335"
+				"library"		"server"
+				"linux"			"336"
 				"windows"		"334"
-				"linux64"		"335"
-				"windows64"		"334"
 			}
 		}
 	}
