@@ -299,6 +299,7 @@ bool b_MiniCrit[2049] = { false, ... };
 bool I_AM_DEAD[2049] = { false, ... };
 bool b_PillAlreadyBounced[2049] = { false, ... };
 bool b_IsProjectile[2049] = { false, ... };
+bool b_IsPhysProp[2049] = { false, ... };
 bool b_IsGib[2049] = { false, ... };
 bool b_IsARespawnRoomVisualiser[2049] = { false, ... };
 bool b_ProjectileAlreadyExploded[2049] = { false, ... };
@@ -645,7 +646,7 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 	GetEntityClassname(weapon, classname, sizeof(classname));
 	if (StrContains(classname, "tf_weapon_bat") != -1)
 		damage = 35.0; 
-	else if (StrContains(classname, "tf_weapon_knife") != -1)	//TODO: Knives should be able to backstab
+	else if (StrContains(classname, "tf_weapon_knife") != -1)
 		damage = 40.0;
 
 	damage *= GetAttributeValue(weapon, 1, 1.0) * GetAttributeValue(weapon, 2, 1.0);
@@ -661,15 +662,8 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 			//Prevent prop_physics, prop_physics_multiplayer, and all building entities from being backstabbed by default, but still allow devs to allow it via the forward.
 			if (canStab)
 			{
-				if (IsABuilding(target))
+				if (IsABuilding(target) || b_IsPhysProp[target])
 					canStab = false;
-				else
-				{
-					char vicClass[255];
-					GetEntityClassname(target, vicClass, sizeof(vicClass));
-					if (StrContains(vicClass, "physics") != -1)
-						canStab = false;
-				}
 			}
 
 			Call_StartForward(g_OnMeleeLogicHit);
@@ -973,6 +967,12 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 	if (b_IsProjectile[entity])
 		return false;
 
+	if (b_IsPhysProp[entity])
+	{
+		if (!GetEntProp(entity, Prop_Data, "m_takedamage"))
+			return false;
+	}
+
 	if (I_AM_DEAD[entity])
 		return false;
 
@@ -990,7 +990,7 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 			return false;
 	}
 
-	return Brush_Is_Solid(entity) || PNPC_IsNPC(entity);
+	return Brush_Is_Solid(entity) || PNPC_IsNPC(entity) || b_IsPhysProp[entity];
 }
 
 void PNPC_MakeForwards()
@@ -1848,6 +1848,8 @@ public void PNPC_OnEntityCreated(int entity, const char[] classname)
 {
 	if (StrContains(classname, "tf_projectile") != -1)
 		b_IsProjectile[entity] = true;
+	if (StrContains(classname, "prop_physics") != -1)
+		b_IsPhysProp[entity] = true;
 
 	if (StrContains(classname, "func_respawnroomvisualizer") != -1)
 		b_IsARespawnRoomVisualiser[entity] = true;
@@ -1882,6 +1884,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	i_HealthBarOwner[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
+	b_IsPhysProp[entity] = false;
 	b_IsARespawnRoomVisualiser[entity] = false;
 	b_ProjectileAlreadyExploded[entity] = false;
 	f_NextSlowScan[entity] = 0.0;
