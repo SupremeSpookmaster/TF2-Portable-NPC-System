@@ -673,12 +673,15 @@ stock bool Melee_LOSTrace(int entity, int contentsmask, int target)
 
 public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit, bool canStab)
 {
+	int maxHits = 1;
+
 	Call_StartForward(g_OnMeleeLogicBegin);
 
 	Call_PushCell(client);
 	Call_PushCell(weapon);
 	Call_PushFloatRef(boundsMult);
 	Call_PushFloatRef(rangeMult);
+	Call_PushCellRef(maxHits);
 
 	Call_Finish();
 
@@ -731,9 +734,6 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 	ArrayList hitsToDo = SortListByDistance(swingPos, Melee_Hits);
 	delete Melee_Hits;
-
-	//TODO: Make this customizable
-	int maxHits = 1;
 
 	//If we're over the max number of hits, start by removing non-building entities, furthest first
 	if (GetArraySize(hitsToDo) > maxHits)
@@ -1175,7 +1175,7 @@ void PNPC_MakeForwards()
 	g_OnHeal = new GlobalForward("PNPC_OnPNPCHeal", ET_Event, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
 	g_OnCheckMedigunCanHealNPC = new GlobalForward("PNPC_OnCheckMedigunCanAttach", ET_Ignore, Param_Any, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnHealthBarUpdated = new GlobalForward("PNPC_OnHealthBarDisplayed", ET_Event, Param_Any, Param_String, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
-	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef);
+	g_OnMeleeLogicBegin = new GlobalForward("PNPC_OnCustomMeleeLogic", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_FloatByRef, Param_CellByRef);
 	g_OnMeleeLogicHit = new GlobalForward("PNPC_OnMeleeHit", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);
 	g_OnBackstab = new GlobalForward("PNPC_OnBackstab", ET_Ignore, Param_Cell, Param_Cell, Param_FloatByRef, Param_CellByRef);
 	g_OnPlayerRagdoll = new GlobalForward("PNPC_OnPlayerRagdoll", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef);

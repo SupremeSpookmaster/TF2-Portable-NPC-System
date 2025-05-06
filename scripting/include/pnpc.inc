@@ -1423,8 +1423,9 @@ forward void PNPC_OnCheckMedigunCanAttach(PNPC npc, int client, int medigun, boo
  * @param weapon		The weapon used for the attack.
  * @param boundsMult	The amount to multiply the melee attack's bounds.
  * @param rangeMult		The amount to multiply the melee attack's range.
+ * @param maxHits		The maximum number of entities this attack can hit.
  */
-forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult, float &rangeMult);
+forward void PNPC_OnCustomMeleeLogic(int attacker, int weapon, float &boundsMult, float &rangeMult, int &maxHits);
 
 /**
  * Called when the Portable NPC System's custom melee logic found a target and is about to hit them.
