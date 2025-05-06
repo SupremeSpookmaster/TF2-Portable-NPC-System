@@ -610,9 +610,69 @@ public void PNPC_DelayedCustomMelee(DataPack pack)
 #define MELEE_RANGE 64.0
 #define MELEE_BOUNDS 22.0
 
+ArrayList Melee_Hits = null;
+
+enum struct Melee_Hit
+{
+	int index;
+	float hitPos[3];
+}
+
+Melee_Hit hitList[2049];
+
+stock ArrayList SortListByDistance(float pos[3], ArrayList list)
+{
+	if (GetArraySize(list) > 0)
+	{
+		ArrayList ordered = new ArrayList(255);
+
+		while (GetArraySize(list) > 0)
+		{
+			PushArrayCell(ordered, Sort_GetClosestInList(pos, list));
+		}
+
+		return ordered;
+	}
+
+	return list;
+}
+
+stock int Sort_GetClosestInList(float pos[3], ArrayList &list)
+{
+	int closestSlot = 0;
+	int closestEntity = 0;
+	float closestDist = 99999999.0;
+
+	for (int i = 0; i < GetArraySize(list); i++)
+	{
+		int ent = GetArrayCell(list, i);
+		float entPos[3];
+		entPos = hitList[ent].hitPos;
+
+		float dist = GetVectorDistance(pos, entPos);
+		if (dist < closestDist)
+		{
+			closestEntity = ent;
+			closestDist = dist;
+			closestSlot = i;
+		}
+	}
+
+	RemoveFromArray(list, closestSlot);
+
+	return closestEntity;
+}
+
+stock bool Melee_LOSTrace(int entity, int contentsmask, int target)
+{
+	if (IsValidClient(entity) || entity == target || IsABuilding(entity) || PNPC_IsNPC(entity) || b_IsProjectile[entity] || !Brush_Is_Solid(entity))
+		return false;
+
+	return IsPayloadCart(entity) || GetTeam(entity) != GetTeam(target);
+}
+
 public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit, bool canStab)
 {
-	bool forceStab = false;
 	Call_StartForward(g_OnMeleeLogicBegin);
 
 	Call_PushCell(client);
@@ -622,16 +682,100 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 	Call_Finish();
 
+	delete Melee_Hits;
+	Melee_Hits = CreateArray(255);
+
 	Handle trace;
-	float swingAng[3];
+	float swingAng[3], swingPos[3];
+	GetClientEyePosition(client, swingPos);
 	PNPC_StartLagCompensation(client);
 	PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult);
+	delete trace;
 
-	int target = TR_GetEntityIndex(trace);
+	for (int i = 0; i < GetArraySize(Melee_Hits); i++)
+	{
+		int ent = GetArrayCell(Melee_Hits, i);
+		PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, ent);
 
-	float hitPos[3];
-	TR_GetEndPosition(hitPos, trace);
+		float hitPos[3], testPos[3];
+		TR_GetEndPosition(hitPos, trace);
+		PNPC_WorldSpaceCenter(ent, testPos);
+		delete trace;
 
+		trace = TR_TraceRayFilterEx(swingPos, testPos, MASK_SHOT, RayType_EndPoint, Melee_LOSTrace, client);
+		if (!TR_DidHit(trace))
+		{
+			hitList[ent].hitPos = hitPos;
+			hitList[ent].index = ent;
+		}
+		else
+		{
+			RemoveFromArray(Melee_Hits, i);
+		}
+
+		delete trace;
+	}
+
+	if (GetArraySize(Melee_Hits) <= 0)
+	{
+		delete Melee_Hits;
+
+		PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, 0);
+		TR_GetEndPosition(hitList[0].hitPos, trace);
+		delete trace;
+		PNPC_MeleeHit(0, client, weapon, crit, canStab);
+
+		PNPC_EndLagCompensation(client);
+		return;
+	}
+
+	ArrayList hitsToDo = SortListByDistance(swingPos, Melee_Hits);
+	delete Melee_Hits;
+
+	//TODO: Make this customizable
+	int maxHits = 1;
+
+	//If we're over the max number of hits, start by removing non-building entities, furthest first
+	if (GetArraySize(hitsToDo) > maxHits)
+	{
+		for (int i = GetArraySize(hitsToDo) - 1; i >= 0 && GetArraySize(hitsToDo) > maxHits; i--)
+		{
+			int target = hitList[GetArrayCell(hitsToDo, i)].index;
+			if (!IsValidMulti(target) && !IsABuilding(target))
+				RemoveFromArray(hitsToDo, i);
+		}
+	}
+	else if (GetArraySize(hitsToDo) < maxHits)
+	{
+		PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, 0);
+		TR_GetEndPosition(hitList[0].hitPos, trace);
+		delete trace;
+		PNPC_MeleeHit(0, client, weapon, crit, canStab);
+	}
+
+	//If we're still over the max number of hits, start removing players and buildings, furthest first
+	if (GetArraySize(hitsToDo) > maxHits)
+	{
+		for (int i = GetArraySize(hitsToDo) - 1; i >= 0 && GetArraySize(hitsToDo) > maxHits; i--)
+		{
+			RemoveFromArray(hitsToDo, i);
+		}
+	}
+
+	for (int i = 0; i < GetArraySize(hitsToDo); i++)
+	{
+		int target = hitList[GetArrayCell(hitsToDo, i)].index;
+		if (IsValidEntity(target))
+			PNPC_MeleeHit(target, client, weapon, crit, canStab);
+	}
+
+	delete hitsToDo;
+
+	PNPC_EndLagCompensation(client);
+}
+
+public void PlayWeaponSound(int client, int weapon, int target)
+{
 	int Item_Index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
 	int soundIndex = PlayCustomWeaponSoundFromPlayerCorrectly(client, target, Item_Index, weapon);	
 	if (soundIndex > 0)
@@ -640,6 +784,35 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 		SDKCall_GetShootSound(weapon, soundIndex, snd, sizeof(snd));
 		EmitGameSoundToAll(snd, client);
 	}
+}
+
+public void PNPC_MeleeHit(int target, int client, int weapon, bool crit, bool canStab)
+{
+	float hitPos[3];
+	hitPos = hitList[target].hitPos;
+
+	if (target == 0)	//We hit a surface, do impact sounds and VFX
+	{
+		float pos[3];
+		float angles[3];
+		GetClientEyeAngles(client, angles);
+		GetClientEyePosition(client, pos);
+		float impactEndPos[3];
+		GetAngleVectors(angles, impactEndPos, NULL_VECTOR, NULL_VECTOR);
+		ScaleVector(impactEndPos, MELEE_RANGE);
+		AddVectors(impactEndPos, hitPos, impactEndPos);
+
+		TR_TraceRayFilter(hitPos, impactEndPos, MASK_SHOT_HULL, RayType_EndPoint, Trace_OnlyHitThisGuy, 0);
+		if(TR_DidHit())
+		{
+			UTIL_ImpactTrace(client, pos, DMG_CLUB);
+			PlayWeaponSound(client, weapon, target);
+		}
+
+		return;
+	}
+
+	PlayWeaponSound(client, weapon, target);
 
 	float damage = 65.0;
 	char classname[255];
@@ -653,194 +826,168 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 
 	int damagetype = DMG_CLUB;
 
-	if (IsValidEntity(target))
+	bool allowMeleeToHit = true;
+	bool forceStab = false;
+
+	//Prevent prop_physics, prop_physics_multiplayer, and all building entities from being backstabbed by default, but still allow devs to allow it via the forward.
+	if (canStab)
 	{
-		if (Entity_Can_Be_Shot(target))	//We hit something that can be harmed, damage it
+		if (IsABuilding(target) || b_IsPhysProp[target])
+			canStab = false;
+	}
+
+	Call_StartForward(g_OnMeleeLogicHit);
+
+	Call_PushCell(client);
+	Call_PushCell(weapon);
+	Call_PushCell(target);
+	Call_PushFloatRef(damage);
+	Call_PushCellRef(crit);
+	Call_PushCellRef(canStab);
+	Call_PushCellRef(forceStab);
+	Call_PushCellRef(allowMeleeToHit);
+
+	Call_Finish();
+
+	if (allowMeleeToHit)
+	{
+		if (crit)
+			damagetype |= DMG_ACID;
+
+		if (canStab)
 		{
-			bool allowMeleeToHit = true;
+			bool stab = forceStab || IsBehindAndFacingTarget(client, target);
 
-			//Prevent prop_physics, prop_physics_multiplayer, and all building entities from being backstabbed by default, but still allow devs to allow it via the forward.
-			if (canStab)
+			if (stab)
 			{
-				if (IsABuilding(target) || b_IsPhysProp[target])
-					canStab = false;
-			}
+				float maxHP = float(TF2Util_GetEntityMaxHealth(target));
 
-			Call_StartForward(g_OnMeleeLogicHit);
+				float stabDMG = maxHP * 3.0;
 
-			Call_PushCell(client);
-			Call_PushCell(weapon);
-			Call_PushCell(target);
-			Call_PushFloatRef(damage);
-			Call_PushCellRef(crit);
-			Call_PushCellRef(canStab);
-			Call_PushCellRef(forceStab);
-			Call_PushCellRef(allowMeleeToHit);
+				bool allowStab = true;
 
-			Call_Finish();
+				if (IsValidClient(target))
+					allowStab = !IsValidEntity(FindAttributeOnClient(target, 402));
 
-			if (allowMeleeToHit)
-			{
-				if (crit)
-					damagetype |= DMG_ACID;
+				Call_StartForward(g_OnBackstab);
 
-				if (canStab)
+				Call_PushCell(client);
+				Call_PushCell(target);
+				Call_PushFloatRef(stabDMG);
+				Call_PushCellRef(allowStab);
+
+				Call_Finish();
+
+				if (!allowStab)
 				{
-					bool stab = forceStab || IsBehindAndFacingTarget(client, target);
-
-					if (stab)
+					PNPC_ImmuneEffect(hitPos, "Immune!", SND_STAB_BLOCKED, client, target);
+				}
+				else
+				{
+					int blocker = -1;
+					if ((blocker = FindAttributeOnClient(target, 52)) != -1)
 					{
-						float maxHP = float(TF2Util_GetEntityMaxHealth(target));
+						damage = 0.0;
+						EmitSoundToClient(client, SND_RAZORBACK);
+						EmitSoundToAll(SND_RAZORBACK, target);
 
-						float stabDMG = maxHP * 3.0;
+						RequestFrame(PNPC_RazorbackStunPenalty, EntIndexToEntRef(weapon));
+						TF2_AddCondition(client, TFCond_RestrictToMelee, 2.33, target);
 
-						bool allowStab = true;
+						if (StrContains(classname, "tf_weapon_knife") != -1)
+						{
+							int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
+							if (IsValidEntity(viewmodel))
+							{
+								DataPack pack = new DataPack();
+								RequestFrame(DoMeleeAnimationFrameLater, pack);
+								WritePackCell(pack, EntIndexToEntRef(viewmodel));
+								WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+							}
+						}
+
+						//TODO: Remove blocker, give it back after a delay
+					}
+					else
+					{
+						damage = stabDMG;
+						PlayCritSound(client);
+
+						if (StrContains(classname, "tf_weapon_knife") != -1)
+						{
+							int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
+							if (IsValidEntity(viewmodel))
+							{
+								DataPack pack = new DataPack();
+								RequestFrame(DoMeleeAnimationFrameLater, pack);
+								WritePackCell(pack, EntIndexToEntRef(viewmodel));
+								WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+							}
+						}
 
 						if (IsValidClient(target))
-							allowStab = !IsValidEntity(FindAttributeOnClient(target, 402));
-
-						Call_StartForward(g_OnBackstab);
-
-						Call_PushCell(client);
-						Call_PushCell(target);
-						Call_PushFloatRef(stabDMG);
-						Call_PushCellRef(allowStab);
-
-						Call_Finish();
-
-						if (!allowStab)
 						{
-							PNPC_ImmuneEffect(hitPos, "Immune!", SND_STAB_BLOCKED, client, target);
+							PlayCritVictimSound(target);
+
+							//Attribute 217: Your Eternal Reward effect.
+							if (GetAttributeValue(weapon, 154, 0.0) > 0.0)
+							{
+								DataPack pack = new DataPack();
+								RequestFrame(PNPC_DisguiseAsVictim, pack);
+								WritePackCell(pack, GetClientUserId(client));
+								WritePackCell(pack, GetClientTeam(target));
+								WritePackCell(pack, TF2_GetPlayerClass(target));
+								WritePackCell(pack, target);
+								WritePackCell(pack, GetClientHealth(target));
+							}
 						}
-						else
+
+						//Attribute 217: Conniver's Kunai effect.
+						//I have taken the liberty of assuming how the overheal should work at varying max health values, as this is not listed anywhere.
+						//At minimum, a stab will heal 33% of the attacker's max health, and at max it will heal for double the attacker's max health.
+						if (GetAttributeValue(weapon, 217, 0.0) > 0.0)
 						{
-							int blocker = -1;
-							if ((blocker = FindAttributeOnClient(target, 52)) != -1)
-							{
-								damage = 0.0;
-								EmitSoundToClient(client, SND_RAZORBACK);
-								EmitSoundToAll(SND_RAZORBACK, target);
+							int minHealing = RoundFloat(0.33 * float(TF2Util_GetEntityMaxHealth(client)));
 
-								RequestFrame(PNPC_RazorbackStunPenalty, EntIndexToEntRef(weapon));
-								TF2_AddCondition(client, TFCond_RestrictToMelee, 2.33, target);
-
-								if (StrContains(classname, "tf_weapon_knife") != -1)
-								{
-									int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
-									if (IsValidEntity(viewmodel))
-									{
-										DataPack pack = new DataPack();
-										RequestFrame(DoMeleeAnimationFrameLater, pack);
-										WritePackCell(pack, EntIndexToEntRef(viewmodel));
-										WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
-									}
-								}
-
-								//TODO: Remove blocker, give it back after a delay
-							}
-							else
-							{
-								damage = stabDMG;
-								PlayCritSound(client);
-
-								if (StrContains(classname, "tf_weapon_knife") != -1)
-								{
-									int viewmodel = GetEntPropEnt(client, Prop_Send, "m_hViewModel");
-									if (IsValidEntity(viewmodel))
-									{
-										DataPack pack = new DataPack();
-										RequestFrame(DoMeleeAnimationFrameLater, pack);
-										WritePackCell(pack, EntIndexToEntRef(viewmodel));
-										WritePackCell(pack, GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
-									}
-								}
-
-								if (IsValidClient(target))
-								{
-									PlayCritVictimSound(target);
-
-									//Attribute 217: Your Eternal Reward effect.
-									if (GetAttributeValue(weapon, 154, 0.0) > 0.0)
-									{
-										DataPack pack = new DataPack();
-										RequestFrame(PNPC_DisguiseAsVictim, pack);
-										WritePackCell(pack, GetClientUserId(client));
-										WritePackCell(pack, GetClientTeam(target));
-										WritePackCell(pack, TF2_GetPlayerClass(target));
-										WritePackCell(pack, target);
-										WritePackCell(pack, GetClientHealth(target));
-									}
-								}
-
-								//Attribute 217: Conniver's Kunai effect.
-								//I have taken the liberty of assuming how the overheal should work at varying max health values, as this is not listed anywhere.
-								//At minimum, a stab will heal 33% of the attacker's max health, and at max it will heal for double the attacker's max health.
-								if (GetAttributeValue(weapon, 217, 0.0) > 0.0)
-								{
-									int minHealing = RoundFloat(0.33 * float(TF2Util_GetEntityMaxHealth(client)));
-
-									int current;
-									if (IsValidClient(target))
-										current = GetEntProp(target, Prop_Send, "m_iHealth");
-									else
-										current = GetEntProp(target, Prop_Data, "m_iHealth");
-
-									if (current < minHealing)
-										current = minHealing;
-
-									if (current > RoundFloat(minHealing * 6.0))
-										current = RoundFloat(minHealing * 6.0);
-
-									PNPC_HealEntity(client, current, 3.0);
-								}
-
-								if (FindAttributeOnClient(client, 296) != -1)
-									SetEntProp(client, Prop_Send, "m_iRevengeCrits", GetEntProp(client, Prop_Send, "m_iRevengeCrits") + 2);
-
-								f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
-								i_StabWeapon[client] = EntIndexToEntRef(weapon);
-							}
-
+							int current;
 							if (IsValidClient(target))
-							{
-								int jaratifier;
-								if ((jaratifier = FindAttributeOnClient(target, 341)) != -1)
-								{
-									TF2_AddCondition(client, TFCond_Jarated, GetAttributeValue(jaratifier, 341, 0.0), target);
-									SpawnParticle(hitPos, PARTICLE_JAR_EXPLODE_JARATE, 2.0);
-									EmitSoundToClient(client, SND_JAR_EXPLODE);
-									EmitSoundToAll(SND_JAR_EXPLODE, target);
-								}
-							}
+								current = GetEntProp(target, Prop_Send, "m_iHealth");
+							else
+								current = GetEntProp(target, Prop_Data, "m_iHealth");
+
+							if (current < minHealing)
+								current = minHealing;
+
+							if (current > RoundFloat(minHealing * 6.0))
+								current = RoundFloat(minHealing * 6.0);
+
+							PNPC_HealEntity(client, current, 3.0);
+						}
+
+						if (FindAttributeOnClient(client, 296) != -1)
+							SetEntProp(client, Prop_Send, "m_iRevengeCrits", GetEntProp(client, Prop_Send, "m_iRevengeCrits") + 2);
+
+						f_WasBackstabbed[client][target] = GetGameTime() + 0.1;
+						i_StabWeapon[client] = EntIndexToEntRef(weapon);
+					}
+
+					if (IsValidClient(target))
+					{
+						int jaratifier;
+						if ((jaratifier = FindAttributeOnClient(target, 341)) != -1)
+						{
+							TF2_AddCondition(client, TFCond_Jarated, GetAttributeValue(jaratifier, 341, 0.0), target);
+							SpawnParticle(hitPos, PARTICLE_JAR_EXPLODE_JARATE, 2.0);
+							EmitSoundToClient(client, SND_JAR_EXPLODE);
+							EmitSoundToAll(SND_JAR_EXPLODE, target);
 						}
 					}
 				}
-
-				SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
 			}
 		}
-		else	//We hit a surface, do impact sounds and VFX
-		{
-			float pos[3];
-			float angles[3];
-			GetClientEyeAngles(client, angles);
-			GetClientEyePosition(client, pos);
-			float impactEndPos[3];
-			GetAngleVectors(angles, impactEndPos, NULL_VECTOR, NULL_VECTOR);
-			ScaleVector(impactEndPos, MELEE_RANGE);
-			AddVectors(impactEndPos, hitPos, impactEndPos);
 
-			TR_TraceRayFilter(hitPos, impactEndPos, MASK_SHOT_HULL, RayType_EndPoint, BulletAndMeleeTrace, client);
-			if(TR_DidHit())
-			{
-				UTIL_ImpactTrace(client, pos, DMG_CLUB);
-			}
-		}
+		SDKHooks_TakeDamage(target, client, client, damage, damagetype, weapon, _, hitPos, false);
 	}
-
-	delete trace;
-
-	PNPC_EndLagCompensation(client);
 }
 
 public void PNPC_DisguiseAsVictim(DataPack pack)
@@ -927,7 +1074,7 @@ stock void SDKCall_GetShootSound(int entity, int index, char[] buffer, int lengt
 		SDKCall(SDKGetShootSound, entity, buffer, length, index);
 }
 
-public void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float boundsMult, float rangeMult)
+void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float boundsMult, float rangeMult, int chosenTarget = -1)
 {
 	float vecSwingMins[3];
 	float vecSwingMaxs[3];
@@ -951,13 +1098,22 @@ public void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float 
 	vecSwingEndHull[1] = vecSwingStart[1] + swingAng[1] * (MELEE_RANGE * 2.1 * rangeMult);
 	vecSwingEndHull[2] = vecSwingStart[2] + swingAng[2] * (MELEE_RANGE * 2.1 * rangeMult);
 
-	trace = TR_TraceRayFilterEx(vecSwingStart, vecSwingEnd, MASK_SOLID, RayType_EndPoint, BulletAndMeleeTrace, client);
-	if (TR_GetFraction(trace) >= 1.0)
+	if (IsValidEntity(chosenTarget))
 	{
-		delete trace;
-		trace = TR_TraceHullFilterEx( vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, ( MASK_SOLID ), BulletAndMeleeTrace, client);
+		trace = TR_TraceHullFilterEx(vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, ( MASK_SOLID ), Trace_OnlyHitThisGuy, chosenTarget);
+	}
+	else
+	{
+		trace = TR_TraceRayFilterEx(vecSwingStart, vecSwingEnd, MASK_SOLID, RayType_EndPoint, BulletAndMeleeTrace, client);
+		if (TR_GetFraction(trace) >= 1.0)
+		{
+			delete trace;
+			trace = TR_TraceHullFilterEx( vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, ( MASK_SOLID ), BulletAndMeleeTrace, client);
+		}
 	}
 }
+
+public bool Trace_OnlyHitThisGuy(int entity, int contentsMask, int target) { return entity == target; }
 
 public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 {
@@ -984,13 +1140,18 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 		return false;
 	}
 
+	bool shouldHit = false;
+	bool sameTeam = false;
 	if (IsValidEntity(iExclude) && !IsABuilding(entity))
-	{
-		if (GetEntProp(iExclude, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"))
-			return false;
-	}
+		sameTeam = (GetEntProp(iExclude, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"));
 
-	return Brush_Is_Solid(entity) || PNPC_IsNPC(entity) || IsABuilding(entity) || b_IsPhysProp[entity];
+	if (!sameTeam)
+		shouldHit = Brush_Is_Solid(entity) || PNPC_IsNPC(entity) || IsABuilding(entity) || b_IsPhysProp[entity];
+	
+	if (Melee_Hits != null && shouldHit)
+		PushArrayCell(Melee_Hits, entity);
+
+	return shouldHit;
 }
 
 void PNPC_MakeForwards()

@@ -2334,6 +2334,14 @@ stock bool Brush_Is_Solid(int entity)
 	return ((GetEntProp(entity, Prop_Send, "m_nSolidType") != 0) && ((GetEntProp(entity, Prop_Send, "m_usSolidFlags") & 4) == 0) && CollisionGroupIsSolid(entity));
 }
 
+stock int GetTeam(int entity)
+{
+	if (!IsValidEntity(entity))
+		return 0;
+		
+	return GetEntProp(entity, Prop_Send, "m_iTeamNum");
+}
+
 stock bool CollisionGroupIsSolid(int entity)
 {
 	int group = GetEntProp(entity, Prop_Send, "m_CollisionGroup");
