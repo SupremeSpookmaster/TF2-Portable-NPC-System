@@ -990,7 +990,7 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 			return false;
 	}
 
-	return Brush_Is_Solid(entity) || PNPC_IsNPC(entity) || b_IsPhysProp[entity];
+	return Brush_Is_Solid(entity) || PNPC_IsNPC(entity) || IsABuilding(entity) || b_IsPhysProp[entity];
 }
 
 void PNPC_MakeForwards()

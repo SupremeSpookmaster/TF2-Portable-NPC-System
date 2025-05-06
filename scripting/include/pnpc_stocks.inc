@@ -2409,13 +2409,16 @@ stock bool IsPointOnGround(float pos[3])
 
 stock bool IsABuilding(int entity)
 {
-	if (!IsValidEntity(entity))
+	if (!IsValidEntity(entity) || IsValidClient(entity))
 		return false;
 
-	char classname[255];
-	GetEntityClassname(entity, classname, sizeof(classname));
+	int offset = GetEntSendPropOffs(entity, "m_iObjectType");
 
-	return StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_teleporter");
+	if (offset <= 0)
+		return false;
+
+	TFObjectType type = view_as<TFObjectType>(GetEntData(entity, offset));
+	return type == TFObject_Sentry || type == TFObject_Dispenser || type == TFObject_Teleporter;
 }
 
 stock void DHook_CreateDetour(GameData gamedata, const char[] name, DHookCallback preCallback = INVALID_FUNCTION, DHookCallback postCallback = INVALID_FUNCTION)
