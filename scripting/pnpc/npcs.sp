@@ -279,8 +279,6 @@ float f_HealthBarHeight[2049] = { 0.0, ... };
 float f_MedigunHealthBucket[2049] = { 0.0, ... };
 float f_OverhealDecayRate[2049] = { 0.0, ... };
 float f_DecayBucket[2049] = { 0.0, ... };
-float f_MeleeBoundsMult[2049] = { 0.0, ... };
-float f_MeleeRangeMult[2049] = { 0.0, ... };
 float f_NextOOBCheck[2049] = { 0.0, ... };
 float f_PunchForce[2049][3];
 float f_LastSafePosition[2049][3];
@@ -503,38 +501,6 @@ public float PNPC_PathCost(INextBot bot, CNavArea area, CNavArea from_area, CNav
 	return from_area.GetCostSoFar() + cost;
 }
 
-public int TF2Items_OnGiveNamedItem_Post(int client, String:classname[], int itemDefinitionIndex, int itemLevel, int itemQuality, int entityIndex)
-{
-	if (Settings_AllowMeleeHitreg())
-	{
-		DataPack pack = new DataPack();
-		RequestFrame(PNPC_OnMeleeEquipped, pack);
-		WritePackCell(pack, GetClientUserId(client));
-		WritePackCell(pack, EntIndexToEntRef(entityIndex));
-	}
-}
-
-public void PNPC_OnMeleeEquipped(DataPack pack)
-{
-	ResetPack(pack);
-	int client = GetClientOfUserId(ReadPackCell(pack));
-	int weapon = EntRefToEntIndex(ReadPackCell(pack));
-	delete pack;
-
-	if (!IsValidEntity(weapon) || !IsValidMulti(client))
-		return;
-
-	if (weapon == GetPlayerWeaponSlot(client, 2))
-	{
-		f_MeleeBoundsMult[client] = GetAttributeValue(weapon, 263, 1.0);
-		f_MeleeRangeMult[client] = GetAttributeValue(weapon, 264, 1.0);
-		TF2Attrib_SetByDefIndex(weapon, 263, 0.0);
-		TF2Attrib_SetByDefIndex(weapon, 264, 0.0);
-
-		//TODO: Detour any and all SetByDefIndex or GetByDefIndex in plugins using #include <pnpc> to a special function which sets/returns f_MeleeBoundsMult and f_MeleeRangeMult.
-	}
-}
-
 enum
 {
 	ZEROSOUND 						= 0,	
@@ -561,7 +527,7 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[]weaponname,
 	if (weapon != GetPlayerWeaponSlot(client, 2) || !Settings_AllowMeleeHitreg())
 		return Plugin_Continue;
 
-	float rangeMult = f_MeleeRangeMult[client], boundsMult = f_MeleeBoundsMult[client];
+	float rangeMult = GetAttributeValue(weapon, 264, 1.0), boundsMult = GetAttributeValue(weapon, 263, 1.0);
 
 	if (StrContains(weaponname, "tf_weapon_knife") != -1)
 		PNPC_DoCustomMelee(client, weapon, rangeMult, boundsMult, result, true);
@@ -782,18 +748,27 @@ public void PlayWeaponSound(int client, int weapon, int target)
 	{
 		char snd[255];
 		SDKCall_GetShootSound(weapon, soundIndex, snd, sizeof(snd));
-		EmitGameSoundToAll(snd, client);
+
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i == client || !IsValidClient(i))
+				continue;
+
+			EmitGameSoundToClient(i, snd, client);
+		}
 	}
 }
 
 public void PNPC_MeleeHit(int target, int client, int weapon, bool crit, bool canStab)
 {
+	PlayWeaponSound(client, weapon, target);
+	
 	float hitPos[3];
 	hitPos = hitList[target].hitPos;
 
 	if (target == 0)	//We hit a surface, do impact sounds and VFX
 	{
-		float pos[3];
+		/*float pos[3];
 		float angles[3];
 		GetClientEyeAngles(client, angles);
 		GetClientEyePosition(client, pos);
@@ -807,12 +782,10 @@ public void PNPC_MeleeHit(int target, int client, int weapon, bool crit, bool ca
 		{
 			UTIL_ImpactTrace(client, pos, DMG_CLUB);
 			PlayWeaponSound(client, weapon, target);
-		}
+		}*/
 
 		return;
 	}
-
-	PlayWeaponSound(client, weapon, target);
 
 	float damage = 65.0;
 	char classname[255];
@@ -856,7 +829,9 @@ public void PNPC_MeleeHit(int target, int client, int weapon, bool crit, bool ca
 
 		if (canStab)
 		{
+			PNPC_StartLagCompensation(client);
 			bool stab = forceStab || IsBehindAndFacingTarget(client, target);
+			PNPC_EndLagCompensation(client);
 
 			if (stab)
 			{
@@ -1270,7 +1245,15 @@ void PNPC_MakeForwards()
 	if(SDKGetCurrentCommand == view_as<Address>(-1))
 		LogError("[Gamedata] Could not find GetCurrentCommand");
 
+	DHook_CreateDetour(gd, "CTFWeaponBaseMelee::DoSwingTraceInternal", DHook_DoSwingTracePre);
+
 	delete gd;
+}
+
+public MRESReturn DHook_DoSwingTracePre(int entity, DHookReturn returnHook, DHookParam param)
+{
+	returnHook.Value = !Settings_AllowMeleeHitreg();
+	return MRES_Supercede;
 }
 
 MRESReturn PNPC_CanMedigunHealTarget(int medigun, Handle hReturn, Handle hParams)
@@ -1655,7 +1638,6 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_GetClosestNavArea", Native_PNPC_GetClosestNavArea);
 	CreateNative("PNPC_StartLagCompensation", Native_PNPC_StartLagCompensation);
 	CreateNative("PNPC_EndLagCompensation", Native_PNPC_EndLagCompensation);
-	CreateNative("PNPC_GetCustomMeleeAttributes", Native_PNPC_GetCustomMeleeAttributes);
 }
 
 public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
@@ -6506,15 +6488,6 @@ static MRESReturn DHook_EndLagCompensation(Address address)
 {
 	CEndLagCompensationManager = address;
 	return MRES_Ignored;
-}
-
-public Native_PNPC_GetCustomMeleeAttributes(Handle plugin, int numParams)
-{
-	int client = GetNativeCell(1);
-	SetNativeCellRef(2, f_MeleeRangeMult[client]);
-	SetNativeCellRef(3, f_MeleeBoundsMult[client]);
-
-	return 0;
 }
 
 float f_TargetVel[2049][3];
