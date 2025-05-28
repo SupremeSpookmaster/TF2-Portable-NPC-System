@@ -1059,7 +1059,7 @@ void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float boundsM
 		vecSwingMaxs[i] = MELEE_BOUNDS * boundsMult;
 	}
 
-	float vecSwingStart[3], ang[3], vecSwingEnd[3], vecSwingEndHull[3];
+	float vecSwingStart[3], ang[3], vecSwingEnd[3];
 	GetClientEyePosition(client, vecSwingStart);
 	GetClientEyeAngles(client, ang);
 	
@@ -1068,10 +1068,6 @@ void PNPC_MeleeTrace(Handle &trace, int client, float swingAng[3], float boundsM
 	vecSwingEnd[0] = vecSwingStart[0] + swingAng[0] * (MELEE_RANGE * rangeMult);
 	vecSwingEnd[1] = vecSwingStart[1] + swingAng[1] * (MELEE_RANGE * rangeMult);
 	vecSwingEnd[2] = vecSwingStart[2] + swingAng[2] * (MELEE_RANGE * rangeMult);
-
-	vecSwingEndHull[0] = vecSwingStart[0] + swingAng[0] * (MELEE_RANGE * 2.1 * rangeMult);
-	vecSwingEndHull[1] = vecSwingStart[1] + swingAng[1] * (MELEE_RANGE * 2.1 * rangeMult);
-	vecSwingEndHull[2] = vecSwingStart[2] + swingAng[2] * (MELEE_RANGE * 2.1 * rangeMult);
 
 	if (IsValidEntity(chosenTarget))
 	{
@@ -3409,7 +3405,7 @@ public void PNPC_InternalLogic(int ref)
 
 	PNPC npc = view_as<PNPC>(ent);
 
-	if (!npc.b_Exists || I_AM_DEAD[ent])
+	if (!npc.b_Exists || I_AM_DEAD[ent] || !TheNPCs.IsValidNPC(npc.GetBaseNPC()))
 		return;
 
 	float gt = GetGameTime();
