@@ -298,6 +298,7 @@ bool I_AM_DEAD[2049] = { false, ... };
 bool b_PillAlreadyBounced[2049] = { false, ... };
 bool b_IsProjectile[2049] = { false, ... };
 bool b_IsPhysProp[2049] = { false, ... };
+bool b_IsATF2Building[2049] = { false, ... };
 bool b_IsGib[2049] = { false, ... };
 bool b_IsARespawnRoomVisualiser[2049] = { false, ... };
 bool b_ProjectileAlreadyExploded[2049] = { false, ... };
@@ -631,7 +632,7 @@ stock int Sort_GetClosestInList(float pos[3], ArrayList &list)
 
 stock bool Melee_LOSTrace(int entity, int contentsmask, int target)
 {
-	if (IsValidClient(entity) || entity == target || IsABuilding(entity) || PNPC_IsNPC(entity) || b_IsProjectile[entity] || !Brush_Is_Solid(entity) || b_IsPhysProp[entity])
+	if (IsValidClient(entity) || entity == target || b_IsATF2Building[entity] || PNPC_IsNPC(entity) || b_IsProjectile[entity] || !Brush_Is_Solid(entity) || b_IsPhysProp[entity])
 		return false;
 
 	return IsPayloadCart(entity) || GetTeam(entity) != GetTeam(target);
@@ -707,7 +708,7 @@ public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float bo
 		for (int i = GetArraySize(hitsToDo) - 1; i >= 0 && GetArraySize(hitsToDo) > maxHits; i--)
 		{
 			int target = hitList[GetArrayCell(hitsToDo, i)].index;
-			if (!IsValidMulti(target) && !IsABuilding(target))
+			if (!IsValidMulti(target) && !b_IsATF2Building[target])
 				RemoveFromArray(hitsToDo, i);
 		}
 	}
@@ -805,7 +806,7 @@ public void PNPC_MeleeHit(int target, int client, int weapon, bool crit, bool ca
 	//Prevent prop_physics, prop_physics_multiplayer, and all building entities from being backstabbed by default, but still allow devs to allow it via the forward.
 	if (canStab)
 	{
-		if (IsABuilding(target) || b_IsPhysProp[target])
+		if (b_IsATF2Building[target] || b_IsPhysProp[target])
 			canStab = false;
 	}
 
@@ -1113,11 +1114,11 @@ public bool BulletAndMeleeTrace(int entity, int contentsMask, any iExclude)
 
 	bool shouldHit = false;
 	bool sameTeam = false;
-	if (IsValidEntity(iExclude) && !IsABuilding(entity))
+	if (IsValidEntity(iExclude) && !b_IsATF2Building[entity])
 		sameTeam = (GetEntProp(iExclude, Prop_Send, "m_iTeamNum") == GetEntProp(entity, Prop_Send, "m_iTeamNum"));
 
 	if (!sameTeam)
-		shouldHit = Brush_Is_Solid(entity) || PNPC_IsNPC(entity) || IsABuilding(entity) || b_IsPhysProp[entity];
+		shouldHit = Brush_Is_Solid(entity) || PNPC_IsNPC(entity) || b_IsATF2Building[entity] || b_IsPhysProp[entity];
 	
 	if (Melee_Hits != null && shouldHit)
 		PushArrayCell(Melee_Hits, entity);
@@ -1989,6 +1990,8 @@ public void PNPC_OnEntityCreated(int entity, const char[] classname)
 		b_IsProjectile[entity] = true;
 	if (StrContains(classname, "prop_physics") != -1)
 		b_IsPhysProp[entity] = true;
+	if (StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_teleporter"))
+		b_IsATF2Building[entity] = true;
 
 	if (StrContains(classname, "func_respawnroomvisualizer") != -1)
 		b_IsARespawnRoomVisualiser[entity] = true;
@@ -2024,6 +2027,7 @@ public void PNPC_OnEntityDestroyed(int entity)
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
 	b_IsPhysProp[entity] = false;
+	b_IsATF2Building[entity] = false;
 	b_IsARespawnRoomVisualiser[entity] = false;
 	b_ProjectileAlreadyExploded[entity] = false;
 	f_NextSlowScan[entity] = 0.0;
@@ -2751,7 +2755,7 @@ public void PNPC_OnGasHit(int victim, int &attacker, int &inflictor, int &weapon
 
 public bool PNPC_GenericNonBuildingFilter(int victim, int &attacker, int &inflictor, int &weapon, float &damage)
 {
-	return !IsABuilding(victim);
+	return !b_IsATF2Building[victim];
 }
 
 public void PNPC_OnMilkHit(int victim, int &attacker, int &inflictor, int &weapon, float &damage)
@@ -3016,7 +3020,7 @@ public void PNPC_OnKilled(int victim, int attacker, int inflictor, float damage,
 
 bool IsNormalCombatEntity(int entity)
 {
-	return (IsValidClient(entity) || PNPC_IsNPC(entity) || IsABuilding(entity));
+	return (IsValidClient(entity) || PNPC_IsNPC(entity) || b_IsATF2Building[entity]);
 }
 
 public void PNPC_CheckCartHit(int victim, int attacker, float &damage)
@@ -3088,7 +3092,7 @@ public void PNPC_PostDamage(int victim, int attacker, int inflictor, float damag
 		PNPC_AttemptIgnite(victim, attacker, inflictor, weapon, damage);
 		PNPC_AttemptBleed(victim, attacker, inflictor, weapon);
 
-		if (IsValidEntity(attacker) && attacker > 0 && !IsABuilding(attacker) && npc.b_Milked)
+		if (IsValidEntity(attacker) && attacker > 0 && !b_IsATF2Building[attacker] && npc.b_Milked)
 		{
 			PNPC_HealEntity(attacker, RoundToFloor(damage * 0.6), 1.0, npc.i_Milker);
 		}
@@ -5212,7 +5216,7 @@ public bool PNPC_AOETrace(entity, contentsmask, target)
 
 public bool PNPC_StuckTrace(int entity, int contentsmask, int user)
 {
-	if (IsValidClient(entity) || PNPC_IsNPC(entity) || entity == user || IsABuilding(entity))
+	if (IsValidClient(entity) || PNPC_IsNPC(entity) || entity == user || b_IsATF2Building[entity])
 		return false;
 
 	return Brush_Is_Solid(entity);
