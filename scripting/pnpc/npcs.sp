@@ -631,7 +631,7 @@ stock int Sort_GetClosestInList(float pos[3], ArrayList &list)
 
 stock bool Melee_LOSTrace(int entity, int contentsmask, int target)
 {
-	if (IsValidClient(entity) || entity == target || IsABuilding(entity) || PNPC_IsNPC(entity) || b_IsProjectile[entity] || !Brush_Is_Solid(entity))
+	if (IsValidClient(entity) || entity == target || IsABuilding(entity) || PNPC_IsNPC(entity) || b_IsProjectile[entity] || !Brush_Is_Solid(entity) || b_IsPhysProp[entity])
 		return false;
 
 	return IsPayloadCart(entity) || GetTeam(entity) != GetTeam(target);
