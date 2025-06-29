@@ -261,6 +261,7 @@ int i_HealthBarOwner[2049] = { -1, ... };
 int i_StabWeapon[MAXPLAYERS + 1] = { -1, ... };
 int i_PNPCHP[2049] = { 0, ... };
 int i_PNPCMaxHP[2049] = { 0, ... };
+int i_MeleePriority[2049] = { 0, ... };
 
 float PNPC_Speed[2049] = { 0.0, ... };
 float PNPC_ThinkRate[2049] = { 0.0, ... };
@@ -391,6 +392,9 @@ void PNPC_MapStart()
 {
 	for (int i = MaxClients + 1; i < 2049; i++)
 		g_PathFollowers[i] = PathFollower(PNPC_PathCost, Path_FilterIgnoreActors, Path_FilterOnlyActors);
+
+	for (int i = 1; i <= MAXPLAYERS; i++)
+		i_MeleePriority[i] = 1;
 
 	PrecacheParticleEffect(VFX_AFTERBURN_RED);
 	PrecacheParticleEffect(VFX_AFTERBURN_BLUE);
@@ -638,107 +642,115 @@ stock bool Melee_LOSTrace(int entity, int contentsmask, int target)
 	return IsPayloadCart(entity) || GetTeam(entity) != GetTeam(target);
 }
 
+int lowestPriority = -1;
+
 public void PNPC_DoCustomMelee(int client, int weapon, float rangeMult, float boundsMult, bool crit, bool canStab)
 {
-	int maxHits = 1;
+    int maxHits    = 1;
+    lowestPriority = -1;
 
-	Call_StartForward(g_OnMeleeLogicBegin);
+    Call_StartForward(g_OnMeleeLogicBegin);
 
-	Call_PushCell(client);
-	Call_PushCell(weapon);
-	Call_PushFloatRef(boundsMult);
-	Call_PushFloatRef(rangeMult);
-	Call_PushCellRef(maxHits);
+    Call_PushCell(client);
+    Call_PushCell(weapon);
+    Call_PushFloatRef(boundsMult);
+    Call_PushFloatRef(rangeMult);
+    Call_PushCellRef(maxHits);
 
-	Call_Finish();
+    Call_Finish();
 
-	delete Melee_Hits;
-	Melee_Hits = CreateArray(255);
+    delete Melee_Hits;
+    Melee_Hits = CreateArray(255);
 
-	Handle trace;
-	float swingAng[3], swingPos[3];
-	GetClientEyePosition(client, swingPos);
-	PNPC_StartLagCompensation(client);
-	PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult);
-	delete trace;
+    Handle trace;
+    float  swingAng[3], swingPos[3];
+    GetClientEyePosition(client, swingPos);
+    PNPC_StartLagCompensation(client);
+    PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult);
+    delete trace;
 
-	for (int i = 0; i < GetArraySize(Melee_Hits); i++)
-	{
-		int ent = GetArrayCell(Melee_Hits, i);
-		PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, ent);
+    for (int i = 0; i < GetArraySize(Melee_Hits); i++)
+    {
+        int ent = GetArrayCell(Melee_Hits, i);
+        PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, ent);
 
-		float hitPos[3], testPos[3];
-		TR_GetEndPosition(hitPos, trace);
-		PNPC_WorldSpaceCenter(ent, testPos);
-		delete trace;
+        float hitPos[3], testPos[3];
+        TR_GetEndPosition(hitPos, trace);
+        PNPC_WorldSpaceCenter(ent, testPos);
+        delete trace;
 
-		trace = TR_TraceRayFilterEx(swingPos, testPos, MASK_SHOT, RayType_EndPoint, Melee_LOSTrace, client);
-		if (!TR_DidHit(trace))
-		{
-			hitList[ent].hitPos = hitPos;
-			hitList[ent].index = ent;
-		}
-		else
-		{
-			RemoveFromArray(Melee_Hits, i);
-		}
+        trace = TR_TraceRayFilterEx(swingPos, testPos, MASK_SHOT, RayType_EndPoint, Melee_LOSTrace, client);
+        if (!TR_DidHit(trace))
+        {
+            hitList[ent].hitPos = hitPos;
+            hitList[ent].index  = ent;
+            if (i == 0 || lowestPriority > i_MeleePriority[ent])
+                lowestPriority = i_MeleePriority[ent];
+        }
+        else
+        {
+            RemoveFromArray(Melee_Hits, i);
+        }
 
-		delete trace;
-	}
+        delete trace;
+    }
 
-	if (GetArraySize(Melee_Hits) <= 0)
-	{
-		delete Melee_Hits;
+    if (GetArraySize(Melee_Hits) <= 0)
+    {
+        delete Melee_Hits;
 
-		PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, 0);
-		TR_GetEndPosition(hitList[0].hitPos, trace);
-		delete trace;
-		PNPC_MeleeHit(0, client, weapon, crit, canStab);
+        PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, 0);
+        TR_GetEndPosition(hitList[0].hitPos, trace);
+        delete trace;
+        PNPC_MeleeHit(0, client, weapon, crit, canStab);
 
-		PNPC_EndLagCompensation(client);
-		return;
-	}
+        PNPC_EndLagCompensation(client);
+        return;
+    }
 
-	ArrayList hitsToDo = SortListByDistance(swingPos, Melee_Hits);
-	delete Melee_Hits;
+    ArrayList hitsToDo = SortListByDistance(swingPos, Melee_Hits);
+    delete Melee_Hits;
 
-	//If we're over the max number of hits, start by removing non-building entities, furthest first
-	if (GetArraySize(hitsToDo) > maxHits)
-	{
-		for (int i = GetArraySize(hitsToDo) - 1; i >= 0 && GetArraySize(hitsToDo) > maxHits; i--)
-		{
-			int target = hitList[GetArrayCell(hitsToDo, i)].index;
-			if (!IsValidMulti(target) && !b_IsATF2Building[target])
-				RemoveFromArray(hitsToDo, i);
-		}
-	}
-	else if (GetArraySize(hitsToDo) < maxHits)
-	{
-		PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, 0);
-		TR_GetEndPosition(hitList[0].hitPos, trace);
-		delete trace;
-		PNPC_MeleeHit(0, client, weapon, crit, canStab);
-	}
+    // We're over the max number of hits, start removing low-priority entities
+    if (GetArraySize(hitsToDo) > maxHits)
+    {
+        for (int lowest = lowestPriority; GetArraySize(hitsToDo) > maxHits; lowest++)
+        {
+            for (int i = GetArraySize(hitsToDo) - 1; i >= 0 && GetArraySize(hitsToDo) > maxHits; i--)
+            {
+                int target = hitList[GetArrayCell(hitsToDo, i)].index;
+                if (i_MeleePriority[target] == lowest)
+                    RemoveFromArray(hitsToDo, i);
+            }
+        }
+    }
+    else if (GetArraySize(hitsToDo) < maxHits)
+    {
+        PNPC_MeleeTrace(trace, client, swingAng, boundsMult, rangeMult, 0);
+        TR_GetEndPosition(hitList[0].hitPos, trace);
+        delete trace;
+        PNPC_MeleeHit(0, client, weapon, crit, canStab);
+    }
 
-	//If we're still over the max number of hits, start removing players and buildings, furthest first
-	if (GetArraySize(hitsToDo) > maxHits)
-	{
-		for (int i = GetArraySize(hitsToDo) - 1; i >= 0 && GetArraySize(hitsToDo) > maxHits; i--)
-		{
-			RemoveFromArray(hitsToDo, i);
-		}
-	}
+    // If we're still over the max number of hits, start removing players and buildings, furthest first
+    if (GetArraySize(hitsToDo) > maxHits)
+    {
+        for (int i = GetArraySize(hitsToDo) - 1; i >= 0 && GetArraySize(hitsToDo) > maxHits; i--)
+        {
+            RemoveFromArray(hitsToDo, i);
+        }
+    }
 
-	for (int i = 0; i < GetArraySize(hitsToDo); i++)
-	{
-		int target = hitList[GetArrayCell(hitsToDo, i)].index;
-		if (IsValidEntity(target))
-			PNPC_MeleeHit(target, client, weapon, crit, canStab);
-	}
+    for (int i = 0; i < GetArraySize(hitsToDo); i++)
+    {
+        int target = hitList[GetArrayCell(hitsToDo, i)].index;
+        if (IsValidEntity(target))
+            PNPC_MeleeHit(target, client, weapon, crit, canStab);
+    }
 
-	delete hitsToDo;
+    delete hitsToDo;
 
-	PNPC_EndLagCompensation(client);
+    PNPC_EndLagCompensation(client);
 }
 
 public void PlayWeaponSound(int client, int weapon, int target)
@@ -1635,6 +1647,7 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_GetClosestNavArea", Native_PNPC_GetClosestNavArea);
 	CreateNative("PNPC_StartLagCompensation", Native_PNPC_StartLagCompensation);
 	CreateNative("PNPC_EndLagCompensation", Native_PNPC_EndLagCompensation);
+	CreateNative("PNPC_SetMeleePriority", Native_PNPC_SetMeleePriority);
 }
 
 public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
@@ -1991,7 +2004,10 @@ public void PNPC_OnEntityCreated(int entity, const char[] classname)
 	if (StrContains(classname, "prop_physics") != -1)
 		b_IsPhysProp[entity] = true;
 	if (StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_teleporter"))
+	{
+		i_MeleePriority[entity] = 1;
 		b_IsATF2Building[entity] = true;
+	}
 
 	if (StrContains(classname, "func_respawnroomvisualizer") != -1)
 		b_IsARespawnRoomVisualiser[entity] = true;
@@ -2022,6 +2038,7 @@ public void PNPC_OnEntityCreated(int entity, const char[] classname)
 public void PNPC_OnEntityDestroyed(int entity)
 {
 	i_PillCollideTarget[entity] = -1;
+	i_MeleePriority[entity] = 0;
 	i_PathTarget[entity] = -1;
 	i_HealthBarOwner[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
@@ -6446,6 +6463,11 @@ public Native_PNPC_EndLagCompensation(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	SDKCall_FinishLagCompensation(client);
+}
+
+public Native_PNPC_SetMeleePriority(Handle plugin, int numParams)
+{
+	i_MeleePriority[GetNativeCell(1)] = GetNativeCell(2);
 }
 
 void SDKCall_FinishLagCompensation(int client)

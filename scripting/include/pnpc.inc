@@ -1655,3 +1655,12 @@ native void PNPC_StartLagCompensation(int client);
  * @param client	The client whose lag compensation to end.
  */
 native void PNPC_EndLagCompensation(int client);
+
+/**
+ * Sets the priority for a given entity in the melee system. Higher priority means the melee will prioritize hitting this entity over entities with lower priority.
+ * Players and buildings have priority 1 by default, all other entities default to 0.
+ * 
+ * @param entity		The entity to set priority for.
+ * @param priority		The priority to set.
+ */
+native void PNPC_SetMeleePriority(int entity, int priority);
