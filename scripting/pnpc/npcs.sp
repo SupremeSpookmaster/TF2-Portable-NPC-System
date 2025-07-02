@@ -307,6 +307,7 @@ bool b_IsABuilding[2049] = { false, ... };
 bool b_CanBeDisabled[2049] = { true, ... };
 bool b_StopThinkingWhenDisabled[2049] = { true, ... };
 bool b_Disabled[2049] = { false, ... };
+bool b_EntityBlocksLOS[2049] = { false, ... };
 
 bool b_EnvDamage = false;
 
@@ -1648,6 +1649,7 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_StartLagCompensation", Native_PNPC_StartLagCompensation);
 	CreateNative("PNPC_EndLagCompensation", Native_PNPC_EndLagCompensation);
 	CreateNative("PNPC_SetMeleePriority", Native_PNPC_SetMeleePriority);
+	CreateNative("PNPC_SetEntityBlocksLOS", Native_PNPC_SetEntityBlocksLOS);
 }
 
 public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
@@ -1999,6 +2001,8 @@ public int Native_PNPC_SetName(Handle plugin, int numParams)
 
 public void PNPC_OnEntityCreated(int entity, const char[] classname)
 {
+	b_EntityBlocksLOS[entity] = false;
+
 	if (StrContains(classname, "tf_projectile") != -1)
 		b_IsProjectile[entity] = true;
 	if (StrContains(classname, "prop_physics") != -1)
@@ -5225,6 +5229,9 @@ public bool PNPC_BlastTrace(int entity, int attacker)
 
 public bool PNPC_AOETrace(entity, contentsmask, target)
 {
+	if (entity != target && b_EntityBlocksLOS[entity])
+		return true;
+
 	if (!PNPC_LOSCheck(entity, contentsmask))
 		return false;
 		
@@ -6468,6 +6475,11 @@ public Native_PNPC_EndLagCompensation(Handle plugin, int numParams)
 public Native_PNPC_SetMeleePriority(Handle plugin, int numParams)
 {
 	i_MeleePriority[GetNativeCell(1)] = GetNativeCell(2);
+}
+
+public Native_PNPC_SetEntityBlocksLOS(Handle plugin, int numParams)
+{
+	b_EntityBlocksLOS[GetNativeCell(1)] = GetNativeCell(2);
 }
 
 void SDKCall_FinishLagCompensation(int client)

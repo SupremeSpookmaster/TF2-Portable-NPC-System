@@ -1664,3 +1664,12 @@ native void PNPC_EndLagCompensation(int client);
  * @param priority		The priority to set.
  */
 native void PNPC_SetMeleePriority(int entity, int priority);
+
+/**
+ * Makes an entity block line-of-sight traces for custom sources. This includes things like explosions and penetrating attacks.
+ * Note that certain entities ignore this, and will either always block or always not block LOS.
+ * 
+ * @param entity		The entity to set LOS block status.
+ * @param status		True to make this entity block LOS traces, false otherwise.
+ */
+native void PNPC_SetEntityBlocksLOS(int entity, bool status);
