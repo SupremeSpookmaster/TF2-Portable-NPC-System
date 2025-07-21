@@ -2001,6 +2001,9 @@ public int Native_PNPC_SetName(Handle plugin, int numParams)
 
 public void PNPC_OnEntityCreated(int entity, const char[] classname)
 {
+	if (entity < 0 || entity > 2047)
+		return;
+		
 	b_EntityBlocksLOS[entity] = false;
 
 	if (StrContains(classname, "tf_projectile") != -1)
