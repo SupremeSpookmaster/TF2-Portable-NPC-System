@@ -254,6 +254,8 @@ int i_Jarater[2049] = { -1, ... };
 int i_Gasser[2049] = { -1, ... };
 int i_PillCollideTarget[2049] = { -1, ... };
 int i_PathTarget[2049] = { -1, ... };
+int i_Target[2049] = { -1, ... };
+int i_Owner[2049] = { -1, ... };
 int i_HealthBar[2049] = { -1, ... };
 int i_HealthBarType[2049] = { -1, ... };
 int i_HealthBarDisplay[2049] = { -1, ... };
@@ -1191,19 +1193,33 @@ void PNPC_MakeForwards()
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
 	SDK_Ragdoll = EndPrepSDKCall();
 	if(!SDK_Ragdoll)
-		LogError("[Gamedata] Could not find CBaseAnimating::BecomeRagdollOnClient");
+		SetFailState("[Gamedata] Could not find CBaseAnimating::BecomeRagdollOnClient");
 
 	//Projectile explosion virtuals:
 	g_DHookGrenadeExplode = DHook_CreateVirtual(gd, "CBaseGrenade::Explode");
+	if(!g_DHookGrenadeExplode)
+		SetFailState("[Gamedata] Could not find CBaseGrenade::Explode");
+
 	g_DHookStickyExplode = DHook_CreateVirtual(gd, "CBaseGrenade::Detonate");
+	if(!g_DHookStickyExplode)
+		SetFailState("[Gamedata] Could not find CBaseGrenade::Detonate");
+
 	g_DHookFireballExplode = DHook_CreateVirtual(gd, "CTFProjectile_SpellFireball::Explode");
+	if(!g_DHookFireballExplode)
+		SetFailState("[Gamedata] Could not find CTFProjectile_SpellFireball::Explode");
+
 	g_DHookRocketExplode = DHook_CreateVirtual(gd, "CTFBaseRocket::Explode");
+	if(!g_DHookRocketExplode)
+		SetFailState("[Gamedata] Could not find CTFBaseRocket::Explode");
 
 	//Projectile explosion detours:
 	DHook_CreateDetour(gd, "JarExplode()", PNPC_OnJarExplodePre);
 	DHook_CreateDetour(gd, "CTFProjectile_Flare::Explode_Air()", PNPC_OnFlareExplodePre);
 	DHook_CreateDetour(gd, "NextBotGroundLocomotion::UpdateGroundConstraint", PNPC_UpdateGroundConstraint_Pre, PNPC_UpdateGroundConstraint_Post);
+
 	g_DHookPillCollide = CheckedDHookCreateFromConf(gd, "CTFGrenadePipebombProjectile::PipebombTouch");
+	if(!g_DHookPillCollide)
+		SetFailState("[Gamedata] Could not find CTFGrenadePipebombProjectile::PipebombTouch");
 
 	//WorldSpaceCenter:
 	StartPrepSDKCall(SDKCall_Entity);
@@ -1230,7 +1246,7 @@ void PNPC_MakeForwards()
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
 	g_hSetLocalOrigin = EndPrepSDKCall();
 	if(!g_hSetLocalOrigin)
-		LogError("[Gamedata] Could not find CBaseEntity::SetLocalOrigin");
+		SetFailState("[Gamedata] Could not find CBaseEntity::SetLocalOrigin");
 
 
 	StartPrepSDKCall(SDKCall_Raw);
@@ -1239,23 +1255,24 @@ void PNPC_MakeForwards()
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Pointer);
 	SDKStartLagCompensation = EndPrepSDKCall();
 	if(!SDKStartLagCompensation)
-		LogError("[Gamedata] Could not find CLagCompensationManager::StartLagCompensation");
+		SetFailState("[Gamedata] Could not find CLagCompensationManager::StartLagCompensation");
 	
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(gd, SDKConf_Signature, "CLagCompensationManager::FinishLagCompensation");
 	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
 	SDKFinishLagCompensation = EndPrepSDKCall();
 	if(!SDKFinishLagCompensation)
-		LogError("[Gamedata] Could not find CLagCompensationManager::FinishLagCompensation");
+		SetFailState("[Gamedata] Could not find CLagCompensationManager::FinishLagCompensation");
 
 	DHook_CreateDetour(gd, "CLagCompensationManager::StartLagCompensation", _, DHook_StartLagCompensation);
 	DHook_CreateDetour(gd, "CLagCompensationManager::FinishLagCompensation", _, DHook_EndLagCompensation);
 
 	SDKGetCurrentCommand = view_as<Address>(gd.GetOffset("GetCurrentCommand"));
 	if(SDKGetCurrentCommand == view_as<Address>(-1))
-		LogError("[Gamedata] Could not find GetCurrentCommand");
+		SetFailState("[Gamedata] Could not find GetCurrentCommand");
 
-	DHook_CreateDetour(gd, "CTFWeaponBaseMelee::DoSwingTraceInternal", DHook_DoSwingTracePre);
+	//TODO: FIX THIS INSTEAD OF DISABLING IT
+	//DHook_CreateDetour(gd, "CTFWeaponBaseMelee::DoSwingTraceInternal", DHook_DoSwingTracePre);
 
 	delete gd;
 }
@@ -1650,6 +1667,11 @@ void PNPC_MakeNatives()
 	CreateNative("PNPC_EndLagCompensation", Native_PNPC_EndLagCompensation);
 	CreateNative("PNPC_SetMeleePriority", Native_PNPC_SetMeleePriority);
 	CreateNative("PNPC_SetEntityBlocksLOS", Native_PNPC_SetEntityBlocksLOS);
+
+	CreateNative("PNPC.i_Target.get", Native_PNPCGetTarget);
+	CreateNative("PNPC.i_Target.set", Native_PNPCSetTarget);
+	CreateNative("PNPC.i_Owner.get", Native_PNPCGetOwner);
+	CreateNative("PNPC.i_Owner.set", Native_PNPCSetOwner);
 }
 
 public any Native_PNPCGetOverhealDecayRate(Handle plugin, int numParams) { return f_OverhealDecayRate[GetNativeCell(1)]; }
@@ -2047,6 +2069,8 @@ public void PNPC_OnEntityDestroyed(int entity)
 	i_PillCollideTarget[entity] = -1;
 	i_MeleePriority[entity] = 0;
 	i_PathTarget[entity] = -1;
+	i_Owner[entity] = -1;
+	i_Target[entity] = -1;
 	i_HealthBarOwner[entity] = -1;
 	b_PillAlreadyBounced[entity] = false;
 	b_IsProjectile[entity] = false;
@@ -2267,14 +2291,23 @@ void PNPC_OnCreate(int npc)
 		}
 	}
 
-	Call_StartForward(g_OnPNPCCreated);
-	Call_PushCell(npc);
-	Call_Finish();
+	RequestFrame(PNPC_CallCreateFrameLater, EntIndexToEntRef(npc));
 
 	alive.b_Exists = true;
 	I_AM_DEAD[npc] = false;
 
 	g_NPCsList.Push(EntIndexToEntRef(npc));
+}
+
+public void PNPC_CallCreateFrameLater(int ref)
+{
+	int npc = EntRefToEntIndex(ref);
+	if (!IsValidEntity(npc))
+		return;
+
+	Call_StartForward(g_OnPNPCCreated);
+	Call_PushCell(npc);
+	Call_Finish();
 }
 
 void PNPC_RemoveFromList(int entity, bool isAGib = false)
@@ -2451,7 +2484,7 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 			npc.f_EndTime = 0.0;
 
 		f_LastValidAt[ent] = GetGameTime() + 0.1;
-		f_LastValidPosition[ent] = NULL_VECTOR;
+		f_LastValidPosition[ent] = pos;
 		f_NextCartPush[ent] = 0.0;
 
 		DispatchSpawn(ent);
@@ -2494,13 +2527,13 @@ public int Native_PNPCConstructor(Handle plugin, int numParams)
 		base.flMaxYawRate = 225.0;
 		base.flDeathDropHeight = 999999.0;
 
-		if (!skipStuck)
+		/*if (!skipStuck)
 		{
 			DataPack pack = new DataPack();
 			WritePackCell(pack, EntIndexToEntRef(npc.Index));
 			WritePackFloatArray(pack, pos, sizeof(pos));
 			RequestFrame(PNPC_CheckStuckNextFrame, pack);
-		}
+		}*/
 
 		TeleportEntity(ent, pos, ang);
 
@@ -2629,6 +2662,9 @@ public void PNPC_Touch(int entity, int other)
 
 MRESReturn PNPC_OnJarExplodePre(Handle hParams) 
 {
+	if (!Settings_AllowJars())
+		return MRES_Ignored;
+		
 	int jar = DHookGetParam(hParams, 1);
 	if (PNPC_JarTouch(jar))
 		return MRES_Supercede;
@@ -3460,18 +3496,18 @@ public void PNPC_InternalLogic(int ref)
 	}
 
 	PNPC_SetMovePose(npc);
-	PNPC_CheckOutOfBounds(npc, gt);
 
 	//Logic that does not need to be done every frame should be put in here for the sake of optimization:
 	if (gt >= f_NextSlowScan[ent])
 	{
+		PNPC_CheckOutOfBounds(npc, gt);
 		PNPC_BurnLogic(npc, gt);
 		PNPC_MilkLogic(npc, gt);
 		PNPC_JarateLogic(npc, gt);
 		PNPC_GasLogic(npc, gt);
 		PNPC_CheckTriggerHurt(npc);
 		PNPC_OverhealDecay(npc);
-		PNPC_CheckStuck(npc, gt);
+		//PNPC_CheckStuck(npc, gt);
 		npc.UpdateHealthBar();
 
 		if (IsValidEntity(npc.i_PathTarget))
@@ -4265,6 +4301,14 @@ public int Native_PNPCSetGoalEntity(Handle plugin, int numParams)
 
 	return 0;
 }
+
+public int Native_PNPCGetOwner(Handle plugin, int numParams) { return GetClientOfUserId(i_Owner[GetNativeCell(1)]); }
+
+public int Native_PNPCSetOwner(Handle plugin, int numParams){ i_Owner[GetNativeCell(1)] = GetClientUserId(GetNativeCell(2)); return 0; }
+
+public int Native_PNPCGetTarget(Handle plugin, int numParams) { return EntRefToEntIndex(i_Target[GetNativeCell(1)]); }
+
+public int Native_PNPCSetTarget(Handle plugin, int numParams){ i_Target[GetNativeCell(1)] = EntIndexToEntRef(GetNativeCell(2)); return 0; }
 
 public int Native_PNPCGetPathTarget(Handle plugin, int numParams) { return EntRefToEntIndex(i_PathTarget[GetNativeCell(1)]); }
 

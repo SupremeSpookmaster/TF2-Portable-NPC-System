@@ -457,7 +457,7 @@ public void Templates_DownloadNPCModels(ConfigMap subsection)
 }
 
 //TODO: Expand parameters to allow specifying a position, angles, owner, and team. Possibly more as well.
-public int PNPC_SpawnNPC(char name[255])
+public int PNPC_SpawnNPC(char name[255], float pos[3], float ang[3])
 {
 	//TODO: This freaks out and lags the server for a brief moment if it fails to find the template it's looking for.
 	//It seems to cycle through the first template until it reaches the max when this happens. Not sure why.
@@ -469,7 +469,7 @@ public int PNPC_SpawnNPC(char name[255])
 
 		if (StrEqual(name, confName) || StrContains(realName, name, false) != -1)
 		{
-			return Templates[i].Spawn(NULL_VECTOR, NULL_VECTOR);
+			return Templates[i].Spawn(pos, ang);
 		}
 	}
 	

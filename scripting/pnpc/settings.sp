@@ -11,6 +11,7 @@ int i_DefaultHealthBarDisplay = -1;
 bool b_KillFeed = false;
 bool b_MeleeHitreg = false;
 bool b_CustomExplosions = false;
+bool b_CustomJars = false;
 
 char s_DefaultName[255] = "";
 
@@ -36,6 +37,7 @@ public void Settings_Load()
 	conf.Get("settings.npc_default_name", s_DefaultName, sizeof(s_DefaultName));
 	b_MeleeHitreg = GetBoolFromCFGMap(conf, "settings.custom_melee_hitreg", true);
 	b_CustomExplosions = GetBoolFromCFGMap(conf, "settings.custom_explosion_logic", true);
+	b_CustomJars = GetBoolFromCFGMap(conf, "settings.custom_jar_logic", true);
 
 	DeleteCfg(conf);
 }
@@ -76,6 +78,7 @@ public int Settings_GetMaxAttachments() { return i_MaxAttachments; }
 public int Settings_GetMaxParticles() { return i_MaxParticles; }
 public bool Settings_AllowExplosions() { return b_CustomExplosions; }
 public bool Settings_AllowMeleeHitreg() { return b_MeleeHitreg; }
+public bool Settings_AllowJars() { return b_CustomJars; }
 public int Settings_GetHealthBarType() { return i_HealthBars; }
 public int Settings_GetHealthBarDisplay() { return i_HealthBarsDisplay; }
 public int Settings_GetDefaultHealthBarType() { return i_DefaultHealthBar; }

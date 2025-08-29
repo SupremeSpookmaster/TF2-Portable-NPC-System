@@ -23,7 +23,7 @@ public Plugin myinfo =
 #include "pnpc/npcs.sp"
 #include "pnpc/templates.sp"
 #include "pnpc/settings.sp"
-#include "pnpc/animator.sp"
+//#include "pnpc/animator.sp"
 
 //PERSONAL NOTES:
 //		- Make a few basic AI templates. These should be split into categories governing movement and combat.
@@ -66,7 +66,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	PNPC_MakeNatives();
 	Templates_MakeNatives();
-	Animator_MakeNatives();
+	//Animator_MakeNatives();
 	return APLRes_Success;
 }
 
@@ -86,7 +86,7 @@ public void OnPluginStart()
 	//AddNormalSoundHook(view_as<NormalSHook>(PNPC_SoundHook));
 	
 	PNPC_MakeForwards();
-	Animator_PluginStart();
+	//Animator_PluginStart();
 }
 
 public Action PlayerKilled_Pre(Event hEvent, const char[] sEvName, bool bDontBroadcast)
@@ -180,20 +180,22 @@ public Action PNPC_Spawn(int client, int args)
 			return Plugin_Continue;
 		}
 		
+		float pos[3], ang[3];
+		Handle trace = getAimTrace(client, Trace_OnlyHitWorld);
+		TR_GetEndPosition(pos, trace);
+		delete trace;
+
+		GetClientEyeAngles(client, ang);
+		ang[0] = 0.0;
+		ang[1] = 0.0;
+
 		char target[255];
 		GetCmdArg(1, target, sizeof(target));
 		
-		int SpawnedPNPC = PNPC_SpawnNPC(target);	//TODO: Expand on this command so the user can specify a team and owner, maybe other things too.
+		int SpawnedPNPC = PNPC_SpawnNPC(target, pos, ang);	//TODO: Expand on this command so the user can specify a team and owner, maybe other things too.
 		
 		if (IsValidEntity(SpawnedPNPC))
 		{
-			float pos[3];
-			Handle trace = getAimTrace(client, Trace_OnlyHitWorld);
-			TR_GetEndPosition(pos, trace);
-			delete trace;
-			
-			TeleportEntity(SpawnedPNPC, pos);
-
 			char name[255];
 			view_as<PNPC>(SpawnedPNPC).GetName(name, sizeof(name));
 			

@@ -2435,16 +2435,16 @@ stock void DHook_CreateDetour(GameData gamedata, const char[] name, DHookCallbac
 	if(detour)
 	{
 		if(preCallback!=INVALID_FUNCTION && !DHookEnableDetour(detour, false, preCallback))
-			LogError("[Gamedata] Failed to enable pre detour: %s", name);
+			SetFailState("[Gamedata] Failed to enable pre detour: %s", name);
 
 		if(postCallback!=INVALID_FUNCTION && !DHookEnableDetour(detour, true, postCallback))
-			LogError("[Gamedata] Failed to enable post detour: %s", name);
+			SetFailState("[Gamedata] Failed to enable post detour: %s", name);
 
 		delete detour;
 	}
 	else
 	{
-		LogError("[Gamedata] Could not find %s", name);
+		SetFailState("[Gamedata] Could not find %s", name);
 	}
 }
 
