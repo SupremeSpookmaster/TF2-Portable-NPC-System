@@ -1,4 +1,5 @@
-# *Introducing (eventually) the Portable NPC System!*
+<img width="998" height="756" alt="PNPCS Logo render 1" src="https://github.com/user-attachments/assets/08729b82-f9b7-4f6d-8662-6eb21a635b0d" />
+
 TODO: Write this.
 
 ## *Installation Guide*
