@@ -4,7 +4,7 @@ The Portable NPC System, or PNPCS, is a helper extension designed to allow devel
 
 ## *Installation Guide*
 1. Install the **prerequisites**.
-2. Download the **latest release Installation Build. (LINK PENDING)**
+2. Download the **[latest release Installation Build](https://github.com/SupremeSpookmaster/TF2-Portable-NPC-System/releases/tag/V1.0).**
 3. Drag-and-drop the contents of the zip file to your server's `tf` folder.
 4. The Portable NPC System is now active on your server!
 
