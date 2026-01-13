@@ -8,11 +8,6 @@ The Portable NPC System, or PNPCS, is a helper extension designed to allow devel
 3. Drag-and-drop the contents of the zip file to your server's `tf` folder.
 4. The Portable NPC System is now active on your server!
 
-## *Update Guide*
-1. Download the **latest release Update Build. (LINK PENDING)**
-2. Drag-and-drop the contents of the zip file to your server's `tf` folder.
-3. The Portable NPC System is now updated on your server!
-
 ## *IMPORTANT DISCLAIMERS*
 1. Many SourceMod plugins utilize custom damage sources, such as custom explosions or laser beams. They may also utilize custom on-hit effects, such as "when X target is damaged my my cool weapon, they take knockback". Regardless of whether it's custom damage or a custom on-hit effect, you will find that many of them were only coded with clients in mind, and will therefore not work against NPCs. This is not the fault of the Portable NPC System, but poorly-coded plugins. To make plugins compatible with NPCs, see the **[NPC Compatibility Guide](https://github.com/SupremeSpookmaster/TF2-Portable-NPC-System/wiki/NPC-Compatibility-Guide)**.
 3. One major issue with NPCs in TF2 is that melee weapons treat them the same as walls. As a result, while melee weapons *can* damage NPCs, the impact sound is *always* the sound of a melee weapon hitting a metal wall. The Portable NPC System fixes this by implementing its own custom melee hitreg. This hitreg functions identically to TF2's actual melee hitreg, but simulates melee bounds and range on its own, using TF2's default range and bounds modified by the weapon's bounds and range attributes. If you wish to use TF2's vanilla hitreg, you may disable the custom hitreg in `data/pnpc/settings.cfg`, though I advise against this as there's really no reason to use TF2's default melee hitreg.
