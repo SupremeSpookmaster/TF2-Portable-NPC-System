@@ -1,9 +1,9 @@
 <img width="998" height="756" alt="PNPCS Logo render 1" src="https://github.com/user-attachments/assets/08729b82-f9b7-4f6d-8662-6eb21a635b0d" />
 
-TODO: Write this.
+The Portable NPC System, or PNPCS, is a helper extension designed to allow developers to dynamically create and deploy their own custom NPCs with ease. It offers a very wide range of natives and forwards, as well as extensive configuration options to allow for maximum control.
 
 ## *Installation Guide*
-1. Install the **[prerequisites]()**.
+1. Install the **prerequisites**.
 2. Download the **latest release Installation Build. (LINK PENDING)**
 3. Drag-and-drop the contents of the zip file to your server's `tf` folder.
 4. The Portable NPC System is now active on your server!
@@ -19,7 +19,7 @@ TODO: Write this.
 4. Another major issue with NPCs in TF2 is that they block explosions. For example: if you fire a rocket at an NPC, that NPC will take damage, but anything behind it will not, even if they are within the blast radius. The Portable NPC System gets around this by simulating all of TF2's explosions manually. These explosions function *almost* identically to TF2's explosions with some very minor exceptions, but if, for whatever reason, you want to turn off the simulation in favor of using TF2's vanilla explosions, you may do so in `data/pnpc/settings.cfg`. Again, I advise against this.
 
 ## *Making NPCs*
-TODO: Write a guide in the wiki and link to it here.
+An extensive guide will be written at a later date.
 
 ## *Prerequisites*
 - **[SourceMod 1.13.7216+](https://www.sourcemod.net/downloads.php)**
