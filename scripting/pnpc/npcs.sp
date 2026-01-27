@@ -1271,15 +1271,12 @@ void PNPC_MakeForwards()
 	if(SDKGetCurrentCommand == view_as<Address>(-1))
 		SetFailState("[Gamedata] Could not find GetCurrentCommand");
 
-	//TODO: FIX THIS INSTEAD OF DISABLING IT
-	//DHook_CreateDetour(gd, "CTFWeaponBaseMelee::DoSwingTraceInternal", DHook_DoSwingTracePre);
-
 	delete gd;
 }
 
 public MRESReturn DHook_DoSwingTracePre(int entity, DHookReturn returnHook, DHookParam param)
 {
-	returnHook.Value = !Settings_AllowMeleeHitreg();
+	returnHook.Value = false;
 	return MRES_Supercede;
 }
 

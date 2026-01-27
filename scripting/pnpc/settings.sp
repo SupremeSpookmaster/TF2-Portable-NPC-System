@@ -12,6 +12,7 @@ bool b_KillFeed = false;
 bool b_MeleeHitreg = false;
 bool b_CustomExplosions = false;
 bool b_CustomJars = false;
+bool meleeHitregWasEnabled = false;
 
 char s_DefaultName[255] = "";
 
@@ -38,6 +39,20 @@ public void Settings_Load()
 	b_MeleeHitreg = GetBoolFromCFGMap(conf, "settings.custom_melee_hitreg", true);
 	b_CustomExplosions = GetBoolFromCFGMap(conf, "settings.custom_explosion_logic", true);
 	b_CustomJars = GetBoolFromCFGMap(conf, "settings.custom_jar_logic", true);
+
+	GameData gd = LoadGameConfigFile("portable_npc_system");
+	if (b_MeleeHitreg)
+	{
+		DHook_CreateDetour(gd, "CTFWeaponBaseMelee::DoSwingTraceInternal", DHook_DoSwingTracePre);
+		meleeHitregWasEnabled = true;
+	}
+	else if (meleeHitregWasEnabled)
+	{
+		DHook_DisableDetour(gd, "CTFWeaponBaseMelee::DoSwingTraceInternal", DHook_DoSwingTracePre);
+		meleeHitregWasEnabled = false;
+	}
+
+	delete gd;
 
 	DeleteCfg(conf);
 }

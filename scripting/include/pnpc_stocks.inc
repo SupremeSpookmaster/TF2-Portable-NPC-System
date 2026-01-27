@@ -2448,6 +2448,25 @@ stock void DHook_CreateDetour(GameData gamedata, const char[] name, DHookCallbac
 	}
 }
 
+stock void DHook_DisableDetour(GameData gamedata, const char[] name, DHookCallback preCallback = INVALID_FUNCTION, DHookCallback postCallback = INVALID_FUNCTION)
+{
+	DynamicDetour detour = DynamicDetour.FromConf(gamedata, name);
+	if(detour)
+	{
+		if(preCallback!=INVALID_FUNCTION && !DHookDisableDetour(detour, false, preCallback))
+			SetFailState("[Gamedata] Failed to disable pre detour: %s", name);
+
+		if(postCallback!=INVALID_FUNCTION && !DHookDisableDetour(detour, true, postCallback))
+			SetFailState("[Gamedata] Failed to disable post detour: %s", name);
+
+		delete detour;
+	}
+	else
+	{
+		SetFailState("[Gamedata] Could not find %s", name);
+	}
+}
+
 stock Handle CheckedDHookCreateFromConf(Handle game_config, const char[] name) {
     Handle res = DHookCreateFromConf(game_config, name);
 
